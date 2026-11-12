@@ -1,5 +1,13 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Supabase setup
+
+The sign-in and sign-up page uses Supabase Auth. Copy `.env.example` to
+`.env.local`, then set `NEXT_PUBLIC_SUPABASE_ANON_KEY` to the project's
+publishable (or legacy anon) key from Supabase. These are browser-safe public
+credentials; never use a service-role key here. Restart the development server
+after changing environment variables.
+
 ## Getting Started
 
 First, run the development server:
