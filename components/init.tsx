@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 import ThemeToggle from "@/components/theme-toggle";
+import { useDeviceNow } from "@/components/use-device-now";
+import { formatLocalTime, formatWeekRange, formatWeekdayShort } from "@/lib/device-time";
 
 const features = [
   {
@@ -21,6 +25,8 @@ const features = [
 ] as const;
 
 export default function Init() {
+  const now = useDeviceNow();
+
   return (
     <main className="landing-page">
       <div className="landing-shell">
@@ -76,15 +82,16 @@ export default function Init() {
                   <p className="landing-window-eyebrow">SPAȚIUL TĂU DE STUDIU</p>
                   <h2>Săptămâna ta</h2>
                 </div>
-                <span className="landing-week">13 — 19 nov.</span>
+                <span className="landing-week">{now ? formatWeekRange(now) : "Se sincronizează"}</span>
               </div>
               <div className="landing-today">
                 <div className="landing-date">
-                  <span>JOI</span>
-                  <strong>13</strong>
+                  <span>{now ? formatWeekdayShort(now) : "···"}</span>
+                  <strong>{now?.getDate() ?? "--"}</strong>
+                  <small>{now ? formatLocalTime(now) : "--:--"}</small>
                 </div>
                 <div className="landing-class">
-                  <span>URMĂTORUL CURS · 09:00</span>
+                  <span>CURS EXEMPLU · 09:00</span>
                   <strong>Proiectare software</strong>
                   <small>Amfiteatrul A · Corp B</small>
                 </div>
