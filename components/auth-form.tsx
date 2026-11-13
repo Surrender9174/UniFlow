@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
@@ -44,6 +44,8 @@ export default function AuthForm({
   const [year, setYear] = useState("");
   const [semester, setSemester] = useState("");
   const [schedule, setSchedule] = useState("");
+  const [scheduleFileName, setScheduleFileName] = useState("");
+  const [scheduleFileError, setScheduleFileError] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -51,6 +53,27 @@ export default function AuthForm({
   const [message, setMessage] = useState<AuthMessage | null>(null);
   const strength = useMemo(() => getPasswordStrength(password), [password]);
 
+  const handleScheduleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setScheduleFileError("");
+    if (!file) {
+      setScheduleFileName("");
+      return;
+    }
+
+    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+    const isImage =
+      file.type.startsWith("image/") ||
+      /\.(png|jpe?g|gif|webp|bmp|avif)$/i.test(file.name);
+    if (!isPdf && !isImage) {
+      setScheduleFileName("");
+      setScheduleFileError("Alege un fișier PDF sau o imagine.");
+      event.target.value = "";
+      return;
+    }
+
+    setScheduleFileName(file.name);
+  };
 
   useEffect(() => {
     if (!supabase) return;
@@ -88,7 +111,7 @@ export default function AuthForm({
 
     if (mode === "signup") {
       if (
-        [name, university, program, year, semester, schedule].some(
+        [name, university, program, year, semester].some(
           (value) => !value.trim(),
         )
       ) {
@@ -299,16 +322,32 @@ export default function AuthForm({
                       <option value="Semestrul II">Semestrul II</option>
                     </select>
                   </label>
-                  <label className="auth-field auth-schedule-field">
-                    <span>Orar</span>
-                    <textarea
-                      onChange={(event) => setSchedule(event.target.value)}
-                      placeholder="Ex.: Luni, 08:00 — Matematică; 10:00 — Fizică"
-                      required
-                      rows={3}
-                      value={schedule}
-                    />
-                  </label>
+                  <div className="auth-field auth-schedule-field">
+                    <span>Orar (opțional)</span>
+                    <label
+                      className={`auth-file-picker${scheduleFileName ? " selected" : ""}`}
+                    >
+                      <Icon name = "upload" size = {16} />
+                      {scheduleFileName || "Upload File (Ex. PDF, JPG, IMG)"}
+                      <input
+                        accept="application/pdf,.pdf,image/*"
+                        aria-label="Selectează un orar PDF sau imagine"
+                        className="visually-hidden"
+                        onChange={handleScheduleFileChange}
+                        type="file"
+                      />
+                    </label>
+                    {scheduleFileError && <small className="auth-message error" role="alert">{scheduleFileError}</small>}
+                    <label className="auth-field">
+                      <textarea
+                        className="auth-schedule-textarea"
+                        onChange={(event) => setSchedule(event.target.value)}
+                        placeholder="Text Simplu"
+                        rows={2}
+                        value={schedule}
+                      />
+                    </label>
+                  </div>
                 </div>
               </>
             )}
