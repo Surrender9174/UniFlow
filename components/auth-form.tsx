@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import ThemeToggle from "@/components/theme-toggle";
+import { extractScheduleFile, isSupportedScheduleFile } from "@/lib/schedule-file-reader";
+import { parseScheduleText } from "@/lib/schedule-parser";
+import { maxScheduleFileSize, scheduleFileAccept } from "@/lib/schedule-file-types";
 import {
   saveAuthenticatedProfileToDatabase,
   syncAuthenticatedProfile,

@@ -6,6 +6,15 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useState, useSyncExternalStore, type ChangeEvent, type FormEvent } from "react";
 import { Icon } from "@/components/icons";
+import { extractScheduleFile, isSupportedScheduleFile } from "@/lib/schedule-file-reader";
+import { parseScheduleText } from "@/lib/schedule-parser";
+import { scheduleFileAccept, maxScheduleFileSize } from "@/lib/schedule-file-types";
+import {
+  getServerScheduleSnapshot,
+  getStoredScheduleSnapshot,
+  parseScheduleSnapshot,
+  subscribeToSchedule,
+} from "@/lib/schedule-storage";
 import { saveStudentProfileToDatabase } from "@/lib/auth-profile";
 import {
   defaultProfile,
@@ -47,7 +56,61 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
+  const [scheduleFileName, setScheduleFileName] = useState("");
+  const [scheduleFileError, setScheduleFileError] = useState("");
+  const [scheduleFileProgress, setScheduleFileProgress] = useState("");
+  const [scheduleFileProcessing, setScheduleFileProcessing] = useState(false);
   const notifications = savedNotifications === "on";
+
+  const handleScheduleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    setScheduleFileError("");
+    setScheduleFileProgress("");
+    if (!file) {
+      setScheduleFileName("");
+      return;
+    }
+
+    if (file.size > maxScheduleFileSize) {
+      setScheduleFileName("");
+      setScheduleFileError("Fișierul depășește limita de 15 MB.");
+      input.value = "";
+      return;
+    }
+
+    if (!isSupportedScheduleFile(file)) {
+      setScheduleFileName("");
+      setScheduleFileError("Alege un PDF, o imagine PNG/JPG/WebP, un fișier Excel, Word, CSV sau TXT.");
+      input.value = "";
+      return;
+    }
+
+    setScheduleFileName(file.name);
+    setScheduleFileProcessing(true);
+    setScheduleFileProgress("Se citește orarul...");
+    try {
+      const text = await extractScheduleFile(file, setScheduleFileProgress);
+      if (!parseScheduleText(text).length) {
+        throw new Error("Nu am putut identifica zile, ore și cursuri în fișier.");
+      }
+      setDraft((current) => ({ ...(current ?? profile), schedule: text }));
+      setSaved(false);
+      setSaveError("");
+      setScheduleFileProgress("Orarul a fost extras. Poți verifica sau edita textul.");
+    } catch (error) {
+      setScheduleFileName("");
+      setScheduleFileProgress("");
+      setScheduleFileError(
+        error instanceof Error ? error.message : "Nu am putut procesa fișierul. Încearcă din nou.",
+      );
+      input.value = "";
+    } finally {
+      setScheduleFileProcessing(false);
+    }
+  };
 
   const updateField = <K extends keyof StudentProfile>(
     field: K,
@@ -148,7 +211,7 @@ export default function ProfilePage() {
                     ? scheduleFileProgress || "Se procesează orarul..."
                     : scheduleFileName || "Upload File (Ex. PDF, JPG, IMG)"}
                   <input
-                    accept="application/pdf,.pdf,image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp,.xlsx,.xls,.xlsm,.docx,.doc,.csv,.txt"
+                    accept={scheduleFileAccept}
                     aria-label="Selectează un orar PDF, imagine sau document"
                     className="visually-hidden"
                     disabled={scheduleFileProcessing}

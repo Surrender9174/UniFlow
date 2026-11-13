@@ -5,10 +5,8 @@ import {
   saveProfile,
   type StudentProfile,
 } from "@/lib/profile";
-<<<<<<< HEAD
 import { parseScheduleText } from "@/lib/schedule-parser";
 import { saveSchedule } from "@/lib/schedule-storage";
-=======
 import { supabase } from "@/lib/supabase";
 
 const studyYearValues: Record<string, number> = {
@@ -123,7 +121,6 @@ export async function saveAuthenticatedProfileToDatabase(user: User) {
 
   if (error) throw error;
 }
->>>>>>> main
 
 export function syncAuthenticatedProfile(user: User) {
   const email = user.email;
