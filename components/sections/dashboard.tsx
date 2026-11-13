@@ -5,6 +5,7 @@ import { useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/icons";
 import ScheduleReview from "@/components/sections/schedule-review";
 import { useScheduleUpload } from "@/components/use-schedule-upload";
+import { scheduleFileAccept } from "@/lib/schedule-file-types";
 import {
   getServerScheduleSnapshot,
   getStoredScheduleSnapshot,
@@ -155,7 +156,7 @@ export default function Dashboard() {
           {uploadError && <p className="schedule-upload-error" role="alert">{uploadError}</p>}
           <div className="next-class-footer">
             <input
-              accept="application/pdf,image/png,image/jpeg,image/webp,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,text/csv,text/plain,.pdf,.png,.jpg,.jpeg,.webp,.xlsx,.xls,.xlsm,.docx,.doc,.csv,.txt"
+              accept={scheduleFileAccept}
               className="visually-hidden"
               disabled={uploadStatus === "processing"}
               onChange={handleFileChange}

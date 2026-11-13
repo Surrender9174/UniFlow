@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import ThemeToggle from "@/components/theme-toggle";
 import { syncAuthenticatedProfile } from "@/lib/auth-profile";
-import { extractScheduleFile, isSupportedScheduleFile } from "@/lib/schedule-file-reader";
-import { parseScheduleText } from "@/lib/schedule-parser";
+import { isSupportedScheduleFile, maxScheduleFileSize, scheduleFileAccept } from "@/lib/schedule-file-types";
 import { supabase } from "@/lib/supabase";
 
 type AuthMessage = {
@@ -58,9 +57,9 @@ export default function AuthForm({
   const [message, setMessage] = useState<AuthMessage | null>(null);
   const strength = useMemo(() => getPasswordStrength(password), [password]);
 
-  const handleScheduleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleScheduleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const input = event.currentTarget;
+    const file = input.files?.[0];
     setScheduleFileError("");
     setScheduleFileProgress("");
     if (!file) {
@@ -68,16 +67,16 @@ export default function AuthForm({
       return;
     }
 
-    if (file.size > 15 * 1024 * 1024) {
+    if (file.size > maxScheduleFileSize) {
       setScheduleFileName("");
       setScheduleFileError("Fișierul depășește limita de 15 MB.");
       input.value = "";
       return;
     }
 
-    if (!isSupportedScheduleFile(file) || /\.doc$/i.test(file.name)) {
+    if (!isSupportedScheduleFile(file)) {
       setScheduleFileName("");
-      setScheduleFileError("Alege un PDF, o imagine sau un format de orar acceptat.");
+      setScheduleFileError("Alege un PDF, o imagine PNG/JPG/WebP, un fișier Excel, Word, CSV sau TXT.");
       input.value = "";
       return;
     }
@@ -251,7 +250,7 @@ export default function AuthForm({
         <section className="auth-intro">
           <div className="auth-intro-header">
             <Link className="auth-brand" href="/">
-              <span className="brand-mark"><Icon name="sparkles" size={20} /></span>
+              <span className="brand-mark"><Icon name="logo" size={20} /></span>
               <span>uni<span>flow</span></span>
             </Link>
             <ThemeToggle variant="accent" />
@@ -370,13 +369,11 @@ export default function AuthForm({
                     <label
                       className={`auth-file-picker${scheduleFileName ? " selected" : ""}`}
                     >
-                      <Icon name = "upload" size = {16} />
-                      {scheduleFileProcessing
-                        ? scheduleFileProgress || "Se procesează orarul..."
-                        : scheduleFileName || "Upload File (Ex. PDF, JPG, IMG)"}
+                      <Icon name="upload" size={16} />
+                      {scheduleFileName || "Încarcă PDF, imagine, Excel, Word, CSV sau TXT"}
                       <input
-                        accept="application/pdf,.pdf,image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp,.xlsx,.xls,.xlsm,.docx,.csv,.txt"
-                        aria-label="Selectează un orar PDF sau imagine"
+                        accept={scheduleFileAccept}
+                        aria-label="Selectează un fișier cu orarul"
                         className="visually-hidden"
                         disabled={scheduleFileProcessing}
                         onChange={handleScheduleFileChange}

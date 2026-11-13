@@ -132,7 +132,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="app-frame" hidden={authState !== "authenticated"}>
       <aside className="sidebar">
         <Link className="brand" href="/dashboard" aria-label="UniFlow, pagina principală">
-          <span className="brand-mark"><Icon name="sparkles" size={20} /></span>
+          <span className="brand-mark"><Icon name="logo" size={20} /></span>
           <span>uni<span>flow</span></span>
         </Link>
         <p className="sidebar-caption">SPAȚIUL TĂU</p>
@@ -179,7 +179,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="app-main">
         <header className="topbar">
           <div className="mobile-brand">
-            <span className="brand-mark"><Icon name="sparkles" size={18} /></span>
+            <span className="brand-mark"><Icon name="logo" size={18} /></span>
             <span>uni<span>flow</span></span>
           </div>
           <div className="topbar-context"><span>{profile.semester}</span><span className="context-dot" /> {now ? getAcademicYearLabel(now) : "—"}</div>
