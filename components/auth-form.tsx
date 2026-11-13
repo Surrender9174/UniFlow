@@ -29,11 +29,21 @@ function getPasswordStrength(password: string) {
   return { label: "Puternică", tone: "strong", value: score };
 }
 
-export default function AuthForm() {
+export default function AuthForm({
+  initialMode = "login",
+}: {
+  initialMode?: "login" | "signup";
+}) {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [institutionType, setInstitutionType] = useState<"university" | "high-school">("university");
+  const [university, setUniversity] = useState("");
+  const [program, setProgram] = useState("");
+  const [year, setYear] = useState("");
+  const [semester, setSemester] = useState("");
+  const [schedule, setSchedule] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -55,7 +65,7 @@ export default function AuthForm() {
         });
       } else if (data.session?.user) {
         syncAuthenticatedProfile(data.session.user);
-        router.replace("/");
+        router.replace("/dashboard");
       }
     });
 
@@ -77,6 +87,17 @@ export default function AuthForm() {
     }
 
     if (mode === "signup") {
+      if (
+        [name, university, program, year, semester, schedule].some(
+          (value) => !value.trim(),
+        )
+      ) {
+        setMessage({
+          type: "error",
+          text: "Completează toate informațiile despre studiile tale.",
+        });
+        return;
+      }
       if (password.length < 8) {
         setMessage({
           type: "error",
@@ -108,21 +129,31 @@ export default function AuthForm() {
         if (!data.user) throw new Error("Autentificarea nu a returnat un utilizator.");
 
         syncAuthenticatedProfile(data.user);
-        router.replace("/");
+        router.replace("/dashboard");
         return;
       }
 
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: { data: { name: name.trim() } },
+        options: {
+          data: {
+            name: name.trim(),
+            institutionType,
+            university: university.trim(),
+            program: program.trim(),
+            year,
+            semester,
+            schedule: schedule.trim(),
+          },
+        },
       });
       if (error) throw error;
       if (!data.user) throw new Error("Înregistrarea nu a returnat un utilizator.");
 
       if (data.session) {
         syncAuthenticatedProfile(data.user);
-        router.replace("/");
+        router.replace("/dashboard");
       } else {
         setMessage({
           type: "success",
@@ -145,8 +176,10 @@ export default function AuthForm() {
   };
 
   const switchMode = () => {
-    setMode((current) => (current === "login" ? "signup" : "login"));
+    const nextMode = mode === "login" ? "signup" : "login";
+    setMode(nextMode);
     setMessage(null);
+    router.replace(nextMode === "signup" ? "/auth/signup" : "/auth");
   };
 
   return (
@@ -200,16 +233,84 @@ export default function AuthForm() {
 
           <form className="auth-form" onSubmit={handleSubmit}>
             {mode === "signup" && (
-              <label className="auth-field">
-                <span>Nume complet</span>
-                <input
-                  autoComplete="name"
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Numele tău"
-                  required
-                  value={name}
-                />
-              </label>
+              <>
+                <label className="auth-field">
+                  <span>Nume complet</span>
+                  <input
+                    autoComplete="name"
+                    onChange={(event) => setName(event.target.value)}
+                    placeholder="Numele tău"
+                    required
+                    value={name}
+                  />
+                </label>
+                <div className="auth-fields-grid">
+                  <label className="auth-field">
+                    <span>Tipul instituției</span>
+                    <select
+                      onChange={(event) => {
+                        const type = event.target.value === "high-school" ? "high-school" : "university";
+                        setInstitutionType(type);
+                        setYear("");
+                      }}
+                      required
+                      value={institutionType}
+                    >
+                      <option value="university">Universitate</option>
+                      <option value="high-school">Liceu</option>
+                    </select>
+                  </label>
+                  <label className="auth-field">
+                    <span>{institutionType === "university" ? "Universitate" : "Liceu"}</span>
+                    <input
+                      autoComplete="organization"
+                      onChange={(event) => setUniversity(event.target.value)}
+                      placeholder={institutionType === "university" ? "Numele universității" : "Numele liceului"}
+                      required
+                      value={university}
+                    />
+                  </label>
+                  <label className="auth-field">
+                    <span>{institutionType === "university" ? "Specializare" : "Profil"}</span>
+                    <input
+                      onChange={(event) => setProgram(event.target.value)}
+                      placeholder={institutionType === "university" ? "ex. Informatică" : "ex. Real"}
+                      required
+                      value={program}
+                    />
+                  </label>
+                  <label className="auth-field">
+                    <span>{institutionType === "university" ? "An de studiu" : "Clasa"}</span>
+                    <select onChange={(event) => setYear(event.target.value)} required value={year}>
+                      <option disabled value="">Alege anul</option>
+                      {(institutionType === "university"
+                        ? ["Anul I", "Anul II", "Anul III", "Anul IV", "Master I", "Master II", "Doctorat"]
+                        : ["Clasa a IX-a", "Clasa a X-a", "Clasa a XI-a", "Clasa a XII-a"]
+                      ).map((studyYear) => (
+                        <option key={studyYear} value={studyYear}>{studyYear}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="auth-field">
+                    <span>Semestru</span>
+                    <select onChange={(event) => setSemester(event.target.value)} required value={semester}>
+                      <option disabled value="">Alege semestrul</option>
+                      <option value="Semestrul I">Semestrul I</option>
+                      <option value="Semestrul II">Semestrul II</option>
+                    </select>
+                  </label>
+                  <label className="auth-field auth-schedule-field">
+                    <span>Orar</span>
+                    <textarea
+                      onChange={(event) => setSchedule(event.target.value)}
+                      placeholder="Ex.: Luni, 08:00 — Matematică; 10:00 — Fizică"
+                      required
+                      rows={3}
+                      value={schedule}
+                    />
+                  </label>
+                </div>
+              </>
             )}
             <label className="auth-field">
               <span>Adresă de email</span>
