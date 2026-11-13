@@ -1075,8 +1075,6 @@ html[data-theme="dark"] .topbar-logout:hover:not(:disabled) { background: #302b4
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
-<<<<<<< Updated upstream
-=======
 
 .gmail-privacy-disclosure { margin-top: 11px; }
 .gmail-privacy-disclosure > summary { display: none; }
@@ -1683,4 +1681,3 @@ html[data-theme="dark"] .skillswap-cycle-modal-list li { color: #c1bfd0; }
   .skillswap-verify-button { grid-column: 2; justify-self: start; }
   .skillswap-remove { grid-column: 3; grid-row: 1; }
 }
->>>>>>> Stashed changes

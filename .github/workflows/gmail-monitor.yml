@@ -1,0 +1,30 @@
+name: Gmail monitor
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  check-gmail:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call the production Gmail monitor
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          MONITOR_CRON_SECRET: ${{ secrets.MONITOR_CRON_SECRET }}
+        run: |
+          if [[ -z "$APP_BASE_URL" || -z "$MONITOR_CRON_SECRET" ]]; then
+            echo "::error::Set APP_BASE_URL and MONITOR_CRON_SECRET in GitHub Actions secrets."
+            exit 1
+          fi
+          if [[ "$APP_BASE_URL" != https://* ]]; then
+            echo "::error::APP_BASE_URL must use HTTPS."
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error \
+            --retry 2 --retry-delay 10 --max-time 300 \
+            -H "Authorization: Bearer $MONITOR_CRON_SECRET" \
+            "${APP_BASE_URL%/}/api/cron/gmail-monitor"
