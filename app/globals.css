@@ -685,7 +685,6 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
 .auth-gate-loading, .auth-gate-error { display: grid; min-height: 100vh; place-content: center; gap: 12px; padding: 24px; text-align: center; }
 
 .auth-gate-error p { color: #8c4d4d; font-size: 12px; }
-<<<<<<< Updated upstream
 
 .sidebar-logout { width: 100%; margin-top: 10px; padding: 9px 10px; border: 0; border-radius: 9px; background: #f7f6fc; color: #777a90; cursor: pointer; font-size: 10px; font-weight: 600; text-align: left; }
 
@@ -697,12 +696,10 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
 
 .topbar-logout { display: none; padding: 7px 9px; border: 0; border-radius: 8px; background: transparent; color: #777a90; cursor: pointer; font-size: 10px; font-weight: 600; }
 
-=======
 .profile-account-actions { width: 100%; margin-top: 15px; }
 .profile-account-actions .button { width: 100%; }
 .profile-logout-error { margin: 8px 0 0; color: #b65252; font-size: 9px; line-height: 1.5; text-align: left; }
 .sidebar-auth-error { margin: 8px 0 0; color: #b65252; font-size: 9px; line-height: 1.5; }
->>>>>>> Stashed changes
 .topbar-auth-error { margin: 8px 44px 0; color: #b65252; font-size: 10px; line-height: 1.5; }
 
 .auth-field .auth-schedule-field:focus { padding: 4px; background: transparent; border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);}
@@ -740,12 +737,9 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
   .sidebar { width: 76px; align-items: center; padding: 21px 9px 15px; }
 
   .brand > span:last-child, .sidebar-caption, .nav-link > span, .sidebar-bottom { display: none; }
-<<<<<<< Updated upstream
 
   .topbar-logout { display: block; }
 
-=======
->>>>>>> Stashed changes
   .brand-mark { width: 38px; height: 38px; }
 
   .sidebar-nav { width: 100%; margin-top: 42px; justify-items: center; }
@@ -1199,15 +1193,12 @@ html[data-theme="dark"] .theme-option { border-color: #3a3b4e; background: #2021
 html[data-theme="dark"] .theme-option.selected { border-color: #62568f; background: #2d2941; color: #c7bcff; }
 html[data-theme="dark"] .button-secondary { border-color: #3a3b4e; background: #20212e; color: #d0cfdf; }
 html[data-theme="dark"] .button-secondary:hover { border-color: #62568f; color: #c7bcff; }
-<<<<<<< Updated upstream
 html[data-theme="dark"] .button-danger { border-color: #563539; background: #302226; color: #f0a2a7; }
 html[data-theme="dark"] .button-danger:hover { border-color: #754249; background: #3a272d; color: #ffb8bd; }
 html[data-theme="dark"] .sidebar-logout { background: #28283a; color: #c3c4d2; }
 html[data-theme="dark"] .sidebar-logout:hover:not(:disabled),
 html[data-theme="dark"] .topbar-logout:hover:not(:disabled) { background: #302b4b; color: #c7bcff; }
 
-=======
->>>>>>> Stashed changes
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
