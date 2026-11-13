@@ -657,6 +657,7 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
 .auth-gate-loading, .auth-gate-error { display: grid; min-height: 100vh; place-content: center; gap: 12px; padding: 24px; text-align: center; }
 
 .auth-gate-error p { color: #8c4d4d; font-size: 12px; }
+<<<<<<< Updated upstream
 
 .sidebar-logout { width: 100%; margin-top: 10px; padding: 9px 10px; border: 0; border-radius: 9px; background: #f7f6fc; color: #777a90; cursor: pointer; font-size: 10px; font-weight: 600; text-align: left; }
 
@@ -668,6 +669,12 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
 
 .topbar-logout { display: none; padding: 7px 9px; border: 0; border-radius: 8px; background: transparent; color: #777a90; cursor: pointer; font-size: 10px; font-weight: 600; }
 
+=======
+.profile-account-actions { width: 100%; margin-top: 15px; }
+.profile-account-actions .button { width: 100%; }
+.profile-logout-error { margin: 8px 0 0; color: #b65252; font-size: 9px; line-height: 1.5; text-align: left; }
+.sidebar-auth-error { margin: 8px 0 0; color: #b65252; font-size: 9px; line-height: 1.5; }
+>>>>>>> Stashed changes
 .topbar-auth-error { margin: 8px 44px 0; color: #b65252; font-size: 10px; line-height: 1.5; }
 
 .auth-field .auth-schedule-field:focus { padding: 4px; background: transparent; border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);}
@@ -705,9 +712,12 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
   .sidebar { width: 76px; align-items: center; padding: 21px 9px 15px; }
 
   .brand > span:last-child, .sidebar-caption, .nav-link > span, .sidebar-bottom { display: none; }
+<<<<<<< Updated upstream
 
   .topbar-logout { display: block; }
 
+=======
+>>>>>>> Stashed changes
   .brand-mark { width: 38px; height: 38px; }
 
   .sidebar-nav { width: 100%; margin-top: 42px; justify-items: center; }
@@ -744,7 +754,6 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
 
   .topbar-context, .search-field, .notification-button { display: none; }
   .topbar-actions { gap: 8px; }
-  .topbar-logout { margin-right: 0; }
   .avatar-top { width: 32px; height: 32px; }
   .page-content { padding: 25px 17px 26px; }
   .bottom-nav { position: fixed; z-index: 30; right: 0; bottom: 0; left: 0; display: grid; min-height: calc(64px + env(safe-area-inset-bottom)); grid-template-columns: repeat(5, 1fr); align-items: start; padding: 8px 6px env(safe-area-inset-bottom); border-top: 1px solid #eeeff5; background: rgba(255,255,255,.94); backdrop-filter: blur(18px); }
@@ -1142,12 +1151,198 @@ html[data-theme="dark"] .theme-option { border-color: #3a3b4e; background: #2021
 html[data-theme="dark"] .theme-option.selected { border-color: #62568f; background: #2d2941; color: #c7bcff; }
 html[data-theme="dark"] .button-secondary { border-color: #3a3b4e; background: #20212e; color: #d0cfdf; }
 html[data-theme="dark"] .button-secondary:hover { border-color: #62568f; color: #c7bcff; }
+<<<<<<< Updated upstream
 html[data-theme="dark"] .button-danger { border-color: #563539; background: #302226; color: #f0a2a7; }
 html[data-theme="dark"] .button-danger:hover { border-color: #754249; background: #3a272d; color: #ffb8bd; }
 html[data-theme="dark"] .sidebar-logout { background: #28283a; color: #c3c4d2; }
 html[data-theme="dark"] .sidebar-logout:hover:not(:disabled),
 html[data-theme="dark"] .topbar-logout:hover:not(:disabled) { background: #302b4b; color: #c7bcff; }
 
+=======
+>>>>>>> Stashed changes
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+.gmail-privacy-disclosure { margin-top: 11px; }
+.gmail-privacy-disclosure > summary { display: none; }
+.gmail-privacy-disclosure > .gmail-privacy-note { margin: 0; }
+
+@media (max-width: 680px) {
+  .page-content { padding-right: 16px; padding-left: 16px; }
+  .bottom-nav-link { gap: 5px; font-size: 10px; }
+  .bottom-nav-link svg { width: 22px; height: 22px; }
+  .welcome-row .eyebrow,
+  .page-heading .eyebrow,
+  .section-heading .eyebrow { font-size: 9px; }
+  .welcome-row h1 { font-size: 27px; }
+  .welcome-copy,
+  .page-heading .muted { font-size: 12px; line-height: 1.55; }
+  .section-heading h2 { font-size: 16px; }
+  .text-link { font-size: 11px; }
+  .button { min-height: 44px; font-size: 12px; }
+  .page-heading .button { min-height: 44px; font-size: 11px; }
+
+  .next-class-card { padding: 18px; }
+  .next-class-content h2 { font-size: 17px; }
+  .next-class-meta { font-size: 11px; line-height: 1.5; }
+  .next-class-footer { flex-wrap: wrap; gap: 8px; font-size: 10px; }
+  .next-class-card .next-class-footer > span { max-width: 100%; }
+  .next-class-footer a,
+  .schedule-upload-link { font-size: 10px; }
+  .schedule-upload-error { font-size: 11px; }
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .stat-card { min-height: 112px; padding: 12px; }
+  .stat-card p { font-size: 10px; line-height: 1.35; }
+  .stat-card strong { font-size: 21px; }
+  .stat-card small { overflow: visible; font-size: 9px; text-overflow: clip; white-space: normal; }
+  .task-row { min-height: 66px; }
+  .task-description strong,
+  .tasks-full-list .task-description strong { font-size: 11px; line-height: 1.35; }
+  .task-description small,
+  .tasks-full-list .task-description small { font-size: 10px; }
+  .task-due,
+  .tasks-full-list .task-due { font-size: 9px; }
+  .recommendation-copy > span { font-size: 9px; }
+  .recommendation-copy h3 { font-size: 12px; }
+  .recommendation-copy p { font-size: 10px; line-height: 1.5; }
+  .recommendation-copy a { font-size: 10px; }
+  .dashboard-footnote { font-size: 10px; }
+
+  .profile-card h2 { font-size: 17px; }
+  .profile-card > p { font-size: 12px; }
+  .student-badge { font-size: 11px; }
+  .profile-detail { font-size: 11px; }
+  .profile-streak strong { font-size: 11px; }
+  .profile-streak small { font-size: 10px; }
+  .profile-account-actions .button { min-height: 44px; }
+  .settings-title h2 { font-size: 14px; }
+  .settings-title p { font-size: 11px; }
+  .form-grid { gap: 14px; }
+  .form-field { gap: 7px; font-size: 12px; }
+  .form-field input,
+  .form-field select,
+  .form-field textarea { min-height: 44px; font-size: 16px; }
+  .form-field textarea { min-height: 110px; }
+  .form-footer { align-items: stretch; flex-direction: column; gap: 9px; }
+  .form-footer .button { width: 100%; min-height: 44px; font-size: 12px; }
+  .save-feedback { font-size: 10px; }
+  .preference-row strong { font-size: 12px; }
+  .preference-row small { font-size: 10px; line-height: 1.45; }
+
+  .week-picker { gap: 4px; padding: 9px 7px; }
+  .week-arrow { width: 28px; height: 28px; }
+  .week-days { gap: 2px; }
+  .week-day { width: clamp(26px, 8.3vw, 34px); }
+  .week-day > span { font-size: 9px; }
+  .week-day > strong { font-size: 14px; }
+  .schedule-date { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: center; gap: 4px 8px; }
+  .schedule-date .today-tag { grid-row: 1 / span 2; font-size: 8px; }
+  .schedule-date h2 { font-size: 13px; }
+  .schedule-date p { grid-column: 2; margin: 0; font-size: 10px; }
+  .schedule-item { grid-template-columns: 48px minmax(0, 1fr); }
+  .schedule-time strong { font-size: 11px; }
+  .schedule-time span { font-size: 9px; }
+  .event-type { font-size: 9px; }
+  .schedule-event h3 { font-size: 12px; line-height: 1.4; }
+  .schedule-event p { font-size: 10px; }
+  .schedule-tip { align-items: flex-start; }
+  .schedule-tip p { font-size: 11px; }
+  .schedule-empty p { font-size: 12px; }
+  .schedule-page-review-heading h2 { font-size: 17px; }
+  .schedule-page-review-heading .muted { font-size: 12px; }
+  .schedule-review-row > input,
+  .schedule-review-row > select { font-size: 11px; }
+  .schedule-review-actions .button,
+  .schedule-cancel-button { font-size: 11px; }
+
+  .task-filters { flex-wrap: wrap; }
+  .filter-chip { min-height: 40px; font-size: 11px; }
+  .filter-chip span { font-size: 10px; }
+  .tasks-full-list .task-row { gap: 8px; }
+  .task-action-panel { width: min(280px, calc(100vw - 42px)); }
+  .task-action-panel label,
+  .task-action-delete { font-size: 11px; }
+  .task-action-panel input { min-height: 44px; font-size: 16px; }
+  .task-action-panel .button { min-height: 42px; font-size: 11px; }
+
+  .gmail-connection { padding: 16px; }
+  .gmail-connection-copy strong { font-size: 12px; line-height: 1.4; }
+  .gmail-connection-copy p { font-size: 11px; line-height: 1.5; }
+  .gmail-connection .button { min-height: 44px; font-size: 12px; }
+  .gmail-privacy-disclosure { margin-top: 12px; border-top: 1px solid #eeedf4; }
+  .gmail-privacy-disclosure > summary { display: flex; min-height: 42px; align-items: center; justify-content: space-between; gap: 12px; color: #67687d; cursor: pointer; font-size: 11px; font-weight: 600; list-style: none; }
+  .gmail-privacy-disclosure > summary::-webkit-details-marker { display: none; }
+  .gmail-privacy-disclosure > summary::after { content: "+"; color: #8673d6; font-size: 18px; line-height: 1; }
+  .gmail-privacy-disclosure[open] > summary::after { content: "−"; }
+  .gmail-privacy-disclosure > .gmail-privacy-note { display: none; }
+  .gmail-privacy-disclosure[open] > .gmail-privacy-note { display: block; padding: 0 0 4px; font-size: 11px; line-height: 1.6; }
+  .gmail-notice,
+  .gmail-status-error { font-size: 11px; line-height: 1.5; }
+  .whatsapp-upload-main { display: grid; grid-template-columns: 37px minmax(0, 1fr); align-items: start; gap: 10px; }
+  .whatsapp-upload-main .gmail-connection-icon { grid-column: 1; grid-row: 1; }
+  .whatsapp-upload-main .gmail-connection-copy { grid-column: 2; grid-row: 1; }
+  .whatsapp-upload-main .whatsapp-file-input { width: 100%; max-width: none; min-height: 44px; grid-column: 1 / -1; padding: 7px; border: 1px solid #e9e9f0; border-radius: 9px; background: #fff; font-size: 12px; }
+  .whatsapp-file-input::file-selector-button { min-height: 30px; margin-right: 8px; padding: 4px 8px; border: 0; border-radius: 6px; background: #f0edff; color: #6554c7; font: inherit; }
+  .whatsapp-upload-main .button { width: 100%; grid-column: 1 / -1; }
+  .whatsapp-file-selected { font-size: 11px; }
+  .chat-header { min-height: 64px; }
+  .chat-messages { min-height: 42vh; max-height: 52vh; }
+  .chat-bubble { font-size: 12px; line-height: 1.55; }
+  .chat-suggestions button { min-height: 40px; font-size: 10px; }
+  .chat-compose { min-height: 54px; }
+  .chat-compose input { font-size: 16px; }
+  .chat-disclaimer { font-size: 9px; line-height: 1.5; }
+
+  .upload-title h2 { font-size: 15px; }
+  .upload-title p,
+  .drop-zone small,
+  .ingestion-side-card > p:not(.eyebrow) { font-size: 11px; line-height: 1.5; }
+  .drop-zone { min-height: 170px; }
+  .drop-zone strong { font-size: 12px; }
+  .privacy-note { align-items: flex-start; font-size: 10px; line-height: 1.5; }
+  .ingestion-side-card h2 { font-size: 20px; }
+  .ingestion-step strong { font-size: 11px; }
+  .ingestion-step small { font-size: 10px; }
+  .extracted-heading h2 { font-size: 14px; }
+  .extracted-list article strong { font-size: 11px; }
+  .extracted-list article > div > small { font-size: 10px; }
+  .pill-success { font-size: 8px; }
+  .extracted-card > .button { min-height: 44px; font-size: 11px; }
+
+  .landing-header { gap: 8px; }
+  .landing-nav { gap: 8px; }
+  .landing-login { font-size: 11px; }
+  .landing-nav .button { min-height: 40px; font-size: 10px; }
+  .landing-description { font-size: 14px; line-height: 1.6; }
+  .landing-feature p { font-size: 11px; line-height: 1.5; }
+  .landing-actions .button { min-height: 44px; font-size: 11px; }
+
+  .auth-field { font-size: 12px; }
+  .auth-field input,
+  .auth-field select,
+  .auth-field textarea { min-height: 44px; font-size: 16px; }
+  .auth-field textarea { min-height: 96px; }
+  .auth-card-heading > p:last-child,
+  .auth-switch { font-size: 11px; line-height: 1.5; }
+  .auth-submit { min-height: 46px; font-size: 13px; }
+  .auth-message { font-size: 11px; }
+}
+
+@media (max-width: 360px) {
+  .topbar { padding-right: 12px; padding-left: 12px; }
+  .mobile-brand { gap: 6px; font-size: 16px; }
+  .mobile-brand .brand-mark { width: 28px; height: 28px; }
+  .topbar-actions { gap: 6px; }
+  .avatar-top { width: 30px; height: 30px; }
+  .page-content { padding-right: 12px; padding-left: 12px; }
+  .landing-page { padding-right: 12px; padding-left: 12px; }
+  .landing-nav { gap: 6px; }
+  .landing-nav .button { padding: 0 7px; }
+}
+
+html[data-theme="dark"] .gmail-privacy-disclosure > summary { border-color: #303141; color: #d0cfdf; }
+@media (max-width: 680px) {
+  html[data-theme="dark"] .whatsapp-upload-main .whatsapp-file-input { border-color: #414254; background: #252634; color: #e5e5ef; }
+  html[data-theme="dark"] .whatsapp-file-input::file-selector-button { background: #302b4b; color: #c7bcff; }
 }

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useSyncExternalStore, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
+import { supabase } from "@/lib/supabase";
 import {
   defaultProfile,
   getNotificationSnapshot,
@@ -19,6 +21,7 @@ import {
 } from "@/lib/profile";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const savedProfile = useSyncExternalStore(
     subscribeToProfile,
     getStoredProfileSnapshot,
@@ -40,6 +43,8 @@ export default function ProfilePage() {
   const [draft, setDraft] = useState<StudentProfile | null>(null);
   const profile = draft ?? persistedProfile;
   const [saved, setSaved] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
   const notifications = savedNotifications === "on";
 
   const updateField = <K extends keyof StudentProfile>(
@@ -65,6 +70,27 @@ export default function ProfilePage() {
     saveThemePreference(savedTheme === "dark" ? "light" : "dark");
   };
 
+  const handleLogout = async () => {
+    if (!supabase) {
+      setSignOutError("Autentificarea nu este disponibilă.");
+      return;
+    }
+
+    setSigningOut(true);
+    setSignOutError("");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      router.replace("/auth");
+    } catch (error) {
+      setSignOutError(
+        error instanceof Error ? error.message : "Nu te-ai putut deconecta.",
+      );
+    } finally {
+      setSigningOut(false);
+    }
+  };
+
   return (
     <div className="section-page profile-page">
       <div className="page-heading">
@@ -80,6 +106,17 @@ export default function ProfilePage() {
           <div className="profile-detail"><Icon name="map" size={16} /><span>{profile.university}</span></div>
           <div className="profile-detail"><Icon name="calendar" size={16} /><span>{profile.schedule || "Orar necompletat"}</span></div>
           <div className="profile-streak"><span>✦</span><div><strong>7 zile la rând</strong><small>Ai grijă de progresul tău!</small></div></div>
+          <div className="profile-account-actions">
+            <button
+              className="button button-secondary"
+              disabled={signingOut}
+              onClick={handleLogout}
+              type="button"
+            >
+              {signingOut ? "Se deconectează..." : "Deconectare"}
+            </button>
+            {signOutError && <p className="profile-logout-error" role="alert">{signOutError}</p>}
+          </div>
         </aside>
         <div className="profile-settings">
           <form className="card-surface settings-card" onSubmit={handleSave}>

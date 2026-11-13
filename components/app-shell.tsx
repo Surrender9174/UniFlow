@@ -35,7 +35,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isAuthRoute = pathname === "/auth" || pathname.startsWith("/auth/");
   const [authState, setAuthState] = useState<"loading" | "authenticated" | "unauthenticated" | "error">("loading");
   const [authError, setAuthError] = useState("");
-  const [signingOut, setSigningOut] = useState(false);
   const savedTheme = useSyncExternalStore(
     subscribeToPreferences,
     getThemeSnapshot,
@@ -107,24 +106,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, [pathname, router]);
 
-  const handleLogout = async () => {
-    if (!supabase) return;
-
-    setSigningOut(true);
-    setAuthError("");
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      router.replace("/auth");
-    } catch (error) {
-      setAuthError(
-        error instanceof Error ? error.message : "Nu te-ai putut deconecta.",
-      );
-    } finally {
-      setSigningOut(false);
-    }
-  };
-
   if (isAuthRoute || pathname === "/") return children;
 
   return (
@@ -164,14 +145,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <span className="profile-summary"><strong>{name}</strong><small>Cont student</small></span>
             <Icon name="more" size={18} />
           </Link>
-          <button
-            className="sidebar-logout"
-            disabled={signingOut}
-            onClick={handleLogout}
-            type="button"
-          >
-            {signingOut ? "Se deconectează..." : "Deconectare"}
-          </button>
           {authError && <p className="sidebar-auth-error" role="alert">{authError}</p>}
         </div>
       </aside>
@@ -191,14 +164,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <ThemeToggle />
             <button aria-label="Notificări" className="icon-button notification-button" type="button">
               <Icon name="bell" size={19} /><span />
-            </button>
-            <button
-              className="topbar-logout"
-              disabled={signingOut}
-              onClick={handleLogout}
-              type="button"
-            >
-              {signingOut ? "..." : "Ieșire"}
             </button>
             <Link aria-label="Deschide profilul" className="avatar avatar-top" href="/profile">
               {name.slice(0, 1).toUpperCase()}
