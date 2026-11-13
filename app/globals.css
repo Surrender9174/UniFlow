@@ -164,12 +164,19 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
 .class-decoration { position: absolute; width: 170px; height: 170px; border: 1px solid #ffffff12; border-radius: 50%; }
 .class-decoration-one { top: -105px; right: 48px; }
 .class-decoration-two { right: -71px; bottom: -123px; width: 220px; height: 220px; }
-.focus-card { position: relative; display: flex; min-height: 205px; flex-direction: column; align-items: flex-start; overflow: hidden; padding: 16px; border: 1px solid #eeeafc; border-radius: 18px; background: linear-gradient(145deg, #fff, #f5f2ff); transition: transform .22s ease, box-shadow .22s ease; }
-.focus-card:hover { box-shadow: 0 10px 24px #55458c14; transform: translateY(-3px); }
+
+.focus-card { position: relative; display: flex; min-height: 205px; flex-direction: column; align-items: flex-start; overflow: hidden; padding: 16px; border: 1px solid #eeeafc; border-radius: 18px; background: linear-gradient(145deg, #fff, #f5f2ff); transition: background .18s ease, transform .18s ease, box-shadow .18s ease; }
+.focus-card:hover {
+  background: linear-gradient(145deg, #fff, #bdaaf8);
+  box-shadow: 0 10px 24px #55458c14; 
+  transform: translateY(-5px); 
+}
 .focus-orbit { display: grid; width: 37px; height: 37px; margin-bottom: 10px; place-items: center; border-radius: 13px; background: #e8e2ff; color: #806dde; }
 .focus-label { margin-bottom: 6px; color: #9991ba; font-size: 8px; font-weight: 700; letter-spacing: .8px; }
 .focus-card strong { color: #353249; font-size: 14px; font-weight: 650; line-height: 1.45; }
-.focus-link { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 10px; color: var(--violet); font-size: 10px; font-weight: 650; }
+.focus-link { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 10px; color: var(--violet-dark); font-size: 10px; font-weight: 650; }
+.focus-link svg { display: block; transition: transform .18s ease; }
+.focus-card:hover .focus-link svg { transform: translateX(6px); }
 .focus-decoration { position: absolute; right: 12px; bottom: 38px; color: #c7baf7; font-size: 34px; }
 
 .stats-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; margin-top: 14px; }
@@ -1038,6 +1045,9 @@ html[data-theme="dark"] .filter-chip.selected { border-color: #4a426a; backgroun
 html[data-theme="dark"] .week-day.selected > strong { color: #d3caff; }
 html[data-theme="dark"] .task-check { border-color: #45465a; background: #242532; }
 html[data-theme="dark"] .focus-card { border-color: #38344d; background: linear-gradient(145deg, #242333, #2b2740); }
+html[data-theme="dark"] .focus-card:hover { border-color: #635780; background: linear-gradient(145deg, #9a84e7, #74579E); }
+html[data-theme="dark"] .focus-link { color: #fff; }
+html:not([data-theme="dark"]) .focus-link { color: var(--violet-dark); }
 html[data-theme="dark"] .focus-card strong { color: #e5e1f4; }
 html[data-theme="dark"] .focus-label { color: #b8addf; }
 html[data-theme="dark"] .card-surface,
