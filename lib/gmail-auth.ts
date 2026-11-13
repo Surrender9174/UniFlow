@@ -1,4 +1,11 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  createHmac,
+  randomBytes,
+  timingSafeEqual,
+} from "node:crypto";
 import { OAuth2Client } from "google-auth-library";
 
 export const GMAIL_SESSION_COOKIE = "uniflow_gmail_session";
@@ -9,6 +16,11 @@ export const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
 export type GmailSession = {
   email: string;
   refreshToken: string;
+};
+
+export type GmailOAuthState = {
+  nonce: string;
+  userId: string;
 };
 
 export class ConfigurationError extends Error {}
@@ -36,6 +48,38 @@ function getEncryptionKey() {
     );
   }
   return createHash("sha256").update(secret).digest();
+}
+
+export function createGmailOAuthState(state: GmailOAuthState) {
+  const payload = Buffer.from(JSON.stringify(state)).toString("base64url");
+  const signature = createHmac("sha256", getEncryptionKey()).update(payload).digest("base64url");
+  return `${payload}.${signature}`;
+}
+
+export function readGmailOAuthState(value: string): GmailOAuthState | null {
+  const [payload, signature, extra] = value.split(".");
+  if (!payload || !signature || extra) return null;
+
+  const expected = createHmac("sha256", getEncryptionKey()).update(payload).digest();
+  const actual = Buffer.from(signature, "base64url");
+  if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return null;
+
+  try {
+    const parsed: unknown = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      !("nonce" in parsed) ||
+      typeof parsed.nonce !== "string" ||
+      !("userId" in parsed) ||
+      typeof parsed.userId !== "string"
+    ) {
+      return null;
+    }
+    return { nonce: parsed.nonce, userId: parsed.userId };
+  } catch {
+    return null;
+  }
 }
 
 export function encryptGmailSession(session: GmailSession) {

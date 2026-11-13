@@ -1,13 +1,12 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import {
+  readGmailOAuthState,
   createOAuthClient,
   encryptGmailSession,
-  GMAIL_SESSION_COOKIE,
   GMAIL_STATE_COOKIE,
-  gmailCookieOptions,
-  SESSION_MAX_AGE,
 } from "@/lib/gmail-auth";
+import { createSupabaseAdminClient } from "@/lib/supabase-server";
 
 function matchesState(left: string, right: string) {
   const leftBuffer = Buffer.from(left);
@@ -35,7 +34,8 @@ export async function GET(request: NextRequest) {
     return response;
   }
 
-  if (!stateCookie || !state || !matchesState(stateCookie, state)) {
+  const oauthState = stateCookie ? readGmailOAuthState(stateCookie) : null;
+  if (!oauthState || !state || !matchesState(oauthState.nonce, state)) {
     const response = assistantRedirect(request, "state-error");
     response.cookies.delete(GMAIL_STATE_COOKIE);
     return response;
@@ -72,15 +72,22 @@ export async function GET(request: NextRequest) {
       throw new Error("Gmail did not return an email address.");
     }
 
-    const response = assistantRedirect(request, "connected");
-    response.cookies.set(
-      GMAIL_SESSION_COOKIE,
-      encryptGmailSession({
-        email: profile.emailAddress,
-        refreshToken: tokens.refresh_token,
-      }),
-      { ...gmailCookieOptions(), maxAge: SESSION_MAX_AGE },
+    const gmailSession = {
+      email: profile.emailAddress,
+      refreshToken: tokens.refresh_token,
+    };
+    const admin = createSupabaseAdminClient();
+    const { error: saveError } = await admin.from("gmail_connections").upsert(
+      {
+        user_id: oauthState.userId,
+        encrypted_refresh_token: encryptGmailSession(gmailSession),
+        last_checked_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
     );
+    if (saveError) throw saveError;
+
+    const response = assistantRedirect(request, "connected");
     response.cookies.delete(GMAIL_STATE_COOKIE);
     return response;
   } catch (error) {

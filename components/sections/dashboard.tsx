@@ -30,20 +30,10 @@ import {
 import {
   formatLocalDate,
   formatLocalTime,
-  formatRelativeDeadline,
   getDeadlineDate,
   getIsoWeekNumber,
-  type RelativeDeadline,
 } from "@/lib/device-time";
 import { useDeviceNow } from "@/components/use-device-now";
-
-type DashboardTask = {
-  title: string;
-  course: string;
-  deadline: RelativeDeadline;
-  color: string;
-  done: boolean;
-};
 
 type DashboardTaskRow = {
   id: string;
@@ -52,8 +42,6 @@ type DashboardTaskRow = {
   date: string;
   color: string;
   done: boolean;
-  savedId?: string;
-  demoIndex?: number;
 };
 
 type UploadStatus = "idle" | "processing" | "preview";
@@ -63,12 +51,6 @@ function getTimeValue(time: string) {
   return hours * 60 + minutes;
 }
 
-const tasks: DashboardTask[] = [
-  { title: "Eseu: Etica în tehnologie", course: "Etică profesională", deadline: { daysFromToday: 0, time: "23:59" }, color: "lavender", done: false },
-  { title: "Laborator — structuri de date", course: "Algoritmi și structuri de date", deadline: { daysFromToday: 1, time: "12:00" }, color: "mint", done: false },
-  { title: "Quiz: Baze de date", course: "Sisteme de gestiune a bazelor de date", deadline: { weekday: 4, time: "10:00" }, color: "peach", done: true },
-];
-
 const recommendations = [
   { category: "CAMPUS", title: "Săptămâna carierei începe luni", description: "Ateliere, întâlniri cu alumni și oportunități de internship.", tone: "recommendation-lilac", icon: "graduation" as const },
   { category: "PENTRU TINE", title: "Ghid de pregătire pentru sesiune", description: "Un plan simplu ca să intri în sesiune fără stres.", tone: "recommendation-peach", icon: "target" as const },
@@ -77,7 +59,6 @@ const recommendations = [
 export default function Dashboard() {
   const now = useDeviceNow();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [taskItems, setTaskItems] = useState(tasks);
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
   const [uploadMessage, setUploadMessage] = useState("");
   const [uploadError, setUploadError] = useState("");
@@ -115,29 +96,15 @@ export default function Dashboard() {
   const name = profileData?.name ?? defaultProfile.name;
   const scheduleEvents = parseScheduleSnapshot(savedSchedule);
   const hasSchedule = scheduleEvents.length > 0;
-  const completed =
-    taskItems.filter((task) => task.done).length +
-    savedTasks.filter((task) => task.done).length;
-  const taskRows: DashboardTaskRow[] = [
-    ...savedTasks.map((task) => ({
-      id: task.id,
-      savedId: task.id,
-      title: task.title,
-      course: task.subject,
-      date: formatSavedTaskDueAt(task.dueAt),
-      color: "lavender",
-      done: task.done,
-    })),
-    ...taskItems.map((task, index) => ({
-      id: `demo-${index}`,
-      demoIndex: index,
-      title: task.title,
-      course: task.course,
-      date: now ? formatRelativeDeadline(now, task.deadline) : "Se sincronizează",
-      color: task.color,
-      done: task.done,
-    })),
-  ];
+  const completed = savedTasks.filter((task) => task.done).length;
+  const taskRows: DashboardTaskRow[] = savedTasks.map((task) => ({
+    id: task.id,
+    title: task.title,
+    course: task.subject,
+    date: formatSavedTaskDueAt(task.dueAt),
+    color: "lavender",
+    done: task.done,
+  }));
   const visibleTasks = taskRows.slice(0, 3);
 
   const firstName = name.trim().split(/\s+/)[0] || "student";
@@ -147,21 +114,11 @@ export default function Dashboard() {
 
   const toggleTask = (task: DashboardTaskRow) => {
     setTaskError("");
-    if (task.savedId) {
-      try {
-        setSavedTaskDone(task.savedId, !task.done);
-      } catch (error) {
-        setTaskError(
-          error instanceof Error ? error.message : "Nu am putut actualiza task-ul.",
-        );
-      }
-      return;
-    }
-    if (task.demoIndex !== undefined) {
-      setTaskItems((current) =>
-        current.map((item, index) =>
-          index === task.demoIndex ? { ...item, done: !item.done } : item,
-        ),
+    try {
+      setSavedTaskDone(task.id, !task.done);
+    } catch (error) {
+      setTaskError(
+        error instanceof Error ? error.message : "Nu am putut actualiza task-ul.",
       );
     }
   };
@@ -360,12 +317,12 @@ export default function Dashboard() {
       <section className="stats-grid" aria-label="Statistici academice">
         <article className="stat-card">
           <span className="stat-icon stat-violet"><Icon name="check" size={18} /></span>
-          <div><p>Task-uri active</p><strong>{taskRows.filter((task) => !task.done).length}</strong><small><span className="trend-up">↑ 2</span> față de săptămâna trecută</small></div>
+          <div><p>Task-uri active</p><strong>{taskRows.filter((task) => !task.done).length}</strong><small>Task-uri încă de făcut</small></div>
           <span className="stat-sparkline sparkline-violet" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></span>
         </article>
         <article className="stat-card">
           <span className="stat-icon stat-green"><Icon name="file" size={18} /></span>
-          <div><p>Practice finalizate</p><strong>{completed + 4}<small className="stat-total">/ 8</small></strong><small>Mai ai <b>4</b> de bifat</small></div>
+          <div><p>Task-uri finalizate</p><strong>{completed}<small className="stat-total">/ {taskRows.length}</small></strong><small>Mai ai <b>{taskRows.length - completed}</b> de bifat</small></div>
           <span className="stat-sparkline sparkline-green" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></span>
         </article>
         <article className="stat-card">
@@ -383,6 +340,12 @@ export default function Dashboard() {
         {savedTasksError && <p className="gmail-status-error" role="alert">{savedTasksError}</p>}
         {taskError && <p className="gmail-status-error" role="alert">{taskError}</p>}
         <div className="task-list card-surface">
+          {visibleTasks.length === 0 && (
+            <div className="schedule-empty">
+              <Icon name="check" size={20} />
+              <p>Nu ai task-uri salvate încă.</p>
+            </div>
+          )}
           {visibleTasks.map((task, index) => {
             const isDone = task.done;
             return (
@@ -421,7 +384,7 @@ export default function Dashboard() {
           ))}
         </div>
       </section>
-      <p className="dashboard-footnote">Ai deja bifat {completed + 5} lucruri săptămâna asta. Bravo! <span>✦</span></p>
+      <p className="dashboard-footnote">Ai finalizat {completed} task-uri. Bravo! <span>✦</span></p>
     </div>
   );
 }
