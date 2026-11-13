@@ -8,6 +8,11 @@ export type SavedTask = {
   createdAt: string;
 };
 
+export type SavedTaskReschedule = {
+  id: string;
+  dueAt: string;
+};
+
 const taskStorageKey = "uniflow-assistant-tasks";
 const tasksChangedEvent = "uniflow-assistant-tasks-change";
 
@@ -133,6 +138,39 @@ export function postponeSavedTask(id: string, dueAt: string) {
       savedTask.id === id ? { ...savedTask, dueAt: newDueAt.toISOString() } : savedTask,
     ),
   );
+}
+
+export function rescheduleSavedTasks(updates: SavedTaskReschedule[]) {
+  const tasks = parseSavedTasksSnapshot(getSavedTasksSnapshot());
+  const taskById = new Map(tasks.map((task) => [task.id, task]));
+  const seenIds = new Set<string>();
+  const normalizedUpdates = updates.map(({ id, dueAt }) => {
+    const task = taskById.get(id);
+    if (!task) {
+      throw new Error("Unul dintre task-urile selectate nu mai există.");
+    }
+    if (task.dueAt === null) {
+      throw new Error("Nu se poate muta un task fără termen existent.");
+    }
+    if (seenIds.has(id)) {
+      throw new Error("Același task a fost selectat de mai multe ori.");
+    }
+    seenIds.add(id);
+
+    const newDueAt = new Date(dueAt);
+    if (!Number.isFinite(newDueAt.getTime()) || newDueAt.getTime() <= Date.now()) {
+      throw new Error("Alege o dată și o oră viitoare pentru reprogramare.");
+    }
+    return { id, dueAt: newDueAt.toISOString() };
+  });
+
+  const updatedById = new Map(normalizedUpdates.map((update) => [update.id, update.dueAt]));
+  const updatedTasks = tasks.map((task) => {
+    const dueAt = updatedById.get(task.id);
+    return dueAt ? { ...task, dueAt } : task;
+  });
+  saveTasks(updatedTasks);
+  return updatedTasks.filter((task) => updatedById.has(task.id));
 }
 
 export function formatSavedTaskDueAt(dueAt: string | null) {

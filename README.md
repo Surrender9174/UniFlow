@@ -19,28 +19,46 @@ answer questions about recent inbox messages.
    node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"
    ```
 
-4. Start the app with `npm run dev`, then open `/assistant` and connect Gmail.
+4. In the Supabase SQL Editor, run
+   `supabase/migrations/20261113210000_student_profile_details.sql`. It creates
+   or updates the student profile table, applies row-level security, and copies
+   signup details from Auth metadata for new and existing users.
+5. Start the app with `npm run dev`, then open `/assistant` and connect Gmail.
+
+After a student signs in, UniFlow also updates that student's existing
+`public.profiles` row using its `id`. The form fields map to `name`,
+`education_level`, `institution`, `study_year`, `semester`, and `class_name`.
+Year and semester labels are converted to numbers for the integer columns;
+`Doctorat` has no numeric year and is stored as `NULL`. The `schedule` field
+isn't part of this table's shown columns.
 
 The app requests only Gmail's `gmail.readonly` permission. When you send a
-question about the inbox, UniFlow reads up to 5 recent Inbox messages from the last 30 days and
-sends their content to the Gemini API to answer it. UniFlow does not store email
-contents. Disconnecting clears the local encrypted Gmail session; to revoke the
-app's Google permission entirely, also remove it from your Google Account's
-third-party connections.
+question about the inbox, UniFlow reads up to 5 recent Inbox messages from the
+last 30 days and sends their content to Gemini to answer it. UniFlow does not
+store email bodies. When background monitoring is configured, the encrypted
+refresh token and generated school alerts are stored in Supabase; disconnecting
+deletes that connection. To revoke Google's permission entirely, also remove
+UniFlow from your Google Account's third-party connections.
 
 The assistant can also add school or university tasks when a task and its due
 date/time are clear; if the date or time is missing, it asks for those details.
 These tasks are saved in the current browser and appear on the dashboard and
 Tasks page. Dated tasks appear on their selected day in the schedule; tasks
 without a deadline are grouped separately. Saved tasks can be deleted or
-postponed to a selected future date and time from the Tasks page.
+postponed to a selected future date and time from the Tasks page. In the
+assistant, you can also ask to move a saved task to a new date and time; Gemini
+must identify the task and a future date/time before UniFlow changes it.
 Gmail does not need to be connected for task requests, but Gemini must be
 configured.
 
 The assistant conversation is also saved in the current browser and restored
 when `/assistant` is opened again. It is not synced to other devices. The latest
 8 messages are sent to Gemini as context for each new request; clearing this
-browser's site data removes the saved conversation.
+browser's site data removes the saved conversation. For each assistant question,
+the saved weekly timetable and up to 100 active tasks with due dates are also
+sent to Gemini so it can answer questions such as what is scheduled for tomorrow
+or which task to reschedule. The timetable and tasks are stored in this browser,
+not in the database.
 
 The default model is `gemini-3.5-flash-lite`, which is available on Google's
 free tier and is optimized for low-latency tasks. Free-tier limits still apply,
@@ -100,3 +118,50 @@ are transient and are not saved as session history. The session timer moves an
 accepted session to mutual confirmation; only after both participants confirm
 does it become completed. Reviews and dispute/no-show reports are stored in
 Supabase.
+## Search and notifications
+
+The global search covers UniFlow pages, saved tasks, and timetable entries in
+the current browser. The task badge and Tasks page both count the same saved
+tasks. Deadline countdowns are shown in the notification menu; when browser
+notifications are enabled, UniFlow can also alert about a deadline while the
+app is open. Tasks and timetable entries are still browser-local, so deadline
+push reminders cannot run after the browser is closed.
+
+### Gmail alerts while UniFlow is closed
+
+Background Gmail checks need a deployed app and an external scheduler. They do
+not run automatically from a local `npm run dev` process.
+
+1. Run `supabase/migrations/20261114120000_gmail_monitoring.sql` in the
+   Supabase SQL Editor.
+2. Set the Supabase URL and anon key in `.env.local`, plus the server-only
+   Supabase secret key as `SUPABASE_SECRET_KEY` (the legacy
+   `SUPABASE_SERVICE_ROLE_KEY` variable is also accepted). Never expose the
+   secret key in client-side code.
+3. Keep `GMAIL_SESSION_SECRET` configured. It encrypts the stored Gmail refresh
+   token and signs the OAuth state.
+4. Generate a random cron secret and VAPID keys:
+
+   ```sh
+   node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"
+   node -e "console.log(require('web-push').generateVAPIDKeys())"
+   ```
+
+   Put the first value in `MONITOR_CRON_SECRET`, the VAPID `publicKey` in
+   `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, the `privateKey` in `VAPID_PRIVATE_KEY`, and
+   a valid `mailto:` contact in `VAPID_SUBJECT`. Keep the private key and cron
+   secret server-only.
+5. Deploy UniFlow, then configure your host or another scheduler to send an
+   **hourly GET** request to `/api/cron/gmail-monitor` with the header
+   `Authorization: Bearer <MONITOR_CRON_SECRET>`. Do not put that secret in a
+   public URL. The endpoint returns an error if any account fails so the
+   scheduler can report failed runs.
+6. In UniFlow, reconnect Gmail while signed in, then allow browser notifications
+   from the notification menu. Reconnecting is required to associate and
+   encrypt the refresh token for background checks.
+
+The monitor searches for new Inbox messages, sends their content to Gemini to
+identify concrete school-related updates, and stores only the generated alert
+and Gmail message ID in Supabase—not the full email body. Gmail access remains
+read-only. Until the migration, server secrets, deployment, scheduler, and
+browser permission are configured, background Gmail alerts are not active.
