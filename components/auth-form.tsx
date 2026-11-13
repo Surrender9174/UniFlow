@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import ThemeToggle from "@/components/theme-toggle";
-import { syncAuthenticatedProfile } from "@/lib/auth-profile";
-import { extractScheduleFile } from "@/lib/schedule-file-reader";
-import { isSupportedScheduleFile, maxScheduleFileSize, scheduleFileAccept } from "@/lib/schedule-file-types";
-import { parseScheduleText } from "@/lib/schedule-parser";
+import {
+  saveAuthenticatedProfileToDatabase,
+  syncAuthenticatedProfile,
+} from "@/lib/auth-profile";
 import { supabase } from "@/lib/supabase";
 
 type AuthMessage = {
@@ -193,6 +193,7 @@ export default function AuthForm({
         if (!data.user) throw new Error("Autentificarea nu a returnat un utilizator.");
 
         syncAuthenticatedProfile(data.user);
+        await saveAuthenticatedProfileToDatabase(data.user);
         router.replace("/dashboard");
         return;
       }
@@ -217,6 +218,7 @@ export default function AuthForm({
 
       if (data.session) {
         syncAuthenticatedProfile(data.user);
+        await saveAuthenticatedProfileToDatabase(data.user);
         router.replace("/dashboard");
       } else {
         setMessage({

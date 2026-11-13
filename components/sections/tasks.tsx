@@ -2,9 +2,8 @@
 
 import { useMemo, useState, useSyncExternalStore, type FormEvent } from "react";
 import { Icon } from "@/components/icons";
-import { formatRelativeDeadline, type RelativeDeadline } from "@/lib/device-time";
-import { useDeviceNow } from "@/components/use-device-now";
 import {
+  addSavedTasks,
   deleteSavedTask,
   formatSavedTaskDueAt,
   getSavedTasksSnapshot,
@@ -15,15 +14,6 @@ import {
   subscribeToSavedTasks,
 } from "@/lib/tasks";
 
-type DemoTask = {
-  title: string;
-  subject: string;
-  deadline?: RelativeDeadline;
-  category: "Studiu" | "Practică" | "Test";
-  done: boolean;
-  dueAt?: string | null;
-};
-
 type TaskRow = {
   id: string;
   title: string;
@@ -32,16 +22,7 @@ type TaskRow = {
   dueAt: string | null;
   category: "Studiu" | "Practică" | "Test";
   done: boolean;
-  savedId?: string;
-  demoIndex?: number;
 };
-
-const initialTasks: DemoTask[] = [
-  { title: "Eseu: Etica în tehnologie", subject: "Etică profesională", deadline: { daysFromToday: 0, time: "23:59" }, category: "Practică", done: false },
-  { title: "Laborator — structuri de date", subject: "Algoritmi și structuri de date", deadline: { daysFromToday: 1, time: "12:00" }, category: "Practică", done: false },
-  { title: "Quiz: Baze de date", subject: "Sisteme de gestiune a bazelor de date", deadline: { weekday: 4, time: "10:00" }, category: "Test", done: true },
-  { title: "Recapitulare: arbori binari", subject: "Algoritmi și structuri de date", deadline: { weekday: 5, time: "16:00" }, category: "Studiu", done: false },
-];
 
 function formatLocalDateTimeInput(date: Date) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
@@ -56,8 +37,6 @@ function getPostponeMinimum(dueAt: string | null) {
 }
 
 export default function TasksPage() {
-  const now = useDeviceNow();
-  const [tasks, setTasks] = useState(initialTasks);
   const [storageError, setStorageError] = useState("");
   const [actionTaskId, setActionTaskId] = useState<string | null>(null);
   const [postponeMinimum, setPostponeMinimum] = useState("");
@@ -78,53 +57,24 @@ export default function TasksPage() {
       };
     }
   }, [taskSnapshot]);
-  const taskRows: TaskRow[] = [
-    ...savedTasks.map((task) => ({
+  const taskRows: TaskRow[] = savedTasks.map((task) => ({
       id: task.id,
-      savedId: task.id,
       title: task.title,
       subject: task.subject,
       date: formatSavedTaskDueAt(task.dueAt),
       dueAt: task.dueAt,
       category: task.category,
       done: task.done,
-    })),
-    ...tasks.map((task, index) => ({
-      id: `demo-${index}`,
-      demoIndex: index,
-      title: task.title,
-      subject: task.subject,
-      date: task.dueAt
-        ? formatSavedTaskDueAt(task.dueAt)
-        : now && task.deadline
-          ? formatRelativeDeadline(now, task.deadline)
-          : task.deadline
-            ? "Se sincronizează"
-            : "Fără termen",
-      dueAt: task.dueAt ?? null,
-      category: task.category,
-      done: task.done,
-    })),
-  ];
-  const activeCount = taskRows.filter((task) => !task.done).length;
+  }));
+  const activeCount = savedTasks.filter((task) => !task.done).length;
 
   const toggleTask = (task: TaskRow) => {
     setStorageError("");
-    if (task.savedId) {
-      try {
-        setSavedTaskDone(task.savedId, !task.done);
-      } catch (error) {
-        setStorageError(
-          error instanceof Error ? error.message : "Nu am putut actualiza task-ul.",
-        );
-      }
-      return;
-    }
-    if (task.demoIndex !== undefined) {
-      setTasks((current) =>
-        current.map((item, index) =>
-          index === task.demoIndex ? { ...item, done: !item.done } : item,
-        ),
+    try {
+      setSavedTaskDone(task.id, !task.done);
+    } catch (error) {
+      setStorageError(
+        error instanceof Error ? error.message : "Nu am putut actualiza task-ul.",
       );
     }
   };
@@ -143,11 +93,7 @@ export default function TasksPage() {
   const deleteTask = (task: TaskRow) => {
     setStorageError("");
     try {
-      if (task.savedId) {
-        deleteSavedTask(task.savedId);
-      } else if (task.demoIndex !== undefined) {
-        setTasks((current) => current.filter((_, index) => index !== task.demoIndex));
-      }
+      deleteSavedTask(task.id);
       setActionTaskId(null);
     } catch (error) {
       setStorageError(
@@ -170,17 +116,7 @@ export default function TasksPage() {
       if (task.dueAt && newDueAt.getTime() <= Date.parse(task.dueAt)) {
         throw new Error("Noul termen trebuie să fie după termenul actual.");
       }
-      if (task.savedId) {
-        postponeSavedTask(task.savedId, newDueAt.toISOString());
-      } else if (task.demoIndex !== undefined) {
-        setTasks((current) =>
-          current.map((item, index) =>
-            index === task.demoIndex
-              ? { ...item, dueAt: newDueAt.toISOString() }
-              : item,
-          ),
-        );
-      }
+      postponeSavedTask(task.id, newDueAt.toISOString());
       setActionTaskId(null);
       setPostponeValue("");
     } catch (error) {
@@ -202,17 +138,23 @@ export default function TasksPage() {
         </div>
         <button
           className="button button-primary"
-          onClick={() =>
-            setTasks((current) => [
-              {
-                title: "Task nou de completat",
-                subject: "Adăugat acum",
-                category: "Studiu",
-                done: false,
-              },
-              ...current,
-            ])
-          }
+          onClick={() => {
+            setStorageError("");
+            try {
+              addSavedTasks([
+                {
+                  title: "Task nou de completat",
+                  subject: "Adăugat manual",
+                  dueAt: null,
+                  category: "Studiu",
+                },
+              ]);
+            } catch (error) {
+              setStorageError(
+                error instanceof Error ? error.message : "Nu am putut crea task-ul.",
+              );
+            }
+          }}
           type="button"
         >
           <Icon name="plus" size={17} /> Task nou
@@ -232,6 +174,12 @@ export default function TasksPage() {
         </button>
       </div>
       <section className="card-surface tasks-full-list">
+        {taskRows.length === 0 && (
+          <div className="schedule-empty">
+            <Icon name="check" size={20} />
+            <p>Nu ai task-uri salvate încă. Cere-i asistentului să adauge unul.</p>
+          </div>
+        )}
         {taskRows.map((task, index) => (
           <article
             className={`task-row${task.done ? " task-done" : ""}${actionTaskId === task.id ? " task-row-actions-open" : ""}`}

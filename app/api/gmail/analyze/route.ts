@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_rethrow } from "next/navigation";
 import {
   ConfigurationError,
-  GMAIL_SESSION_COOKIE,
+  decryptGmailSession,
   InvalidGmailSessionError,
-  readGmailSession,
 } from "@/lib/gmail-auth";
 import {
+  createSupabaseAdminClient,
+  getRequestUser,
+  SupabaseServerConfigurationError,
+} from "@/lib/supabase-server";
+import {
   analyzeInbox,
+  type AssistantScheduleContext,
   ProviderRequestError,
   type ChatTurn,
   type TimeContext,
@@ -25,6 +31,72 @@ function isChatHistory(value: unknown): value is ChatTurn[] {
         "content" in turn &&
         typeof turn.content === "string" &&
         turn.content.length <= 1_200,
+    )
+  );
+}
+
+function isClockTime(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{2}:\d{2}$/.test(value)) return false;
+  const [hours, minutes] = value.split(":").map(Number);
+  return hours < 24 && minutes < 60;
+}
+
+function isScheduleContext(value: unknown): value is AssistantScheduleContext {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "events" in value &&
+    Array.isArray(value.events) &&
+    value.events.length <= 200 &&
+    value.events.every(
+      (event) =>
+        typeof event === "object" &&
+        event !== null &&
+        "weekday" in event &&
+        typeof event.weekday === "number" &&
+        Number.isInteger(event.weekday) &&
+        event.weekday >= 0 &&
+        event.weekday <= 6 &&
+        "start" in event &&
+        isClockTime(event.start) &&
+        "end" in event &&
+        isClockTime(event.end) &&
+        "title" in event &&
+        typeof event.title === "string" &&
+        event.title.length > 0 &&
+        event.title.length <= 200 &&
+        "type" in event &&
+        typeof event.type === "string" &&
+        event.type.length <= 60 &&
+        "room" in event &&
+        typeof event.room === "string" &&
+        event.room.length <= 100,
+    ) &&
+    "tasks" in value &&
+    Array.isArray(value.tasks) &&
+    value.tasks.length <= 100 &&
+    value.tasks.every(
+      (task) =>
+        typeof task === "object" &&
+        task !== null &&
+        "id" in task &&
+        typeof task.id === "string" &&
+        task.id.length > 0 &&
+        task.id.length <= 100 &&
+        "title" in task &&
+        typeof task.title === "string" &&
+        task.title.length > 0 &&
+        task.title.length <= 200 &&
+        "subject" in task &&
+        typeof task.subject === "string" &&
+        task.subject.length <= 200 &&
+        "dueAt" in task &&
+        typeof task.dueAt === "string" &&
+        Number.isFinite(Date.parse(task.dueAt)) &&
+        "category" in task &&
+        (task.category === "Studiu" ||
+          task.category === "Practică" ||
+          task.category === "Test"),
     )
   );
 }
@@ -73,6 +145,30 @@ function isTaskCreationRequest(question: string, history: ChatTurn[]) {
     ) &&
     history.some((turn) => turn.role === "assistant");
   return asksToAdd && (mentionsTasks || refersToPreviousTasks);
+}
+
+function isTaskRescheduleRequest(question: string, history: ChatTurn[]) {
+  const normalized = question
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+  const asksToMove =
+    /\b(mut\w*|aman\w*|reprogram\w*|decal\w*|schimb\w*|move\w*|postpon\w*|reschedul\w*)\b/.test(
+      normalized,
+    );
+  const mentionsTask =
+    /\b(task\w*|sarcin\w*|tem\w*|lucrare\w*|deadline\w*|termen\w*)\b/.test(
+      normalized,
+    );
+  const previousTaskContext = history.some((turn) =>
+    /\b(task\w*|sarcin\w*|tem\w*|lucrare\w*|deadline\w*|termen\w*)\b/.test(
+      turn.content
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase(),
+    ),
+  );
+  return asksToMove && (mentionsTask || previousTaskContext);
 }
 
 function isEmailRelatedQuestion(question: string) {
@@ -131,28 +227,67 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  try {
-    const session = readGmailSession(
-      request.cookies.get(GMAIL_SESSION_COOKIE)?.value,
+  const scheduleValue =
+    typeof body === "object" && body !== null && "schedule" in body
+      ? body.schedule
+      : { events: [], tasks: [] };
+  if (!isScheduleContext(scheduleValue)) {
+    return NextResponse.json(
+      { error: "The saved schedule information is invalid." },
+      { status: 400 },
     );
+  }
+
+  try {
+    const user = await getRequestUser(request);
+    if (!user) {
+      return NextResponse.json(
+        { error: "Autentifică-te din nou pentru a folosi asistentul." },
+        { status: 401 },
+      );
+    }
+    const searchInbox = isEmailRelatedQuestion(body.question);
+    let session = null;
+    if (searchInbox) {
+      const admin = createSupabaseAdminClient();
+      const { data: connection, error } = await admin
+        .from("gmail_connections")
+        .select("encrypted_refresh_token")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      session = connection?.encrypted_refresh_token
+        ? decryptGmailSession(connection.encrypted_refresh_token)
+        : null;
+    }
     const result = await analyzeInbox(
       session,
       body.question.trim(),
       historyValue,
       timeContextValue,
+      scheduleValue,
+      isTaskRescheduleRequest(body.question, historyValue),
       isTaskCreationRequest(body.question, historyValue),
-      isEmailRelatedQuestion(body.question),
+      searchInbox,
     );
     return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
+    unstable_rethrow(error);
     console.error("Inbox analysis failed", error);
     const message =
-      error instanceof ConfigurationError || error instanceof ProviderRequestError
+      error instanceof ConfigurationError ||
+      error instanceof SupabaseServerConfigurationError ||
+      error instanceof ProviderRequestError
         ? error.message
         : error instanceof InvalidGmailSessionError
           ? "Your Gmail session is invalid. Disconnect and reconnect your account."
         : "Inbox analysis failed. Check your Gmail and Gemini configuration, then try again.";
-    const status = error instanceof ProviderRequestError ? error.status : 500;
+    const status =
+      error instanceof ProviderRequestError
+        ? error.status
+        : error instanceof SupabaseServerConfigurationError
+          ? 503
+          : 500;
     return NextResponse.json(
       { error: message },
       { status, headers: { "Cache-Control": "no-store" } },

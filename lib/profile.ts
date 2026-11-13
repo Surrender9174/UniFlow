@@ -1,4 +1,4 @@
-export type InstitutionType = "university" | "high-school";
+export type InstitutionType = "Universitate" | "Liceu";
 export type ColorTheme = "light" | "dark";
 
 export type StudentProfile = {
@@ -15,7 +15,7 @@ export type StudentProfile = {
 export const defaultProfile: StudentProfile = {
   name: "Alexandra Popescu",
   email: "alexandra.popescu@student.unibuc.ro",
-  institutionType: "university",
+  institutionType: "Universitate",
   university: "Universitatea din București",
   program: "Informatică",
   year: "Anul II",

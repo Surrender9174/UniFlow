@@ -16,17 +16,43 @@ import {
   type StudentProfile,
 } from "@/lib/profile";
 import { supabase } from "@/lib/supabase";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { getAcademicYearLabel } from "@/lib/device-time";
 import { useDeviceNow } from "@/components/use-device-now";
+import {
+  getSavedTasksSnapshot,
+  getServerSavedTasksSnapshot,
+  parseSavedTasksSnapshot,
+  subscribeToSavedTasks,
+  type SavedTask,
+} from "@/lib/tasks";
 
 const navigation: { href: string; label: string; icon: IconName }[] = [
   { href: "/dashboard", label: "Acasă", icon: "home" },
   { href: "/schedule", label: "Orar", icon: "calendar" },
   { href: "/tasks", label: "Task-uri", icon: "check" },
   { href: "/assistant", label: "Asistent", icon: "sparkles" },
+  { href: "/skillswap", label: "SkillSwap", icon: "swap" },
   { href: "/profile", label: "Profil", icon: "user" },
 ];
+
+type AppNotification = {
+  id: string;
+  title: string;
+  body: string;
+  href: string;
+  read_at: string | null;
+};
+
+function formatTimeUntil(dueAt: string, now: Date) {
+  const minutes = Math.max(1, Math.ceil((Date.parse(dueAt) - now.getTime()) / 60_000));
+  const days = Math.floor(minutes / (24 * 60));
+  const hours = Math.floor((minutes % (24 * 60)) / 60);
+  const remainingMinutes = minutes % 60;
+  if (days) return `${days} z · ${hours} h`;
+  if (hours) return `${hours} h${remainingMinutes ? ` ${remainingMinutes} min` : ""}`;
+  return `${remainingMinutes} min`;
+}
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const now = useDeviceNow();
@@ -35,6 +61,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isAuthRoute = pathname === "/auth" || pathname.startsWith("/auth/");
   const [authState, setAuthState] = useState<"loading" | "authenticated" | "unauthenticated" | "error">("loading");
   const [authError, setAuthError] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [gmailNotifications, setGmailNotifications] = useState<AppNotification[]>([]);
+  const [unreadGmailCount, setUnreadGmailCount] = useState(0);
+  const [notificationError, setNotificationError] = useState("");
   const savedTheme = useSyncExternalStore(
     subscribeToPreferences,
     getThemeSnapshot,
@@ -45,6 +76,35 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     getStoredProfileSnapshot,
     getServerProfileSnapshot,
   );
+  const taskSnapshot = useSyncExternalStore(
+    subscribeToSavedTasks,
+    getSavedTasksSnapshot,
+    getServerSavedTasksSnapshot,
+  );
+  const taskData = useMemo(() => {
+    try {
+      return { tasks: parseSavedTasksSnapshot(taskSnapshot), error: "" };
+    } catch (error) {
+      return {
+        tasks: [],
+        error: error instanceof Error ? error.message : "Nu am putut citi task-urile.",
+      };
+    }
+  }, [taskSnapshot]);
+  const upcomingDeadlines = useMemo(() => {
+    if (!now) return [];
+    const maximum = now.getTime() + 24 * 60 * 60 * 1_000;
+    return taskData.tasks
+      .filter(
+        (task): task is SavedTask & { dueAt: string } =>
+          !task.done &&
+          typeof task.dueAt === "string" &&
+          Date.parse(task.dueAt) > now.getTime() &&
+          Date.parse(task.dueAt) <= maximum,
+      )
+      .sort((left, right) => (left.dueAt ?? "").localeCompare(right.dueAt ?? ""));
+  }, [now, taskData.tasks]);
+  const notificationCount = unreadGmailCount + upcomingDeadlines.length;
   const profile: StudentProfile = savedProfile
     ? { ...defaultProfile, ...JSON.parse(savedProfile) as Partial<StudentProfile> }
     : defaultProfile;
@@ -106,6 +166,87 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, [pathname, router]);
 
+  useEffect(() => {
+    if (authState !== "authenticated" || !supabase) return;
+
+    const client = supabase;
+    let active = true;
+    const loadNotifications = async () => {
+      const [notificationsResult, unreadResult] = await Promise.all([
+        client
+          .from("app_notifications")
+          .select("id, title, body, href, read_at")
+          .order("created_at", { ascending: false })
+          .limit(30),
+        client
+          .from("app_notifications")
+          .select("id", { count: "exact", head: true })
+          .is("read_at", null),
+      ]);
+      if (!active) return;
+      if (notificationsResult.error || unreadResult.error) {
+        setNotificationError(
+          notificationsResult.error?.message ??
+            unreadResult.error?.message ??
+            "Nu am putut încărca notificările.",
+        );
+        return;
+      }
+      setNotificationError("");
+      setGmailNotifications(notificationsResult.data ?? []);
+      setUnreadGmailCount(unreadResult.count ?? 0);
+    };
+
+    void loadNotifications();
+    const intervalId = window.setInterval(() => void loadNotifications(), 60_000);
+    window.addEventListener("focus", loadNotifications);
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", loadNotifications);
+    };
+  }, [authState]);
+
+  const markNotificationRead = async (notification: AppNotification) => {
+    if (!supabase || notification.read_at) return;
+    try {
+      const readAt = new Date().toISOString();
+      const { error } = await supabase
+        .from("app_notifications")
+        .update({ read_at: readAt })
+        .eq("id", notification.id);
+      if (error) throw error;
+      setUnreadGmailCount((count) => Math.max(0, count - 1));
+      setGmailNotifications((current) =>
+        current.map((item) =>
+          item.id === notification.id ? { ...item, read_at: readAt } : item,
+        ),
+      );
+    } catch (error) {
+      setNotificationError(
+        error instanceof Error ? error.message : "Nu am putut marca notificarea ca citită.",
+      );
+    }
+  };
+
+  const handleLogout = async () => {
+    if (!supabase) return;
+
+    setSigningOut(true);
+    setAuthError("");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      router.replace("/auth");
+    } catch (error) {
+      setAuthError(
+        error instanceof Error ? error.message : "Nu te-ai putut deconecta.",
+      );
+    } finally {
+      setSigningOut(false);
+    }
+  };
+
   if (isAuthRoute || pathname === "/") return children;
 
   return (
@@ -162,8 +303,93 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <input aria-label="Caută în UniFlow" placeholder="Caută orice..." />
             </label>
             <ThemeToggle />
-            <button aria-label="Notificări" className="icon-button notification-button" type="button">
-              <Icon name="bell" size={19} /><span />
+            <div className="notification-wrap">
+              <button
+                aria-controls="notification-panel"
+                aria-expanded={notificationsOpen}
+                aria-label={`Notificări${notificationCount ? `, ${notificationCount} noi` : ""}`}
+                className="icon-button notification-button"
+                onClick={() => setNotificationsOpen((open) => !open)}
+                type="button"
+              >
+                <Icon name="bell" size={19} />
+                {notificationCount > 0 && (
+                  <span>{notificationCount > 99 ? "99+" : notificationCount}</span>
+                )}
+              </button>
+              {notificationsOpen && (
+                <div
+                  aria-label="Centrul de notificări"
+                  className="notification-panel"
+                  id="notification-panel"
+                >
+                  <div className="notification-panel-heading">
+                    <strong>Notificări</strong>
+                    <button onClick={() => setNotificationsOpen(false)} type="button">
+                      Închide
+                    </button>
+                  </div>
+                  {notificationError && (
+                    <p className="notification-error" role="alert">{notificationError}</p>
+                  )}
+                  {taskData.error && (
+                    <p className="notification-error" role="alert">{taskData.error}</p>
+                  )}
+                  {now && upcomingDeadlines.length > 0 && (
+                    <section className="notification-section">
+                      <strong>Termene apropiate</strong>
+                      {upcomingDeadlines.map((task) => (
+                        <Link
+                          className="notification-item"
+                          href="/tasks"
+                          key={`${task.id}-${task.dueAt}`}
+                          onClick={() => setNotificationsOpen(false)}
+                        >
+                          <span className="notification-dot deadline" />
+                          <span>
+                            <strong>{task.title}</strong>
+                            <small>
+                              Mai ai {formatTimeUntil(task.dueAt, now)} · {task.subject}
+                            </small>
+                          </span>
+                        </Link>
+                      ))}
+                    </section>
+                  )}
+                  <section className="notification-section">
+                    <strong>Actualizări Gmail</strong>
+                    {gmailNotifications.length ? (
+                      gmailNotifications.map((notification) => (
+                        <Link
+                          className={`notification-item${notification.read_at ? "" : " unread"}`}
+                          href={notification.href || "/assistant"}
+                          key={notification.id}
+                          onClick={() => {
+                            void markNotificationRead(notification);
+                            setNotificationsOpen(false);
+                          }}
+                        >
+                          <span className="notification-dot gmail" />
+                          <span>
+                            <strong>{notification.title}</strong>
+                            <small>{notification.body}</small>
+                          </span>
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="notification-empty">Nu există noutăți Gmail.</p>
+                    )}
+                  </section>
+                </div>
+              )}
+            </div>
+            <button
+              className="topbar-logout"
+              disabled={signingOut}
+              onClick={handleLogout}
+              type="button"
+            >
+              {signingOut ? "..." : "Ieșire"}
             </button>
             <Link aria-label="Deschide profilul" className="avatar avatar-top" href="/profile">
               {name.slice(0, 1).toUpperCase()}

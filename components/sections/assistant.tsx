@@ -20,8 +20,16 @@ import type {
 import {
   addSavedTasks,
   formatSavedTaskDueAt,
+  getSavedTasksSnapshot,
+  parseSavedTasksSnapshot,
+  rescheduleSavedTasks,
   type SavedTask,
 } from "@/lib/tasks";
+import {
+  getStoredScheduleSnapshot,
+  parseScheduleSnapshot,
+} from "@/lib/schedule-storage";
+import { supabase } from "@/lib/supabase";
 
 type Message = {
   role: "assistant" | "student";
@@ -29,6 +37,7 @@ type Message = {
   time: string;
   tasks?: EmailTask[];
   savedTasks?: SavedTask[];
+  rescheduledTasks?: SavedTask[];
   whatsappEvents?: WhatsAppEvent[];
   savedWhatsAppEventIndexes?: number[];
 };
@@ -100,10 +109,23 @@ function isTaskAction(value: unknown): value is TaskAction {
     "status" in value &&
     (value.status === "none" ||
       value.status === "needs_details" ||
-      value.status === "create") &&
+      value.status === "create" ||
+      value.status === "reschedule") &&
     "tasks" in value &&
     Array.isArray(value.tasks) &&
-    value.tasks.every(isTaskActionItem)
+    value.tasks.every(isTaskActionItem) &&
+    "reschedules" in value &&
+    Array.isArray(value.reschedules) &&
+    value.reschedules.every(
+      (item) =>
+        typeof item === "object" &&
+        item !== null &&
+        "id" in item &&
+        typeof item.id === "string" &&
+        "dueAt" in item &&
+        typeof item.dueAt === "string" &&
+        Number.isFinite(Date.parse(item.dueAt)),
+    )
   );
 }
 
@@ -206,6 +228,9 @@ function isStoredMessage(value: unknown): value is Message {
       (Array.isArray(value.tasks) && value.tasks.every(isEmailTask))) &&
     (!("savedTasks" in value) ||
       (Array.isArray(value.savedTasks) && value.savedTasks.every(isStoredSavedTask))) &&
+    (!("rescheduledTasks" in value) ||
+      (Array.isArray(value.rescheduledTasks) &&
+        value.rescheduledTasks.every(isStoredSavedTask))) &&
     (!("whatsappEvents" in value) ||
       (Array.isArray(value.whatsappEvents) && value.whatsappEvents.every(isWhatsAppEvent))) &&
     (!("savedWhatsAppEventIndexes" in value) ||
@@ -235,7 +260,7 @@ const whatsappEventStatusLabels: Record<WhatsAppEvent["status"], string> = {
 const starterMessages: Message[] = [
   {
     role: "assistant",
-    text: "Hei! Sunt Uni, study buddy-ul tău. Conectează Gmail pentru întrebări despre inbox sau cere-mi să-ți adaug un task pentru școală ori facultate, cu dată și oră.",
+    text: "Hei! Sunt Uni, study buddy-ul tău. Conectează Gmail pentru întrebări despre inbox, cere-mi să-ți adaug un task sau să reprogramez unul salvat.",
     time: "Acum",
   },
 ];
@@ -323,6 +348,14 @@ function getGmailNotice(status: string) {
   return null;
 }
 
+async function getAccessToken() {
+  if (!supabase) throw new Error("Supabase nu este configurat.");
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  if (!data.session) throw new Error("Autentifică-te din nou pentru a continua.");
+  return data.session.access_token;
+}
+
 export default function AssistantPage() {
   const chatSnapshot = useSyncExternalStore(
     subscribeToAssistantChat,
@@ -339,6 +372,7 @@ export default function AssistantPage() {
   const [draft, setDraft] = useState("");
   const [gmailStatus, setGmailStatus] = useState<GmailStatus | null>(null);
   const [gmailStatusError, setGmailStatusError] = useState("");
+  const [gmailConnecting, setGmailConnecting] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -371,8 +405,13 @@ export default function AssistantPage() {
       window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
     }
 
-    void fetch("/api/gmail/status", { cache: "no-store" })
-      .then(async (response) => {
+    void (async () => {
+      try {
+        const accessToken = await getAccessToken();
+        const response = await fetch("/api/gmail/status", {
+          cache: "no-store",
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
         const result: unknown = await response.json();
         if (!response.ok) {
           throw new Error(
@@ -396,15 +435,15 @@ export default function AssistantPage() {
         }
         if (gmailNotice) setNotice(gmailNotice);
         setGmailStatus({ connected: result.connected, email: result.email });
-      })
-      .catch((statusError: unknown) => {
+      } catch (statusError: unknown) {
         if (gmailNotice) setNotice(gmailNotice);
         setGmailStatusError(
           statusError instanceof Error
             ? statusError.message
             : "Nu am putut verifica starea conexiunii Gmail.",
         );
-      });
+      }
+    })();
   }, []);
 
   const submitQuestion = async (question: string) => {
@@ -420,9 +459,37 @@ export default function AssistantPage() {
     setLoading(true);
 
     try {
+      const scheduleEvents = parseScheduleSnapshot(getStoredScheduleSnapshot()).map(
+        ({ weekday, start, end, title, type, room }) => ({
+          weekday,
+          start,
+          end,
+          title,
+          type,
+          room,
+        }),
+      );
+      const scheduleTasks = parseSavedTasksSnapshot(getSavedTasksSnapshot())
+        .filter(
+          (task): task is SavedTask & { dueAt: string } =>
+            !task.done && typeof task.dueAt === "string",
+        )
+        .sort((left, right) => left.dueAt.localeCompare(right.dueAt))
+        .slice(0, 100)
+        .map(({ id, title, subject, dueAt, category }) => ({
+          id,
+          title,
+          subject,
+          dueAt,
+          category,
+        }));
+      const accessToken = await getAccessToken();
       const response = await fetch("/api/gmail/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           question: text,
           history: messages
@@ -435,6 +502,10 @@ export default function AssistantPage() {
           timeContext: {
             currentTime: new Date().toISOString(),
             timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          },
+          schedule: {
+            events: scheduleEvents,
+            tasks: scheduleTasks,
           },
         }),
       });
@@ -463,6 +534,10 @@ export default function AssistantPage() {
               })),
             )
           : [];
+      const rescheduledTasks =
+        result.taskAction.status === "reschedule"
+            ? rescheduleSavedTasks(result.taskAction.reschedules)
+            : [];
       const answer =
         result.inboxAvailable && result.emailCount === 0
           ? `${result.reply} Nu am găsit emailuri în Inbox din ultimele 30 de zile.`
@@ -475,6 +550,8 @@ export default function AssistantPage() {
           time: currentTime(),
           tasks: result.tasks,
           savedTasks: savedTasks.length > 0 ? savedTasks : undefined,
+          rescheduledTasks:
+            rescheduledTasks.length > 0 ? rescheduledTasks : undefined,
         },
       ]);
     } catch (requestError: unknown) {
@@ -628,16 +705,63 @@ export default function AssistantPage() {
   const disconnectGmail = async () => {
     setError("");
     try {
-      const response = await fetch("/api/gmail/disconnect", { method: "POST" });
+      const accessToken = await getAccessToken();
+      const response = await fetch("/api/gmail/disconnect", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
       if (!response.ok) throw new Error("Nu am putut șterge sesiunea Gmail.");
       setGmailStatus({ connected: false, email: null });
-      setNotice("Sesiunea Gmail a fost ștearsă din UniFlow.");
+      setNotice("Gmail a fost deconectat din UniFlow.");
     } catch (requestError: unknown) {
       setError(
         requestError instanceof Error
           ? requestError.message
           : "Nu am putut deconecta Gmail.",
       );
+    }
+  };
+
+  const connectGmail = async () => {
+    setGmailStatusError("");
+    setGmailConnecting(true);
+    try {
+      const accessToken = await getAccessToken();
+      const response = await fetch("/api/gmail/connect", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const result: unknown = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          typeof result === "object" &&
+            result !== null &&
+            "error" in result &&
+            typeof result.error === "string"
+            ? result.error
+            : "Nu am putut porni conectarea Gmail.",
+        );
+      }
+      if (
+        typeof result !== "object" ||
+        result === null ||
+        !("authorizationUrl" in result) ||
+        typeof result.authorizationUrl !== "string"
+      ) {
+        throw new Error("Răspuns invalid pentru conectarea Gmail.");
+      }
+      const authorizationUrl = new URL(result.authorizationUrl);
+      if (authorizationUrl.origin !== "https://accounts.google.com") {
+        throw new Error("Adresa de autorizare Gmail nu este validă.");
+      }
+      window.location.assign(authorizationUrl.href);
+    } catch (connectError: unknown) {
+      setGmailStatusError(
+        connectError instanceof Error
+          ? connectError.message
+          : "Nu am putut porni conectarea Gmail.",
+      );
+      setGmailConnecting(false);
     }
   };
 
@@ -682,27 +806,29 @@ export default function AssistantPage() {
               Deconectează
             </button>
           ) : (
-            <a className="button button-secondary" href="/api/gmail/connect">
-              Conectează Gmail
-            </a>
+            <button
+              className="button button-secondary"
+              disabled={gmailConnecting}
+              onClick={() => void connectGmail()}
+              type="button"
+            >
+              {gmailConnecting ? "Se conectează..." : "Conectează Gmail"}
+            </button>
           )}
         </div>
         {gmailStatusError && <p className="gmail-status-error" role="alert">{gmailStatusError}</p>}
         {notice && <p className="gmail-notice" role="status">{notice}</p>}
         {error && <p className="gmail-status-error" role="alert">{error}</p>}
-        <details className="gmail-privacy-disclosure">
-          <summary>Detalii privind confidențialitatea Gmail</summary>
-          <p className="gmail-privacy-note">
-            Gmail este accesat doar pentru citire și este căutat numai când mesajul tău
-            menționează emailuri, Inbox, Gmail sau mesaje. Atunci, până la 5 mesaje din
-            ultimele 30 de zile sunt trimise către Gemini. Pentru celelalte întrebări,
-            Gmail nu este accesat. Pe planul gratuit, Google poate folosi conținutul trimis
-            pentru îmbunătățirea produselor. UniFlow nu salvează emailurile. Task-urile
-            și istoricul conversației sunt salvate local în browserul acesta, fără
-            sincronizare între dispozitive. Deconectarea șterge sesiunea Gmail locală;
-            poți revoca accesul aplicației și din setările contului Google.
-          </p>
-        </details>
+        <p className="gmail-privacy-note">
+          Gmail este accesat doar pentru citire. Când întrebi despre email, până la 5
+          mesaje din ultimele 30 de zile sunt trimise către Gemini; separat, dacă verificarea de fundal
+          este configurată, mesajele noi din Inbox sunt analizate periodic pentru
+          actualizări școlare. Google poate folosi conținutul trimis pentru
+          îmbunătățirea produselor pe planul gratuit. UniFlow nu salvează corpul
+          emailurilor; păstrează doar notificările școlare generate și ID-ul mesajului.
+          Tokenul Gmail este criptat în baza de date. Deconectarea îl șterge din UniFlow;
+          pentru revocare completă, elimină aplicația și din setările contului Google.
+        </p>
       </section>
 
       <section aria-label="Importă export WhatsApp" className="gmail-connection card-surface whatsapp-upload">
@@ -786,6 +912,18 @@ export default function AssistantPage() {
                     <div className="email-task-heading">
                       <strong>{task.title}</strong>
                       <span className="email-task-priority">Adăugat în task-uri</span>
+                    </div>
+                    <small>
+                      {task.subject} · {formatSavedTaskDueAt(task.dueAt)}
+                    </small>
+                    <Link className="text-link" href="/tasks">Vezi lista de task-uri</Link>
+                  </article>
+                ))}
+                {message.rescheduledTasks?.map((task) => (
+                  <article className="email-task-card" key={task.id}>
+                    <div className="email-task-heading">
+                      <strong>{task.title}</strong>
+                      <span className="email-task-priority">Reprogramat</span>
                     </div>
                     <small>
                       {task.subject} · {formatSavedTaskDueAt(task.dueAt)}

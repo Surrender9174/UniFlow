@@ -27,7 +27,9 @@ export type IconName =
   | "menu"
   | "more"
   | "eye"
-  | "eyeOff";
+  | "eyeOff"
+  | "swap"
+  | "star"
 
 export function Icon({
   name,
@@ -76,6 +78,8 @@ export function Icon({
     more: <><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></>,
     eye: <><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></>,
     eyeOff: <><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8" /><path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a14.8 14.8 0 0 1-3.1 3.8M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7a10.7 10.7 0 0 0 2.1-.2" /></>,
+    swap: <><path d="M4 7h15m-4-4 4 4-4 4" /><path d="M20 17H5m4 4-4-4 4-4" /></>,
+    star: <path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z" />,
   };
 
   return (
