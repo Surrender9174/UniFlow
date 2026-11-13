@@ -191,7 +191,6 @@ export default function SchedulePage() {
           )}
         </div>
       </section>
-<<<<<<< Updated upstream
       {unscheduledTasks.length > 0 && (
         <section className="section-block">
           <div className="section-heading">
@@ -216,8 +215,6 @@ export default function SchedulePage() {
           </div>
         </section>
       )}
-=======
->>>>>>> Stashed changes
       {!!events.length && <div className="schedule-tip"><span><Icon name="sparkles" size={18} /></span><p><strong>Orar salvat:</strong> programul a fost extras din fișierul tău și îl poți actualiza din pagina Acasă.</p></div>}
     </div>
   );
