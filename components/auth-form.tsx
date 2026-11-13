@@ -8,7 +8,6 @@ import ThemeToggle from "@/components/theme-toggle";
 import { syncAuthenticatedProfile } from "@/lib/auth-profile";
 import { extractScheduleFile, isSupportedScheduleFile } from "@/lib/schedule-file-reader";
 import { parseScheduleText } from "@/lib/schedule-parser";
-import { saveSchedule } from "@/lib/schedule-storage";
 import { supabase } from "@/lib/supabase";
 
 type AuthMessage = {
@@ -215,10 +214,8 @@ export default function AuthForm({
       if (error) throw error;
       if (!data.user) throw new Error("Înregistrarea nu a returnat un utilizator.");
 
-      const scheduleEvents = schedule.trim() ? parseScheduleText(schedule) : [];
       if (data.session) {
         syncAuthenticatedProfile(data.user);
-        if (scheduleEvents.length) saveSchedule(scheduleEvents);
         router.replace("/dashboard");
       } else {
         setMessage({

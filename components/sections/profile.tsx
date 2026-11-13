@@ -1,7 +1,17 @@
 "use client";
 
-import { useState, useSyncExternalStore, type FormEvent } from "react";
+import { useState, useSyncExternalStore, type ChangeEvent, type FormEvent } from "react";
 import { Icon } from "@/components/icons";
+import { extractScheduleFile, isSupportedScheduleFile } from "@/lib/schedule-file-reader";
+import { parseScheduleText } from "@/lib/schedule-parser";
+import {
+  clearSchedule,
+  getServerScheduleSnapshot,
+  getStoredScheduleSnapshot,
+  parseScheduleSnapshot,
+  saveSchedule,
+  subscribeToSchedule,
+} from "@/lib/schedule-storage";
 import {
   defaultProfile,
   getNotificationSnapshot,
@@ -34,12 +44,24 @@ export default function ProfilePage() {
     getThemeSnapshot,
     getServerThemeSnapshot,
   );
+  const savedSchedule = useSyncExternalStore(
+    subscribeToSchedule,
+    getStoredScheduleSnapshot,
+    getServerScheduleSnapshot,
+  );
   const persistedProfile = savedProfile
     ? { ...defaultProfile, ...JSON.parse(savedProfile) as Partial<StudentProfile> }
     : defaultProfile;
   const [draft, setDraft] = useState<StudentProfile | null>(null);
   const profile = draft ?? persistedProfile;
+  const hasSchedule =
+    !!profile.schedule.trim() || parseScheduleSnapshot(savedSchedule).length > 0;
   const [saved, setSaved] = useState(false);
+  const [scheduleFileName, setScheduleFileName] = useState("");
+  const [scheduleFileError, setScheduleFileError] = useState("");
+  const [scheduleFileProgress, setScheduleFileProgress] = useState("");
+  const [scheduleFileProcessing, setScheduleFileProcessing] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const notifications = savedNotifications === "on";
 
   const updateField = <K extends keyof StudentProfile>(
@@ -48,11 +70,68 @@ export default function ProfilePage() {
   ) => {
     setDraft((current) => ({ ...(current ?? profile), [field]: value }));
     setSaved(false);
+    setSaveError("");
+  };
+
+  const handleScheduleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    setScheduleFileError("");
+    setScheduleFileProgress("");
+    if (!file) return;
+
+    if (file.size > 15 * 1024 * 1024) {
+      setScheduleFileError("Fișierul depășește limita de 15 MB.");
+      input.value = "";
+      return;
+    }
+
+    if (!isSupportedScheduleFile(file)) {
+      setScheduleFileError("Alege un PDF, o imagine, un fișier Excel, Word, CSV sau TXT.");
+      input.value = "";
+      return;
+    }
+
+    setScheduleFileName(file.name);
+    setScheduleFileProcessing(true);
+    setScheduleFileProgress("Se citește orarul...");
+    try {
+      const text = await extractScheduleFile(file, setScheduleFileProgress);
+      if (!parseScheduleText(text).length) {
+        throw new Error("Nu am putut identifica zile, ore și cursuri în fișier.");
+      }
+      updateField("schedule", text);
+      setScheduleFileProgress("Orarul a fost extras. Poți verifica sau edita textul.");
+    } catch (error) {
+      setScheduleFileName("");
+      setScheduleFileProgress("");
+      setScheduleFileError(
+        error instanceof Error ? error.message : "Nu am putut procesa fișierul. Încearcă din nou.",
+      );
+      input.value = "";
+    } finally {
+      setScheduleFileProcessing(false);
+    }
   };
 
   const handleSave = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setSaveError("");
+    if (scheduleFileProcessing) {
+      setSaveError("Așteaptă terminarea procesării orarului.");
+      return;
+    }
+    const scheduleEvents = profile.schedule.trim() ? parseScheduleText(profile.schedule) : [];
+    if (profile.schedule.trim() && !scheduleEvents.length) {
+      setSaveError("Nu am putut identifica zile, ore și cursuri în orar.");
+      return;
+    }
     saveProfile(profile);
+    if (scheduleEvents.length) {
+      saveSchedule(scheduleEvents);
+    } else if (persistedProfile.schedule.trim()) {
+      clearSchedule();
+    }
     setDraft(null);
     setSaved(true);
   };
@@ -78,7 +157,7 @@ export default function ProfilePage() {
           <div className="profile-card-divider" />
           <div className="profile-detail"><Icon name="mail" size={16} /><span>{profile.email}</span></div>
           <div className="profile-detail"><Icon name="map" size={16} /><span>{profile.university}</span></div>
-          <div className="profile-detail"><Icon name="calendar" size={16} /><span>{profile.schedule || "Orar necompletat"}</span></div>
+          <div className="profile-detail"><Icon name="calendar" size={16} /><span>{hasSchedule ? "Completat" : "Necompletat"}</span></div>
           <div className="profile-streak"><span>✦</span><div><strong>7 zile la rând</strong><small>Ai grijă de progresul tău!</small></div></div>
         </aside>
         <div className="profile-settings">
@@ -92,9 +171,39 @@ export default function ProfilePage() {
               <label className="form-field"><span>{profile.institutionType === "university" ? "Specializare" : "Profil"}</span><input onChange={(event) => updateField("program", event.target.value)} required value={profile.program} /></label>
               <label className="form-field"><span>{profile.institutionType === "university" ? "An de studiu" : "Clasa"}</span><select onChange={(event) => updateField("year", event.target.value)} required value={profile.year}>{(profile.institutionType === "university" ? ["Anul I", "Anul II", "Anul III", "Anul IV", "Master I", "Master II", "Doctorat"] : ["Clasa a IX-a", "Clasa a X-a", "Clasa a XI-a", "Clasa a XII-a"]).map((studyYear) => <option key={studyYear}>{studyYear}</option>)}</select></label>
               <label className="form-field"><span>Semestru</span><select onChange={(event) => updateField("semester", event.target.value)} required value={profile.semester}><option>Semestrul I</option><option>Semestrul II</option></select></label>
-              <label className="form-field form-field-wide"><span>Orar</span><textarea onChange={(event) => updateField("schedule", event.target.value)} placeholder="Ex.: Luni, 08:00 — Matematică; 10:00 — Fizică" required rows={4} value={profile.schedule} /></label>
+              <div className="form-field form-field-wide">
+                <span>Orar (opțional)</span>
+                <label className={`auth-file-picker${scheduleFileName ? " selected" : ""}`}>
+                  <Icon name="upload" size={16} />
+                  {scheduleFileProcessing
+                    ? scheduleFileProgress || "Se procesează orarul..."
+                    : scheduleFileName || "Upload File (Ex. PDF, JPG, IMG)"}
+                  <input
+                    accept="application/pdf,.pdf,image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp,.xlsx,.xls,.xlsm,.docx,.doc,.csv,.txt"
+                    aria-label="Selectează un orar PDF, imagine sau document"
+                    className="visually-hidden"
+                    disabled={scheduleFileProcessing}
+                    onChange={handleScheduleFileChange}
+                    type="file"
+                  />
+                </label>
+                {scheduleFileError && <small className="auth-message error" role="alert">{scheduleFileError}</small>}
+                {!scheduleFileError && scheduleFileProgress && !scheduleFileProcessing && (
+                  <small className="muted" role="status">{scheduleFileProgress}</small>
+                )}
+                <label className="auth-field">
+                  <textarea
+                    className="auth-schedule-textarea"
+                    onChange={(event) => updateField("schedule", event.target.value)}
+                    placeholder="Text Simplu"
+                    rows={2}
+                    value={profile.schedule}
+                  />
+                </label>
+              </div>
             </div>
-            <div className="form-footer"><span className="save-feedback" role="status">{saved ? "Modificările au fost salvate." : ""}</span><button className="button button-primary" type="submit">Salvează modificările</button></div>
+            {saveError && <p className="form-error" role="alert">{saveError}</p>}
+            <div className="form-footer"><span className="save-feedback" role="status">{saved ? "Modificările au fost salvate." : ""}</span><button className="button button-primary" disabled={scheduleFileProcessing} type="submit">Salvează modificările</button></div>
           </form>
           <section className="card-surface preferences-card">
             <div className="settings-title"><span className="settings-icon settings-icon-muted"><Icon name="bell" size={18} /></span><div><h2>Preferințe</h2><p>Controlează cum te ține UniFlow la curent.</p></div></div>

@@ -83,7 +83,8 @@ export function Icon({
       height={size}
       viewBox="0 0 24 24"
       {...common}
-    >
+      >
+    
       {paths[name]}
     </svg>
   );
