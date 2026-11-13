@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
+import ThemeToggle from "@/components/theme-toggle";
 import { syncAuthenticatedProfile } from "@/lib/auth-profile";
 import { supabase } from "@/lib/supabase";
 
@@ -185,10 +186,13 @@ export default function AuthForm({
     <main className="auth-page">
       <div className="auth-layout">
         <section className="auth-intro">
-          <Link className="auth-brand" href="/">
-            <span className="brand-mark"><Icon name="sparkles" size={20} /></span>
-            <span>uni<span>flow</span></span>
-          </Link>
+          <div className="auth-intro-header">
+            <Link className="auth-brand" href="/">
+              <span className="brand-mark"><Icon name="sparkles" size={20} /></span>
+              <span>uni<span>flow</span></span>
+            </Link>
+            <ThemeToggle variant="accent" />
+          </div>
           <div className="auth-intro-copy">
             <p className="eyebrow">SPAȚIUL TĂU DE STUDIU</p>
             <h1>Un semestru mai simplu începe aici.</h1>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Icon, type IconName } from "@/components/icons";
+import ThemeToggle from "@/components/theme-toggle";
 import { syncAuthenticatedProfile } from "@/lib/auth-profile";
 import {
   defaultProfile,
@@ -183,8 +184,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <label className="search-field">
               <Icon name="search" size={18} />
               <input aria-label="Caută în UniFlow" placeholder="Caută orice..." />
-              <kbd>⌘ K</kbd>
             </label>
+            <ThemeToggle />
             <button aria-label="Notificări" className="icon-button notification-button" type="button">
               <Icon name="bell" size={19} /><span />
             </button>

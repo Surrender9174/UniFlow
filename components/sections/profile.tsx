@@ -100,10 +100,7 @@ export default function ProfilePage() {
             <div className="settings-title"><span className="settings-icon settings-icon-muted"><Icon name="bell" size={18} /></span><div><h2>Preferințe</h2><p>Controlează cum te ține UniFlow la curent.</p></div></div>
             <div className="preference-row"><div><strong>Notificări pentru deadline-uri</strong><small>Primești un reminder înainte de fiecare termen.</small></div><button aria-checked={notifications} aria-label="Notificări pentru deadline-uri" className={`toggle-switch${notifications ? " on" : ""}`} onClick={toggleNotifications} role="switch" type="button"><span /></button></div>
           </section>
-          <section className="card-surface preferences-card">
-            <div className="settings-title"><span className="settings-icon settings-icon-muted"><Icon name="sun" size={18} /></span><div><h2>Aparență</h2><p>Setarea temei pentru spațiul tău.</p></div></div>
-            <div className="preference-row theme-preference-row"><div><strong>Mod întunecat</strong><small>Aplică tema întunecată în tot UniFlow.</small></div><button aria-checked={savedTheme === "dark"} aria-label="Mod întunecat" className={`toggle-switch${savedTheme === "dark" ? " on" : ""}`} onClick={toggleTheme} role="switch" type="button"><span /></button></div>
-          </section>
+          
         </div>
       </div>
     </div>

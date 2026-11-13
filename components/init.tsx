@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/icons";
+import ThemeToggle from "@/components/theme-toggle";
 
 const features = [
   {
@@ -30,6 +31,7 @@ export default function Init() {
           </Link>
           <nav aria-label="Navigare" className="landing-nav">
             <Link className="landing-login" href="/auth">Conectare</Link>
+            <ThemeToggle />
             <Link className="button button-primary" href="/auth/signup">
               Get started <Icon name="arrow" size={16} />
             </Link>
