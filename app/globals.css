@@ -203,6 +203,7 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
 .task-row { display: flex; min-height: 60px; align-items: center; gap: 12px; border-bottom: 1px solid #f1f1f5; transition: background .18s ease, opacity .18s ease; }
 .task-row:last-child { border-bottom: 0; }
 .task-row:hover { background: #fcfbff; }
+.task-row-actions-open { position: relative; z-index: 3; }
 .task-check { display: grid; width: 19px; height: 19px; flex: 0 0 auto; place-items: center; border: 1px solid #dfe0e9; border-radius: 6px; background: #fff; color: white; cursor: pointer; transition: border-color .2s ease, background .2s ease, transform .2s ease; }
 .task-check:hover { border-color: #9a8be1; transform: scale(1.08); }
 .task-check.checked { border-color: #8472dc; background: #8472dc; }
@@ -295,7 +296,7 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
 .week-arrow { display: grid; width: 29px; height: 29px; flex: 0 0 auto; place-items: center; border: 1px solid #ececf2; border-radius: 9px; background: white; color: #828397; cursor: pointer; font-size: 20px; line-height: 1; transition: border .2s, color .2s; }
 .week-arrow:hover { border-color: #c9c0f2; color: var(--violet); }
 .week-days { display: flex; flex: 1; justify-content: center; gap: clamp(8px, 3vw, 36px); }
-.week-day { position: relative; display: grid; width: 43px; height: 59px; justify-items: center; align-content: center; gap: 5px; border: 0; border-radius: 11px; background: transparent; color: #999bab; cursor: pointer; }
+.week-day { position: relative; display: grid; width: 43px; height: 59px; flex: 0 0 auto; justify-items: center; align-content: center; gap: 5px; border: 0; border-radius: 11px; background: transparent; color: #999bab; cursor: pointer; }
 .week-day > span { font-size: 8px; font-weight: 650; }
 .week-day > strong { color: #525366; font-size: 14px; font-weight: 620; }
 .week-day.selected { background: #f1eeff; color: #7b68d8; }
@@ -362,11 +363,31 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
 .tasks-full-list .task-description strong { font-size: 11px; }
 .tasks-full-list .task-description small { font-size: 9px; }
 .task-category { padding: 5px 8px; border-radius: 7px; background: #f5f3fc; color: #8173c4; font-size: 8px; }
+.task-actions { position: relative; flex: 0 0 auto; }
+.task-action-panel { position: absolute; z-index: 5; top: calc(100% + 6px); right: 0; display: grid; width: 230px; gap: 10px; padding: 12px; border: 1px solid #e8e5f2; border-radius: 11px; background: #fff; box-shadow: 0 8px 24px #2928441a; }
+.task-action-panel form { display: grid; gap: 7px; }
+.task-action-panel label { color: #696a7d; font-size: 9px; font-weight: 600; }
+.task-action-panel input { width: 100%; min-width: 0; padding: 8px; border: 1px solid #e5e4ed; border-radius: 7px; color: #4b4c60; font: inherit; font-size: 9px; }
+.task-action-panel .button { min-height: 32px; justify-content: center; padding: 0 9px; font-size: 9px; }
+.task-action-delete { justify-self: start; padding: 3px 0; border: 0; background: transparent; color: #c65e65; cursor: pointer; font: inherit; font-size: 9px; font-weight: 600; }
 
 .assistant-page { max-width: 940px; margin: 0 auto; }
 .assistant-page .page-heading { margin-bottom: 19px; }
 .assistant-online { display: inline-flex; align-items: center; gap: 7px; color: #5da88b; font-size: 10px; font-weight: 600; }
 .assistant-online i { width: 7px; height: 7px; box-shadow: none; }
+.gmail-connection { margin-bottom: 14px; padding: 14px 17px; }
+.gmail-connection-main { display: flex; align-items: center; gap: 11px; }
+.whatsapp-upload-main { flex-wrap: wrap; }
+.whatsapp-file-input { max-width: 240px; color: #77798d; font-size: 9px; }
+.whatsapp-file-selected { margin: 8px 0 0; color: #77798d; font-size: 9px; }
+.gmail-connection-icon { display: grid; width: 37px; height: 37px; flex: 0 0 auto; place-items: center; border-radius: 12px; background: #f0edff; color: #7866d5; }
+.gmail-connection-copy { flex: 1; min-width: 0; }
+.gmail-connection-copy strong { color: #414257; font-size: 10px; }
+.gmail-connection-copy p { margin: 4px 0 0; color: #8d8fa1; font-size: 9px; }
+.gmail-connection .button { min-height: 34px; padding: 8px 11px; font-size: 9px; white-space: nowrap; }
+.gmail-privacy-note, .gmail-notice, .gmail-status-error { margin: 11px 0 0; color: #8d8fa1; font-size: 8px; line-height: 1.6; }
+.gmail-notice { color: #4b9678; }
+.gmail-status-error { color: #c65e65; }
 .chat-panel { overflow: hidden; }
 .chat-header { display: flex; min-height: 69px; align-items: center; gap: 11px; padding: 12px 17px; border-bottom: 1px solid #f0f0f5; }
 .chat-avatar { display: grid; width: 39px; height: 39px; place-items: center; border-radius: 14px; background: linear-gradient(145deg, #e6e1ff, #d1c6ff); color: #7562d4; }
@@ -385,6 +406,15 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
 .chat-message-content { display: grid; gap: 5px; }
 .chat-bubble { padding: 11px 13px; border: 1px solid #eeedf4; border-radius: 14px 14px 14px 4px; background: white; color: #56576b; font-size: 10px; line-height: 1.65; box-shadow: 0 2px 6px #29284406; }
 .student .chat-bubble { border-color: #e5defb; border-radius: 14px 14px 4px 14px; background: #eee9ff; color: #514975; }
+.email-task-card { display: grid; gap: 6px; padding: 10px 11px; border: 1px solid #eae7f7; border-radius: 11px; background: #fff; color: #56576b; }
+.email-task-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.email-task-heading strong { color: #414257; font-size: 9px; line-height: 1.45; }
+.email-task-priority { flex: 0 0 auto; padding: 4px 6px; border-radius: 6px; background: #f1effb; color: #7967c8; font-size: 7px; }
+.email-task-priority.high { background: #fff0ef; color: #c65e65; }
+.whatsapp-add-task { justify-self: start; border: 0; background: transparent; cursor: pointer; font: inherit; }
+.email-task-card p { margin: 0; color: #77788b; font-size: 8px; line-height: 1.5; }
+.email-task-card small { color: #a0a1af; font-size: 7px; line-height: 1.4; }
+.assistant-thinking { align-self: flex-start; margin-left: 35px; color: #8d8fa1; font-size: 9px; }
 .chat-time { color: #adafbb; font-size: 8px; }
 .student .chat-time { text-align: right; }
 .chat-suggestions { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 35px; }
@@ -805,6 +835,8 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
   .profile-card-divider { margin: 13px 0 7px; }
   .profile-detail { padding: 6px 1px; }
   .profile-streak { margin-top: 9px; }
+  .whatsapp-upload-main { gap: 8px; }
+  .whatsapp-file-input { max-width: 100%; flex: 1 1 180px; }
   .settings-card, .preferences-card { padding: 15px; }
   .settings-title { margin-bottom: 14px; }
   .form-grid { grid-template-columns: 1fr; gap: 11px; }
@@ -819,8 +851,8 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
   .schedule-heading .button { white-space: nowrap; }
   .week-picker { min-height: 78px; gap: 6px; padding: 8px; }
   .week-arrow { width: 25px; height: 25px; }
-  .week-days { gap: 4px; }
-  .week-day { width: 37px; height: 53px; }
+  .week-days { gap: clamp(1px, 1vw, 4px); }
+  .week-day { width: clamp(28px, 8.5vw, 37px); height: 53px; }
   .week-range { display: none; }
   .schedule-board { grid-template-columns: 1fr; gap: 2px; margin-top: 19px; }
   .schedule-date { display: flex; align-items: center; gap: 8px; }
@@ -836,6 +868,8 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
   .current-time-line::after { width: calc(100vw - 108px); }
 
   .tasks-full-list { padding: 0 10px; }
+  .tasks-full-list .task-more { display: grid; }
+  .task-action-panel { width: min(230px, calc(100vw - 42px)); }
   .tasks-full-list .task-row { min-height: 64px; gap: 8px; }
   .tasks-full-list .task-description strong { font-size: 9px; }
   .tasks-full-list .task-description small { font-size: 8px; }

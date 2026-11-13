@@ -1,50 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UniFlow
 
-## Supabase setup
+UniFlow is a Next.js study companion. Its assistant can connect to Gmail and
+answer questions about recent inbox messages.
 
-The public home page (`/`) introduces UniFlow. **Get started** opens sign-up at
-`/auth/signup`; existing users can sign in at `/auth`. After authentication,
-the study dashboard is available at `/dashboard`, and protected study pages
-redirect unauthenticated visitors to sign-in.
-Copy `.env.example` to `.env.local`, then set `NEXT_PUBLIC_SUPABASE_ANON_KEY` to
-the project's publishable (or legacy anon) key from Supabase. These are
-browser-safe public credentials; never use a service-role key here. Restart the
-development server after changing environment variables.
+## Gmail and Gemini setup
 
-Sign-up also saves the student's institution, field of study, year, semester,
-and timetable. The dark theme can be enabled from **Profil → Apariție**.
+1. In Google Cloud, enable the Gmail API and create an OAuth client ID for a
+   **Web application**.
+2. Add `http://localhost:3000/api/gmail/callback` as an authorized redirect URI.
+   While the OAuth consent screen is in testing, add your Google account as a
+   test user.
+3. Create a Gemini API key in Google AI Studio. Add the values from
+   `.env.example` to `.env.local` (copy the template only if you don't already
+   have a local env file). Fill in the Google OAuth values, `GEMINI_API_KEY`,
+   and the exact redirect URI. Generate a private session secret with:
 
-## Getting Started
+   ```sh
+   node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"
+   ```
 
-First, run the development server:
+4. Start the app with `npm run dev`, then open `/assistant` and connect Gmail.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The app requests only Gmail's `gmail.readonly` permission. When you send a
+question about the inbox, UniFlow reads up to 5 recent Inbox messages from the last 30 days and
+sends their content to the Gemini API to answer it. UniFlow does not store email
+contents. Disconnecting clears the local encrypted Gmail session; to revoke the
+app's Google permission entirely, also remove it from your Google Account's
+third-party connections.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The assistant can also add school or university tasks when a task and its due
+date/time are clear; if the date or time is missing, it asks for those details.
+These tasks are saved in the current browser and appear on the dashboard and
+Tasks page. Dated tasks appear on their selected day in the schedule; tasks
+without a deadline are grouped separately. Saved tasks can be deleted or
+postponed to a selected future date and time from the Tasks page.
+Gmail does not need to be connected for task requests, but Gemini must be
+configured.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The assistant conversation is also saved in the current browser and restored
+when `/assistant` is opened again. It is not synced to other devices. The latest
+8 messages are sent to Gemini as context for each new request; clearing this
+browser's site data removes the saved conversation.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The default model is `gemini-3.5-flash-lite`, which is available on Google's
+free tier and is optimized for low-latency tasks. Free-tier limits still apply,
+and Google may use submitted content to improve its products. Change
+`GEMINI_MODEL` in `.env.local` only if you have confirmed the other model is
+available on your plan.
 
-## Learn More
+## WhatsApp chat export
 
-To learn more about Next.js, take a look at the following resources:
+On `/assistant`, upload a WhatsApp-exported `.txt` file up to 200 KB. Uni sends
+the text to Gemini to identify school announcements such as tests, oral
+assessments, class cancellations, schedule changes, and deadlines. The export
+is not stored by UniFlow. On the free tier, Google may use submitted content to
+improve its products; remove private information you do not want to share before
+uploading. Non-cancelled events can be added from their result cards to the
+browser-local task list and appear in `/schedule`. Select a day in the week
+calendar to see that day's activities; use the arrows to browse other weeks.
+Events without a confirmed date and time are saved without a deadline and shown
+in a separate unscheduled group; cancelled events remain visible in the analysis
+but are not added as tasks.
+Tasks Gemini creates from chat requests are also shown in that schedule section.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The Gmail read scope may require Google OAuth verification and additional
+review before the app can be used by people outside your configured test users.
