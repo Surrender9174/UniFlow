@@ -1,14 +1,13 @@
 import { supabase } from "@/lib/supabase";
 import { recognizeScheduleFile } from "@/lib/schedule-ocr";
 import { extractSpreadsheetText } from "@/lib/schedule-spreadsheet";
+import { getScheduleFileExtension } from "@/lib/schedule-file-types";
+
+export { isSupportedScheduleFile } from "@/lib/schedule-file-types";
 
 type ProgressCallback = (message: string) => void;
 
 const maxExtractedTextLength = 500_000;
-
-function getExtension(file: File) {
-  return file.name.toLowerCase().split(".").pop() ?? "";
-}
 
 async function extractLegacyWordFile(file: File, onProgress: ProgressCallback) {
   if (!supabase) throw new Error("Autentificarea nu este disponibilă.");
@@ -32,15 +31,8 @@ async function extractLegacyWordFile(file: File, onProgress: ProgressCallback) {
   return result.text;
 }
 
-export function isSupportedScheduleFile(file: File) {
-  return [
-    "pdf", "png", "jpg", "jpeg", "webp", "xlsx", "xls", "xlsm",
-    "docx", "doc", "csv", "txt",
-  ].includes(getExtension(file));
-}
-
 export async function extractScheduleFile(file: File, onProgress: ProgressCallback) {
-  const extension = getExtension(file);
+  const extension = getScheduleFileExtension(file.name);
   let text: string;
 
   if (["pdf", "png", "jpg", "jpeg", "webp"].includes(extension)) {

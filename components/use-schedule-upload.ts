@@ -3,6 +3,7 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { parseScheduleText } from "@/lib/schedule-parser";
 import { extractScheduleFile, isSupportedScheduleFile } from "@/lib/schedule-file-reader";
+import { maxScheduleFileSize } from "@/lib/schedule-file-types";
 import { saveSchedule, type ScheduleEvent } from "@/lib/schedule-storage";
 
 export type ScheduleUploadStatus = "idle" | "processing" | "preview";
@@ -30,7 +31,7 @@ export function useScheduleUpload() {
     setPendingSchedule([]);
     if (!file) return;
 
-    if (file.size > 15 * 1024 * 1024) {
+    if (file.size > maxScheduleFileSize) {
       setUploadError("Fișierul depășește limita de 15 MB.");
       input.value = "";
       return;

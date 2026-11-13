@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import ThemeToggle from "@/components/theme-toggle";
 import { syncAuthenticatedProfile } from "@/lib/auth-profile";
+import { isSupportedScheduleFile, maxScheduleFileSize, scheduleFileAccept } from "@/lib/schedule-file-types";
 import { supabase } from "@/lib/supabase";
 
 type AuthMessage = {
@@ -55,21 +56,25 @@ export default function AuthForm({
   const strength = useMemo(() => getPasswordStrength(password), [password]);
 
   const handleScheduleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const input = event.currentTarget;
+    const file = input.files?.[0];
     setScheduleFileError("");
     if (!file) {
       setScheduleFileName("");
       return;
     }
 
-    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
-    const isImage =
-      file.type.startsWith("image/") ||
-      /\.(png|jpe?g|gif|webp|bmp|avif)$/i.test(file.name);
-    if (!isPdf && !isImage) {
+    if (file.size > maxScheduleFileSize) {
       setScheduleFileName("");
-      setScheduleFileError("Alege un fișier PDF sau o imagine.");
-      event.target.value = "";
+      setScheduleFileError("Fișierul depășește limita de 15 MB.");
+      input.value = "";
+      return;
+    }
+
+    if (!isSupportedScheduleFile(file)) {
+      setScheduleFileName("");
+      setScheduleFileError("Alege un PDF, o imagine PNG/JPG/WebP, un fișier Excel, Word, CSV sau TXT.");
+      input.value = "";
       return;
     }
 
@@ -212,7 +217,7 @@ export default function AuthForm({
         <section className="auth-intro">
           <div className="auth-intro-header">
             <Link className="auth-brand" href="/">
-              <span className="brand-mark"><Icon name="sparkles" size={20} /></span>
+              <span className="brand-mark"><Icon name="logo" size={20} /></span>
               <span>uni<span>flow</span></span>
             </Link>
             <ThemeToggle variant="accent" />
@@ -331,11 +336,11 @@ export default function AuthForm({
                     <label
                       className={`auth-file-picker${scheduleFileName ? " selected" : ""}`}
                     >
-                      <Icon name = "upload" size = {16} />
-                      {scheduleFileName || "Upload File (Ex. PDF, JPG, IMG)"}
+                      <Icon name="upload" size={16} />
+                      {scheduleFileName || "Încarcă PDF, imagine, Excel, Word, CSV sau TXT"}
                       <input
-                        accept="application/pdf,.pdf,image/*"
-                        aria-label="Selectează un orar PDF sau imagine"
+                        accept={scheduleFileAccept}
+                        aria-label="Selectează un fișier cu orarul"
                         className="visually-hidden"
                         onChange={handleScheduleFileChange}
                         type="file"
