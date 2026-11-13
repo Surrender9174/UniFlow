@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import ThemeToggle from "@/components/theme-toggle";
 import { syncAuthenticatedProfile } from "@/lib/auth-profile";
+import { extractScheduleFile, isSupportedScheduleFile } from "@/lib/schedule-file-reader";
+import { parseScheduleText } from "@/lib/schedule-parser";
+import { saveSchedule } from "@/lib/schedule-storage";
 import { supabase } from "@/lib/supabase";
 
 type AuthMessage = {
@@ -47,6 +50,8 @@ export default function AuthForm({
   const [schedule, setSchedule] = useState("");
   const [scheduleFileName, setScheduleFileName] = useState("");
   const [scheduleFileError, setScheduleFileError] = useState("");
+  const [scheduleFileProgress, setScheduleFileProgress] = useState("");
+  const [scheduleFileProcessing, setScheduleFileProcessing] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -54,26 +59,50 @@ export default function AuthForm({
   const [message, setMessage] = useState<AuthMessage | null>(null);
   const strength = useMemo(() => getPasswordStrength(password), [password]);
 
-  const handleScheduleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleScheduleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    const input = event.currentTarget;
     setScheduleFileError("");
+    setScheduleFileProgress("");
     if (!file) {
       setScheduleFileName("");
       return;
     }
 
-    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
-    const isImage =
-      file.type.startsWith("image/") ||
-      /\.(png|jpe?g|gif|webp|bmp|avif)$/i.test(file.name);
-    if (!isPdf && !isImage) {
+    if (file.size > 15 * 1024 * 1024) {
       setScheduleFileName("");
-      setScheduleFileError("Alege un fișier PDF sau o imagine.");
-      event.target.value = "";
+      setScheduleFileError("Fișierul depășește limita de 15 MB.");
+      input.value = "";
+      return;
+    }
+
+    if (!isSupportedScheduleFile(file) || /\.doc$/i.test(file.name)) {
+      setScheduleFileName("");
+      setScheduleFileError("Alege un PDF, o imagine sau un format de orar acceptat.");
+      input.value = "";
       return;
     }
 
     setScheduleFileName(file.name);
+    setScheduleFileProcessing(true);
+    setScheduleFileProgress("Se citește orarul...");
+    try {
+      const text = await extractScheduleFile(file, setScheduleFileProgress);
+      if (!parseScheduleText(text).length) {
+        throw new Error("Nu am putut identifica zile, ore și cursuri în fișier.");
+      }
+      setSchedule(text);
+      setScheduleFileProgress("Orarul a fost extras. Poți verifica sau edita textul.");
+    } catch (error) {
+      setScheduleFileName("");
+      setScheduleFileProgress("");
+      setScheduleFileError(
+        getErrorMessage(error, "Nu am putut procesa fișierul. Încearcă din nou."),
+      );
+      input.value = "";
+    } finally {
+      setScheduleFileProcessing(false);
+    }
   };
 
   useEffect(() => {
@@ -111,6 +140,10 @@ export default function AuthForm({
     }
 
     if (mode === "signup") {
+      if (scheduleFileProcessing) {
+        setMessage({ type: "error", text: "Așteaptă terminarea procesării orarului." });
+        return;
+      }
       if (
         [name, university, program, year, semester].some(
           (value) => !value.trim(),
@@ -119,6 +152,13 @@ export default function AuthForm({
         setMessage({
           type: "error",
           text: "Completează toate informațiile despre studiile tale.",
+        });
+        return;
+      }
+      if (schedule.trim() && !parseScheduleText(schedule).length) {
+        setMessage({
+          type: "error",
+          text: "Nu am putut identifica zile, ore și cursuri în orar. Verifică textul sau încarcă un fișier clar.",
         });
         return;
       }
@@ -175,8 +215,10 @@ export default function AuthForm({
       if (error) throw error;
       if (!data.user) throw new Error("Înregistrarea nu a returnat un utilizator.");
 
+      const scheduleEvents = schedule.trim() ? parseScheduleText(schedule) : [];
       if (data.session) {
         syncAuthenticatedProfile(data.user);
+        if (scheduleEvents.length) saveSchedule(scheduleEvents);
         router.replace("/dashboard");
       } else {
         setMessage({
@@ -332,16 +374,22 @@ export default function AuthForm({
                       className={`auth-file-picker${scheduleFileName ? " selected" : ""}`}
                     >
                       <Icon name = "upload" size = {16} />
-                      {scheduleFileName || "Upload File (Ex. PDF, JPG, IMG)"}
+                      {scheduleFileProcessing
+                        ? scheduleFileProgress || "Se procesează orarul..."
+                        : scheduleFileName || "Upload File (Ex. PDF, JPG, IMG)"}
                       <input
-                        accept="application/pdf,.pdf,image/*"
+                        accept="application/pdf,.pdf,image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp,.xlsx,.xls,.xlsm,.docx,.csv,.txt"
                         aria-label="Selectează un orar PDF sau imagine"
                         className="visually-hidden"
+                        disabled={scheduleFileProcessing}
                         onChange={handleScheduleFileChange}
                         type="file"
                       />
                     </label>
                     {scheduleFileError && <small className="auth-message error" role="alert">{scheduleFileError}</small>}
+                    {!scheduleFileError && scheduleFileProgress && !scheduleFileProcessing && (
+                      <small className="muted" role="status">{scheduleFileProgress}</small>
+                    )}
                     <label className="auth-field">
                       <textarea
                         className="auth-schedule-textarea"

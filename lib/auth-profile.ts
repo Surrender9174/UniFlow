@@ -5,12 +5,17 @@ import {
   saveProfile,
   type StudentProfile,
 } from "@/lib/profile";
+import { parseScheduleText } from "@/lib/schedule-parser";
+import { saveSchedule } from "@/lib/schedule-storage";
 
 export function syncAuthenticatedProfile(user: User) {
   const email = user.email;
   if (!email) throw new Error("Contul nu conține o adresă de email.");
 
   const metadata = user.user_metadata;
+  const metadataSchedule = typeof metadata.schedule === "string" ? metadata.schedule : "";
+  const scheduleEvents = metadataSchedule.trim() ? parseScheduleText(metadataSchedule) : [];
+  if (scheduleEvents.length) saveSchedule(scheduleEvents);
   const metadataType = metadata.institutionType;
   const profileFromMetadata: StudentProfile = {
     ...defaultProfile,
@@ -36,8 +41,7 @@ export function syncAuthenticatedProfile(user: User) {
       typeof metadata.semester === "string" && metadata.semester.trim()
         ? metadata.semester.trim()
         : defaultProfile.semester,
-    schedule:
-      typeof metadata.schedule === "string" ? metadata.schedule : defaultProfile.schedule,
+    schedule: metadataSchedule || defaultProfile.schedule,
   };
 
   const savedProfile = getStoredProfileSnapshot();
