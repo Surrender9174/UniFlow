@@ -65,3 +65,38 @@ Tasks Gemini creates from chat requests are also shown in that schedule section.
 
 The Gmail read scope may require Google OAuth verification and additional
 review before the app can be used by people outside your configured test users.
+
+## SkillSwap setup
+
+SkillSwap is available at `/skillswap`. It uses the existing Supabase project
+for authentication, profiles, skill listings, availability, sessions,
+notifications, peer reviews, and reports. Exchanges are free: the feature does
+not create credits, balances, payments, or escrow.
+
+1. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in
+   `.env.local`. Use the project's anon/publishable key; SkillSwap API requests
+   use the signed-in user's token and Supabase row-level security.
+2. Apply
+   [`supabase/migrations/20261113223000_skillswap.sql`](./supabase/migrations/20261113223000_skillswap.sql)
+   to the same Supabase project, using `supabase db push` or the Supabase SQL
+   Editor. The migration creates the schema, access policies, session functions,
+   and private Realtime authorization. The API will return setup errors until
+   this migration has been applied.
+3. For calls that must work across restrictive NATs/firewalls, configure a
+   Coturn server with its REST shared-secret authentication enabled. Set
+   `SKILLSWAP_TURN_URL` to one or more comma-separated `turn:`/`turns:` URLs and
+   `SKILLSWAP_TURN_SECRET` to the server-side shared secret. The API derives
+   short-lived per-user credentials; never expose the shared secret through a
+   `NEXT_PUBLIC_` variable. `SKILLSWAP_TURN_TTL_SECONDS` is optional and is
+   clamped to 5 minutes–2 hours. Without TURN, the app uses a public STUN server,
+   so peer-to-peer calls may not connect on some networks.
+4. Open `/skillswap`, complete a profile, add skills to teach and learn, and set
+   recurring availability. Accepted sessions can be opened at
+   `/skillswap/room/[sessionId]`.
+
+The room uses private Supabase Realtime channels for WebRTC signaling, live
+chat, the shared whiteboard, and code snippets. These collaboration messages
+are transient and are not saved as session history. The session timer moves an
+accepted session to mutual confirmation; only after both participants confirm
+does it become completed. Reviews and dispute/no-show reports are stored in
+Supabase.

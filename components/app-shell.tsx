@@ -25,6 +25,7 @@ const navigation: { href: string; label: string; icon: IconName }[] = [
   { href: "/schedule", label: "Orar", icon: "calendar" },
   { href: "/tasks", label: "Task-uri", icon: "check" },
   { href: "/assistant", label: "Asistent", icon: "sparkles" },
+  { href: "/skillswap", label: "SkillSwap", icon: "swap" },
   { href: "/profile", label: "Profil", icon: "user" },
 ];
 

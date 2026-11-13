@@ -655,7 +655,7 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
   .topbar-logout { margin-right: 0; }
   .avatar-top { width: 32px; height: 32px; }
   .page-content { padding: 25px 17px 26px; }
-  .bottom-nav { position: fixed; z-index: 30; right: 0; bottom: 0; left: 0; display: grid; min-height: calc(64px + env(safe-area-inset-bottom)); grid-template-columns: repeat(5, 1fr); align-items: start; padding: 8px 6px env(safe-area-inset-bottom); border-top: 1px solid #eeeff5; background: rgba(255,255,255,.94); backdrop-filter: blur(18px); }
+  .bottom-nav { position: fixed; z-index: 30; right: 0; bottom: 0; left: 0; display: grid; min-height: calc(64px + env(safe-area-inset-bottom)); grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: start; padding: 8px 6px env(safe-area-inset-bottom); border-top: 1px solid #eeeff5; background: rgba(255,255,255,.94); backdrop-filter: blur(18px); }
   .bottom-nav-link { display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 4px; padding: 4px 2px; color: #9b9dae; font-size: 8px; font-weight: 550; transition: color .18s ease, transform .18s ease; }
   .bottom-nav-link.active { color: #7663d3; }
   .bottom-nav-link.active svg { filter: drop-shadow(0 2px 4px #7663d344); }
@@ -1047,3 +1047,612 @@ html[data-theme="dark"] .topbar-logout:hover:not(:disabled) { background: #302b4
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+<<<<<<< Updated upstream
+=======
+
+.gmail-privacy-disclosure { margin-top: 11px; }
+.gmail-privacy-disclosure > summary { display: none; }
+.gmail-privacy-disclosure > .gmail-privacy-note { margin: 0; }
+
+@media (max-width: 680px) {
+  .page-content { padding-right: 16px; padding-left: 16px; }
+  .bottom-nav-link { gap: 5px; font-size: 10px; }
+  .bottom-nav-link svg { width: 22px; height: 22px; }
+  .welcome-row .eyebrow,
+  .page-heading .eyebrow,
+  .section-heading .eyebrow { font-size: 9px; }
+  .welcome-row h1 { font-size: 27px; }
+  .welcome-copy,
+  .page-heading .muted { font-size: 12px; line-height: 1.55; }
+  .section-heading h2 { font-size: 16px; }
+  .text-link { font-size: 11px; }
+  .button { min-height: 44px; font-size: 12px; }
+  .page-heading .button { min-height: 44px; font-size: 11px; }
+
+  .next-class-card { padding: 18px; }
+  .next-class-content h2 { font-size: 17px; }
+  .next-class-meta { font-size: 11px; line-height: 1.5; }
+  .next-class-footer { flex-wrap: wrap; gap: 8px; font-size: 10px; }
+  .next-class-card .next-class-footer > span { max-width: 100%; }
+  .next-class-footer a,
+  .schedule-upload-link { font-size: 10px; }
+  .schedule-upload-error { font-size: 11px; }
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .stat-card { min-height: 112px; padding: 12px; }
+  .stat-card p { font-size: 10px; line-height: 1.35; }
+  .stat-card strong { font-size: 21px; }
+  .stat-card small { overflow: visible; font-size: 9px; text-overflow: clip; white-space: normal; }
+  .task-row { min-height: 66px; }
+  .task-description strong,
+  .tasks-full-list .task-description strong { font-size: 11px; line-height: 1.35; }
+  .task-description small,
+  .tasks-full-list .task-description small { font-size: 10px; }
+  .task-due,
+  .tasks-full-list .task-due { font-size: 9px; }
+  .recommendation-copy > span { font-size: 9px; }
+  .recommendation-copy h3 { font-size: 12px; }
+  .recommendation-copy p { font-size: 10px; line-height: 1.5; }
+  .recommendation-copy a { font-size: 10px; }
+  .dashboard-footnote { font-size: 10px; }
+
+  .profile-card h2 { font-size: 17px; }
+  .profile-card > p { font-size: 12px; }
+  .student-badge { font-size: 11px; }
+  .profile-detail { font-size: 11px; }
+  .profile-streak strong { font-size: 11px; }
+  .profile-streak small { font-size: 10px; }
+  .profile-account-actions .button { min-height: 44px; }
+  .settings-title h2 { font-size: 14px; }
+  .settings-title p { font-size: 11px; }
+  .form-grid { gap: 14px; }
+  .form-field { gap: 7px; font-size: 12px; }
+  .form-field input,
+  .form-field select,
+  .form-field textarea { min-height: 44px; font-size: 16px; }
+  .form-field textarea { min-height: 110px; }
+  .form-footer { align-items: stretch; flex-direction: column; gap: 9px; }
+  .form-footer .button { width: 100%; min-height: 44px; font-size: 12px; }
+  .save-feedback { font-size: 10px; }
+  .preference-row strong { font-size: 12px; }
+  .preference-row small { font-size: 10px; line-height: 1.45; }
+
+  .week-picker { gap: 4px; padding: 9px 7px; }
+  .week-arrow { width: 28px; height: 28px; }
+  .week-days { gap: 2px; }
+  .week-day { width: clamp(26px, 8.3vw, 34px); }
+  .week-day > span { font-size: 9px; }
+  .week-day > strong { font-size: 14px; }
+  .schedule-date { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: center; gap: 4px 8px; }
+  .schedule-date .today-tag { grid-row: 1 / span 2; font-size: 8px; }
+  .schedule-date h2 { font-size: 13px; }
+  .schedule-date p { grid-column: 2; margin: 0; font-size: 10px; }
+  .schedule-item { grid-template-columns: 48px minmax(0, 1fr); }
+  .schedule-time strong { font-size: 11px; }
+  .schedule-time span { font-size: 9px; }
+  .event-type { font-size: 9px; }
+  .schedule-event h3 { font-size: 12px; line-height: 1.4; }
+  .schedule-event p { font-size: 10px; }
+  .schedule-tip { align-items: flex-start; }
+  .schedule-tip p { font-size: 11px; }
+  .schedule-empty p { font-size: 12px; }
+  .schedule-page-review-heading h2 { font-size: 17px; }
+  .schedule-page-review-heading .muted { font-size: 12px; }
+  .schedule-review-row > input,
+  .schedule-review-row > select { font-size: 11px; }
+  .schedule-review-actions .button,
+  .schedule-cancel-button { font-size: 11px; }
+
+  .task-filters { flex-wrap: wrap; }
+  .filter-chip { min-height: 40px; font-size: 11px; }
+  .filter-chip span { font-size: 10px; }
+  .tasks-full-list .task-row { gap: 8px; }
+  .task-action-panel { width: min(280px, calc(100vw - 42px)); }
+  .task-action-panel label,
+  .task-action-delete { font-size: 11px; }
+  .task-action-panel input { min-height: 44px; font-size: 16px; }
+  .task-action-panel .button { min-height: 42px; font-size: 11px; }
+
+  .gmail-connection { padding: 16px; }
+  .gmail-connection-copy strong { font-size: 12px; line-height: 1.4; }
+  .gmail-connection-copy p { font-size: 11px; line-height: 1.5; }
+  .gmail-connection .button { min-height: 44px; font-size: 12px; }
+  .gmail-privacy-disclosure { margin-top: 12px; border-top: 1px solid #eeedf4; }
+  .gmail-privacy-disclosure > summary { display: flex; min-height: 42px; align-items: center; justify-content: space-between; gap: 12px; color: #67687d; cursor: pointer; font-size: 11px; font-weight: 600; list-style: none; }
+  .gmail-privacy-disclosure > summary::-webkit-details-marker { display: none; }
+  .gmail-privacy-disclosure > summary::after { content: "+"; color: #8673d6; font-size: 18px; line-height: 1; }
+  .gmail-privacy-disclosure[open] > summary::after { content: "−"; }
+  .gmail-privacy-disclosure > .gmail-privacy-note { display: none; }
+  .gmail-privacy-disclosure[open] > .gmail-privacy-note { display: block; padding: 0 0 4px; font-size: 11px; line-height: 1.6; }
+  .gmail-notice,
+  .gmail-status-error { font-size: 11px; line-height: 1.5; }
+  .whatsapp-upload-main { display: grid; grid-template-columns: 37px minmax(0, 1fr); align-items: start; gap: 10px; }
+  .whatsapp-upload-main .gmail-connection-icon { grid-column: 1; grid-row: 1; }
+  .whatsapp-upload-main .gmail-connection-copy { grid-column: 2; grid-row: 1; }
+  .whatsapp-upload-main .whatsapp-file-input { width: 100%; max-width: none; min-height: 44px; grid-column: 1 / -1; padding: 7px; border: 1px solid #e9e9f0; border-radius: 9px; background: #fff; font-size: 12px; }
+  .whatsapp-file-input::file-selector-button { min-height: 30px; margin-right: 8px; padding: 4px 8px; border: 0; border-radius: 6px; background: #f0edff; color: #6554c7; font: inherit; }
+  .whatsapp-upload-main .button { width: 100%; grid-column: 1 / -1; }
+  .whatsapp-file-selected { font-size: 11px; }
+  .chat-header { min-height: 64px; }
+  .chat-messages { min-height: 42vh; max-height: 52vh; }
+  .chat-bubble { font-size: 12px; line-height: 1.55; }
+  .chat-suggestions button { min-height: 40px; font-size: 10px; }
+  .chat-compose { min-height: 54px; }
+  .chat-compose input { font-size: 16px; }
+  .chat-disclaimer { font-size: 9px; line-height: 1.5; }
+
+  .upload-title h2 { font-size: 15px; }
+  .upload-title p,
+  .drop-zone small,
+  .ingestion-side-card > p:not(.eyebrow) { font-size: 11px; line-height: 1.5; }
+  .drop-zone { min-height: 170px; }
+  .drop-zone strong { font-size: 12px; }
+  .privacy-note { align-items: flex-start; font-size: 10px; line-height: 1.5; }
+  .ingestion-side-card h2 { font-size: 20px; }
+  .ingestion-step strong { font-size: 11px; }
+  .ingestion-step small { font-size: 10px; }
+  .extracted-heading h2 { font-size: 14px; }
+  .extracted-list article strong { font-size: 11px; }
+  .extracted-list article > div > small { font-size: 10px; }
+  .pill-success { font-size: 8px; }
+  .extracted-card > .button { min-height: 44px; font-size: 11px; }
+
+  .landing-header { gap: 8px; }
+  .landing-nav { gap: 8px; }
+  .landing-login { font-size: 11px; }
+  .landing-nav .button { min-height: 40px; font-size: 10px; }
+  .landing-description { font-size: 14px; line-height: 1.6; }
+  .landing-feature p { font-size: 11px; line-height: 1.5; }
+  .landing-actions .button { min-height: 44px; font-size: 11px; }
+
+  .auth-field { font-size: 12px; }
+  .auth-field input,
+  .auth-field select,
+  .auth-field textarea { min-height: 44px; font-size: 16px; }
+  .auth-field textarea { min-height: 96px; }
+  .auth-card-heading > p:last-child,
+  .auth-switch { font-size: 11px; line-height: 1.5; }
+  .auth-submit { min-height: 46px; font-size: 13px; }
+  .auth-message { font-size: 11px; }
+}
+
+@media (max-width: 360px) {
+  .topbar { padding-right: 12px; padding-left: 12px; }
+  .mobile-brand { gap: 6px; font-size: 16px; }
+  .mobile-brand .brand-mark { width: 28px; height: 28px; }
+  .topbar-actions { gap: 6px; }
+  .avatar-top { width: 30px; height: 30px; }
+  .page-content { padding-right: 12px; padding-left: 12px; }
+  .landing-page { padding-right: 12px; padding-left: 12px; }
+  .landing-nav { gap: 6px; }
+  .landing-nav .button { padding: 0 7px; }
+}
+
+html[data-theme="dark"] .gmail-privacy-disclosure > summary { border-color: #303141; color: #d0cfdf; }
+@media (max-width: 680px) {
+  html[data-theme="dark"] .whatsapp-upload-main .whatsapp-file-input { border-color: #414254; background: #252634; color: #e5e5ef; }
+  html[data-theme="dark"] .whatsapp-file-input::file-selector-button { background: #302b4b; color: #c7bcff; }
+}
+
+.skillswap-room-page { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 18px; }
+.skillswap-room-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; }
+.skillswap-back-link { display: inline-flex; align-items: center; margin-bottom: 16px; color: #7466c9; font-size: 12px; font-weight: 650; }
+.skillswap-room-header .skillswap-eyebrow { margin-bottom: 7px; color: #9b91d8; font-size: 9px; font-weight: 750; letter-spacing: 1.1px; }
+.skillswap-room-header h1 { margin-bottom: 5px; }
+.skillswap-room-subtitle { margin-bottom: 0; color: #85879a; font-size: 12px; }
+.skillswap-room-timer { display: grid; min-width: 150px; gap: 5px; padding: 12px 16px; border: 1px solid #e8e4f7; border-radius: 14px; background: #fff; text-align: center; }
+.skillswap-room-timer span { color: #89899b; font-size: 10px; }
+.skillswap-room-timer strong { color: #6554c7; font-size: 21px; font-variant-numeric: tabular-nums; letter-spacing: .5px; }
+.skillswap-feedback { padding: 12px 15px; border: 1px solid #e9e5fa; border-radius: 12px; background: #f9f7ff; color: #65617c; font-size: 12px; line-height: 1.55; }
+.skillswap-feedback.error { border-color: #f0d7d9; background: #fff8f8; color: #a63b48; }
+.skillswap-room-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(330px, .9fr); align-items: stretch; gap: 16px; }
+.skillswap-call-card, .skillswap-workspace { min-width: 0; overflow: hidden; border: 1px solid #ececf3; border-radius: 18px; background: #fff; box-shadow: 0 8px 26px #28274408; }
+.skillswap-call-card { padding: 14px; }
+.skillswap-video-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.skillswap-video-tile { position: relative; display: grid; min-height: 230px; overflow: hidden; place-items: center; border-radius: 13px; background: #1c1c2a; }
+.skillswap-video { width: 100%; height: 100%; min-height: 230px; object-fit: cover; }
+.skillswap-video-tile:first-child .skillswap-video { transform: scaleX(-1); }
+.skillswap-video-placeholder { position: absolute; inset: 0; display: grid; place-items: center; padding: 15px; color: #d3d1e4; font-size: 12px; text-align: center; }
+.skillswap-video-name { position: absolute; right: 9px; bottom: 9px; left: 9px; overflow: hidden; padding: 6px 8px; border-radius: 7px; background: #11111bb8; color: white; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.skillswap-call-controls { display: flex; min-height: 58px; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; padding-top: 12px; }
+.skillswap-primary-button, .skillswap-control-button, .skillswap-danger-button { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 7px; padding: 0 13px; border: 1px solid transparent; border-radius: 10px; cursor: pointer; font-size: 11px; font-weight: 650; transition: background .18s ease, transform .18s ease, opacity .18s ease; }
+.skillswap-primary-button { background: #7562d6; color: white; }
+.skillswap-primary-button:hover:not(:disabled) { transform: translateY(-1px); background: #6250c4; }
+.skillswap-control-button { border-color: #e7e5f0; background: white; color: #68697e; }
+.skillswap-control-button:hover { border-color: #cbc3f1; color: #6654c7; }
+.skillswap-danger-button { border-color: #f0d7d9; background: #fff8f8; color: #ab4852; }
+.skillswap-primary-button:disabled { cursor: not-allowed; opacity: .5; }
+.skillswap-room-note { margin: 8px 0 0; color: #9999a8; font-size: 10px; line-height: 1.5; text-align: center; }
+.skillswap-panel-tabs { display: flex; min-height: 54px; align-items: stretch; gap: 4px; padding: 7px 10px 0; border-bottom: 1px solid #eeedf4; }
+.skillswap-panel-tabs button { position: relative; min-width: 72px; padding: 0 12px; border: 0; background: transparent; color: #88899b; cursor: pointer; font-size: 11px; font-weight: 600; }
+.skillswap-panel-tabs button[aria-selected="true"] { color: #6554c7; }
+.skillswap-panel-tabs button[aria-selected="true"]::after { position: absolute; right: 12px; bottom: -1px; left: 12px; height: 2px; border-radius: 2px; background: #7562d6; content: ""; }
+.skillswap-board-panel, .skillswap-code-panel, .skillswap-chat-panel { display: flex; min-height: 390px; flex-direction: column; padding: 15px; }
+.skillswap-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.skillswap-panel-heading h2, .skillswap-confirm-card h2 { margin: 0 0 4px; color: #343449; font-size: 13px; font-weight: 680; }
+.skillswap-panel-heading p, .skillswap-confirm-card p { margin: 0; color: #9192a2; font-size: 10px; line-height: 1.5; }
+.skillswap-panel-heading .skillswap-control-button { min-height: 33px; flex: 0 0 auto; padding: 0 9px; font-size: 10px; }
+.skillswap-board-canvas { display: block; width: 100%; height: auto; flex: 1; border: 1px solid #efedf7; border-radius: 11px; background-color: #fff; background-image: radial-gradient(#e9e6f4 1px, transparent 1px); background-size: 18px 18px; cursor: crosshair; touch-action: none; }
+.skillswap-code-editor { width: 100%; min-height: 300px; flex: 1; resize: vertical; padding: 13px; border: 1px solid #e9e7f2; border-radius: 11px; outline: 0; background: #20202c; color: #e3e1f4; font-family: var(--font-mono), monospace; font-size: 12px; line-height: 1.65; tab-size: 2; }
+.skillswap-code-editor:focus { border-color: #9384e1; box-shadow: 0 0 0 3px #7662d814; }
+.skillswap-chat-panel { min-height: 390px; }
+.skillswap-chat-messages { display: flex; min-height: 280px; max-height: 420px; flex: 1; flex-direction: column; align-items: flex-start; gap: 10px; overflow-y: auto; padding: 4px 3px 12px; }
+.skillswap-chat-message { display: grid; max-width: 85%; gap: 4px; padding: 9px 11px; border: 1px solid #efedf5; border-radius: 11px 11px 11px 3px; background: #faf9fd; }
+.skillswap-chat-message.own { align-self: flex-end; border-color: #e4defa; border-radius: 11px 11px 3px 11px; background: #f3f0ff; }
+.skillswap-chat-message strong { color: #68627e; font-size: 10px; }
+.skillswap-chat-message p { margin: 0; color: #46465a; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+.skillswap-chat-message time { color: #a1a1af; font-size: 9px; }
+.skillswap-empty-state { margin: auto; color: #9b9baa; font-size: 11px; }
+.skillswap-chat-form { display: flex; gap: 7px; padding-top: 10px; border-top: 1px solid #eeedf4; }
+.skillswap-chat-form input { width: 100%; min-width: 0; min-height: 40px; padding: 0 11px; border: 1px solid #e9e8ef; border-radius: 9px; outline: 0; background: #fff; color: #38384b; font-size: 12px; }
+.skillswap-chat-form input:focus { border-color: #bdb1ec; }
+.skillswap-chat-form .skillswap-primary-button { min-width: 42px; padding: 0; }
+.skillswap-confirm-card { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 16px 18px; border: 1px solid #e8e3f7; border-radius: 15px; background: #fbfaff; }
+.skillswap-confirm-card p { max-width: 600px; }
+.skillswap-confirm-card .skillswap-primary-button { flex: 0 0 auto; }
+.skillswap-room-footer { margin: 0; color: #9999a8; font-size: 10px; line-height: 1.5; text-align: center; }
+.skillswap-finish-retry { justify-self: center; }
+
+html[data-theme="dark"] .skillswap-room-timer,
+html[data-theme="dark"] .skillswap-call-card,
+html[data-theme="dark"] .skillswap-workspace { border-color: #303141; background: #20212e; }
+html[data-theme="dark"] .skillswap-room-subtitle,
+html[data-theme="dark"] .skillswap-room-timer span,
+html[data-theme="dark"] .skillswap-panel-heading p,
+html[data-theme="dark"] .skillswap-confirm-card p { color: #aaa9bb; }
+html[data-theme="dark"] .skillswap-room-timer strong,
+html[data-theme="dark"] .skillswap-back-link { color: #c4b8ff; }
+html[data-theme="dark"] .skillswap-panel-heading h2,
+html[data-theme="dark"] .skillswap-confirm-card h2 { color: #e7e5f1; }
+html[data-theme="dark"] .skillswap-control-button { border-color: #414254; background: #292a38; color: #d3d1e1; }
+html[data-theme="dark"] .skillswap-control-button:hover { border-color: #6559a6; color: #c4b8ff; }
+html[data-theme="dark"] .skillswap-panel-tabs { border-color: #363747; }
+html[data-theme="dark"] .skillswap-panel-tabs button { color: #aaa9bb; }
+html[data-theme="dark"] .skillswap-panel-tabs button[aria-selected="true"] { color: #c4b8ff; }
+html[data-theme="dark"] .skillswap-board-canvas { border-color: #414254; background-color: #292a38; background-image: radial-gradient(#464658 1px, transparent 1px); }
+html[data-theme="dark"] .skillswap-chat-message { border-color: #414254; background: #292a38; }
+html[data-theme="dark"] .skillswap-chat-message.own { border-color: #51477c; background: #302b48; }
+html[data-theme="dark"] .skillswap-chat-message strong { color: #c3b9f1; }
+html[data-theme="dark"] .skillswap-chat-message p { color: #e0deea; }
+html[data-theme="dark"] .skillswap-chat-form { border-color: #363747; }
+html[data-theme="dark"] .skillswap-chat-form input { border-color: #414254; background: #292a38; color: #e6e5ef; }
+html[data-theme="dark"] .skillswap-confirm-card { border-color: #3a374f; background: #252432; }
+html[data-theme="dark"] .skillswap-feedback { border-color: #3c3854; background: #282638; color: #d0cde0; }
+html[data-theme="dark"] .skillswap-feedback.error { border-color: #60434b; background: #30252b; color: #f0b5bb; }
+html[data-theme="dark"] .skillswap-room-note,
+html[data-theme="dark"] .skillswap-room-footer { color: #a5a4b5; }
+
+@media (max-width: 1000px) {
+  .skillswap-room-layout { grid-template-columns: minmax(0, 1fr); }
+  .skillswap-video-tile, .skillswap-video { min-height: 260px; }
+}
+
+@media (max-width: 680px) {
+  .skillswap-room-page { gap: 13px; }
+  .skillswap-room-header { align-items: stretch; flex-direction: column; gap: 12px; }
+  .skillswap-room-header h1 { font-size: 23px; }
+  .skillswap-back-link { margin-bottom: 12px; }
+  .skillswap-room-timer { grid-template-columns: 1fr auto; align-items: center; text-align: left; }
+  .skillswap-room-timer strong { font-size: 18px; }
+  .skillswap-room-layout { gap: 12px; }
+  .skillswap-call-card { padding: 9px; border-radius: 14px; }
+  .skillswap-video-grid { gap: 6px; }
+  .skillswap-video-tile, .skillswap-video { min-height: clamp(120px, 42vw, 190px); }
+  .skillswap-video-name { right: 5px; bottom: 5px; left: 5px; padding: 5px 6px; font-size: 9px; }
+  .skillswap-call-controls { gap: 6px; }
+  .skillswap-primary-button, .skillswap-control-button, .skillswap-danger-button { min-height: 42px; padding: 0 10px; font-size: 10px; }
+  .skillswap-panel-tabs { min-height: 48px; }
+  .skillswap-board-panel, .skillswap-code-panel, .skillswap-chat-panel { min-height: 330px; padding: 11px; }
+  .skillswap-panel-heading { align-items: flex-start; }
+  .skillswap-panel-heading h2 { font-size: 12px; }
+  .skillswap-panel-heading p { max-width: 205px; font-size: 9px; }
+  .skillswap-board-canvas { min-height: 220px; object-fit: contain; }
+  .skillswap-code-editor { min-height: 230px; font-size: 12px; }
+  .skillswap-chat-messages { min-height: 220px; max-height: 45vh; }
+  .skillswap-confirm-card { align-items: stretch; flex-direction: column; padding: 14px; }
+  .skillswap-confirm-card .skillswap-primary-button { width: 100%; }
+}
+
+@media (max-width: 360px) {
+  .skillswap-video-grid { grid-template-columns: minmax(0, 1fr); }
+  .skillswap-video-tile, .skillswap-video { min-height: 190px; }
+  .skillswap-call-controls > button { flex: 1 1 44%; }
+}
+
+.skillswap-page { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 18px; }
+.skillswap-heading { margin-bottom: 0; }
+.skillswap-heading .muted { max-width: 600px; }
+.skillswap-free-badge { display: inline-flex; min-height: 34px; align-items: center; gap: 7px; padding: 0 11px; border: 1px solid #e6e1fa; border-radius: 999px; background: #f7f5ff; color: #6654c7; font-size: 10px; font-weight: 650; white-space: nowrap; }
+.skillswap-hero { position: relative; display: grid; min-height: 154px; grid-template-columns: minmax(0, 1fr) 64px; align-items: center; gap: 8px 18px; overflow: hidden; padding: 22px 25px 17px; border-radius: 18px; background: linear-gradient(112deg, #7160d0, #8b78df 68%, #a28ee8); color: white; box-shadow: 0 10px 24px #7563d52c; }
+.skillswap-hero > div:first-child { position: relative; z-index: 1; }
+.skillswap-hero-kicker { color: #ffffffc7; font-size: 9px; font-weight: 720; letter-spacing: 1px; }
+.skillswap-hero h2 { margin: 8px 0 6px; color: white; font-size: 20px; font-weight: 680; letter-spacing: -.55px; }
+.skillswap-hero p { margin: 0; color: #ffffffcf; font-size: 11px; }
+.skillswap-hero-mark { display: grid; width: 58px; height: 58px; place-items: center; border: 1px solid #ffffff47; border-radius: 18px; background: #ffffff20; color: white; }
+.skillswap-hero-foot { z-index: 1; display: flex; grid-column: 1 / -1; flex-wrap: wrap; gap: 8px 20px; padding-top: 11px; border-top: 1px solid #ffffff38; color: #ffffffdd; font-size: 9px; }
+.skillswap-hero-foot span { display: inline-flex; align-items: center; gap: 6px; }
+.skillswap-feedback { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.skillswap-page > .skillswap-feedback { flex-wrap: wrap; }
+.skillswap-page > .skillswap-feedback > span { min-width: 0; flex: 1 1 100%; }
+.skillswap-feedback small { display: flex; min-width: 0; flex: 1 1 100%; flex-wrap: wrap; gap: 4px; color: #89879b; font-size: 10px; overflow-wrap: anywhere; }
+.skillswap-feedback code { color: #6554c7; font-family: var(--font-mono), monospace; overflow-wrap: anywhere; }
+.skillswap-feedback > button { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 18px; line-height: 1; }
+.skillswap-toast { position: fixed; z-index: 55; top: 88px; right: 24px; display: flex; max-width: min(390px, calc(100vw - 32px)); align-items: center; gap: 10px; padding: 13px 15px; border: 1px solid #e6e1fa; border-radius: 12px; background: white; box-shadow: 0 12px 35px #25213b20; color: #554a89; font-size: 12px; }
+.skillswap-overview { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; }
+.skillswap-stat { display: flex; min-height: 74px; align-items: center; gap: 11px; padding: 13px; }
+.skillswap-stat-icon, .skillswap-subheading-icon, .skillswap-cycle-icon { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 11px; background: #f0edff; color: #7663d7; }
+.skillswap-stat-icon.mint, .skillswap-subheading-icon.mint { background: #e8f7f1; color: #31a782; }
+.skillswap-stat-icon.peach, .skillswap-subheading-icon.peach { background: #fff1e9; color: #d9875d; }
+.skillswap-stat-icon.rose { background: #fff0f2; color: #d16d7a; }
+.skillswap-stat > div { display: grid; gap: 3px; }
+.skillswap-stat strong { color: #333449; font-size: 18px; font-weight: 700; }
+.skillswap-stat small { color: #9293a4; font-size: 9px; }
+.skillswap-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .85fr); align-items: start; gap: 15px; }
+.skillswap-main-column, .skillswap-side-column { display: grid; min-width: 0; align-content: start; gap: 15px; }
+.skillswap-layout .card-surface { min-width: 0; padding: 17px; }
+.skillswap-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 15px; }
+.skillswap-section-heading .eyebrow { margin-bottom: 6px; }
+.skillswap-section-heading h2 { margin: 0; color: #333449; font-size: 15px; font-weight: 680; letter-spacing: -.3px; }
+.skillswap-match-count, .skillswap-unread-count { display: inline-grid; min-width: 28px; height: 25px; place-items: center; padding: 0 7px; border-radius: 8px; background: #f2efff; color: #7461d1; font-size: 9px; font-weight: 700; white-space: nowrap; }
+.skillswap-unread-count { background: #fff1f2; color: #ce6874; }
+.skillswap-empty { display: flex; align-items: center; gap: 12px; padding: 17px; border: 1px dashed #e2dfed; border-radius: 12px; background: #fbfaff; }
+.skillswap-empty-icon { display: grid; width: 39px; height: 39px; flex: 0 0 auto; place-items: center; border-radius: 12px; background: #f0edff; color: #7663d7; }
+.skillswap-empty strong { color: #45455b; font-size: 11px; }
+.skillswap-empty p { margin: 4px 0 0; color: #9293a4; font-size: 10px; line-height: 1.5; }
+.skillswap-match-list { display: grid; gap: 10px; }
+.skillswap-match-card { display: grid; grid-template-columns: 39px minmax(0, 1fr) auto; align-items: start; gap: 11px; padding: 13px; border: 1px solid #eeedf4; border-radius: 13px; background: #fff; transition: border-color .2s ease, box-shadow .2s ease; }
+.skillswap-match-card:hover { border-color: #ded8f5; box-shadow: 0 6px 16px #2c25440b; }
+.skillswap-match-avatar { display: grid; width: 39px; height: 39px; place-items: center; border-radius: 13px; background: linear-gradient(145deg, #d9d2fa, #aa9ce9); color: white; font-size: 14px; font-weight: 750; }
+.skillswap-match-details { min-width: 0; }
+.skillswap-match-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.skillswap-match-title strong { overflow: hidden; color: #3d3d53; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.skillswap-score { display: inline-flex; flex: 0 0 auto; align-items: center; padding: 4px 7px; border-radius: 999px; background: #eaf7f1; color: #258f6d; font-size: 8px; font-weight: 700; }
+.skillswap-match-details > p { margin: 5px 0 8px; color: #9293a4; font-size: 9px; line-height: 1.5; }
+.skillswap-match-skills, .skillswap-match-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.skill-tag, .skill-verified { display: inline-flex; min-height: 24px; align-items: center; gap: 4px; padding: 0 7px; border-radius: 7px; font-size: 8px; font-weight: 600; }
+.skill-tag.learn { background: #f0edff; color: #6b59c8; }
+.skill-tag.teach { background: #e9f7f2; color: #328d70; }
+.skill-verified { background: #fff6e8; color: #bd8539; }
+.skillswap-match-meta { margin-top: 8px; color: #9293a4; font-size: 8px; }
+.skillswap-match-meta span { display: inline-flex; align-items: center; gap: 4px; }
+.skillswap-match-meta span:first-child svg { color: #dfa849; }
+.skillswap-next-slots { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.skillswap-next-slots span { padding: 4px 6px; border: 1px solid #ece9f8; border-radius: 6px; color: #77718d; font-size: 8px; }
+.skillswap-propose-button { min-height: 34px; align-self: center; padding: 0 9px; font-size: 9px; white-space: nowrap; }
+.skillswap-cycles { display: grid; gap: 9px; margin-top: 17px; padding-top: 15px; border-top: 1px solid #efedf4; }
+.skillswap-subheading { display: flex; align-items: center; gap: 9px; }
+.skillswap-subheading > div { display: grid; gap: 3px; }
+.skillswap-subheading strong { color: #4a495f; font-size: 10px; }
+.skillswap-subheading small { color: #9696a5; font-size: 9px; line-height: 1.45; }
+.skillswap-cycle-icon { width: 31px; height: 31px; background: #f0edff; color: #7763d7; }
+.skillswap-cycle-card { display: grid; gap: 9px; padding: 11px; border: 1px solid #eeedf4; border-radius: 11px; background: #fcfbff; }
+.skillswap-cycle-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.skillswap-cycle-header strong { overflow: hidden; color: #525166; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.skillswap-cycle-card ol { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.skillswap-cycle-card li { display: flex; align-items: center; gap: 5px; color: #77788b; font-size: 8px; }
+.skillswap-cycle-card li small { margin-left: auto; color: #6358a0; font-size: 8px; font-weight: 600; }
+.skillswap-cycle-card > .button { min-height: 32px; justify-self: start; font-size: 9px; }
+.skillswap-tree-copy { margin: -4px 0 12px; color: #9192a2; font-size: 10px; line-height: 1.5; }
+.skillswap-tree-domain { padding: 5px 8px; border-radius: 8px; background: #f0edff; color: #705ecb; font-size: 8px; font-weight: 650; }
+.skillswap-tree { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 7px; padding: 13px 8px; border-radius: 12px; background: linear-gradient(135deg, #fbfaff, #f8f6ff); }
+.skillswap-tree-step { display: flex; align-items: center; gap: 7px; }
+.skillswap-tree-node { display: inline-flex; min-height: 34px; align-items: center; gap: 6px; padding: 0 9px; border: 1px solid #e9e5f6; border-radius: 9px; background: white; color: #6c6d81; cursor: pointer; font-size: 9px; font-weight: 600; }
+.skillswap-tree-node span { display: grid; width: 18px; height: 18px; place-items: center; border-radius: 6px; background: #f1eff8; color: #8178a6; font-size: 8px; }
+.skillswap-tree-node.known { border-color: #bce6d5; background: #f2fbf7; color: #308668; }
+.skillswap-tree-node.wanted { border-color: #d8cff9; background: #f6f3ff; color: #6c59c5; }
+.skillswap-tree-edge { color: #aaa4c5; }
+.skillswap-tree-hint { display: block; margin-top: 9px; color: #a0a0ae; font-size: 8px; text-align: center; }
+.skillswap-review-queue { display: grid; gap: 10px; }
+.skillswap-verification-card { display: grid; gap: 10px; padding: 12px; border: 1px solid #eeedf4; border-radius: 11px; }
+.skillswap-verification-card > div:first-child { display: grid; gap: 4px; }
+.skillswap-verification-card strong { color: #49495d; font-size: 10px; }
+.verification-type { color: #7462cd; font-size: 9px; font-weight: 600; }
+.skillswap-verification-card p { margin: 0; color: #7e7f91; font-size: 10px; line-height: 1.55; overflow-wrap: anywhere; }
+.skillswap-inline-field { display: grid; gap: 5px; color: #838496; font-size: 9px; }
+.skillswap-inline-field input { min-height: 34px; padding: 0 9px; border: 1px solid #e9e9f0; border-radius: 8px; outline: 0; background: white; color: #48495c; font-size: 10px; }
+.skillswap-review-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.skillswap-review-actions .button { min-height: 34px; font-size: 9px; }
+.skillswap-saved { display: inline-flex; align-items: center; gap: 4px; color: #299875; font-size: 9px; font-weight: 650; }
+.skillswap-profile-card form { display: grid; gap: 10px; }
+.skillswap-profile-card .form-field { font-size: 9px; }
+.skillswap-profile-card .form-field input, .skillswap-profile-card .form-field select, .skillswap-profile-card .form-field textarea { min-height: 35px; font-size: 10px; }
+.skillswap-profile-card .form-field textarea { min-height: 68px; }
+.skillswap-form-divider { height: 1px; margin: 3px 0; background: #efedf4; }
+.skillswap-subheading-icon { width: 29px; height: 29px; border-radius: 9px; }
+.skillswap-skill-list, .skillswap-availability-list { display: grid; gap: 5px; }
+.skillswap-skill-row { display: grid; grid-template-columns: 7px minmax(0, 1fr) auto auto; align-items: center; gap: 7px; padding: 7px 8px; border: 1px solid #f0eff5; border-radius: 9px; }
+.skill-direction-dot { width: 7px; height: 7px; border-radius: 50%; background: #31a782; }
+.skill-direction-dot.wanted { background: #8b78df; }
+.skillswap-skill-row > div { display: grid; min-width: 0; gap: 3px; }
+.skillswap-skill-row strong { overflow: hidden; color: #4a4b60; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.skillswap-skill-row small { overflow: hidden; color: #9a9baa; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.skillswap-verify-button { padding: 4px 6px; border: 0; border-radius: 6px; background: #f1efff; color: #7060c4; cursor: pointer; font-size: 8px; }
+.skillswap-verify-button:disabled { cursor: default; opacity: .65; }
+.verified-mini { display: grid; width: 20px; height: 20px; place-items: center; border-radius: 6px; background: #e8f7f1; color: #299875; }
+.skillswap-remove { display: grid; width: 22px; height: 22px; place-items: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #a3a2b0; cursor: pointer; font-size: 17px; }
+.skillswap-remove:hover { background: #fff0f2; color: #c65e68; }
+.skillswap-skill-add { display: grid; gap: 8px; }
+.skillswap-mini-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.skillswap-level-field { grid-column: 1 / -1; }
+.skillswap-add-button { min-height: 34px; justify-self: start; font-size: 9px; }
+.skillswap-subtle { margin: 0; color: #9a9aa9; font-size: 9px; line-height: 1.5; }
+.skillswap-availability-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 22px; align-items: center; gap: 7px; padding: 6px 8px; border: 1px solid #f0eff5; border-radius: 8px; color: #77788a; font-size: 9px; }
+.skillswap-availability-row strong { color: #57576c; font-size: 9px; font-weight: 600; }
+.skillswap-availability-add { display: grid; grid-template-columns: 1.2fr 1fr 1fr; align-items: end; gap: 6px; }
+.skillswap-availability-add > button { min-height: 35px; grid-column: 1 / -1; justify-self: start; font-size: 9px; }
+.skillswap-timezone-note { margin: -3px 0 0; color: #9a9aa9; font-size: 8px; }
+.skillswap-timezone-note strong { color: #6b6880; font-weight: 600; }
+.skillswap-save-profile { width: 100%; min-height: 38px; }
+.skillswap-verification-form { margin-top: 13px; padding: 12px; border: 1px solid #eeeaf9; border-radius: 11px; background: #fcfbff; }
+.skillswap-session-list { display: grid; gap: 9px; }
+.skillswap-session { display: grid; grid-template-columns: 9px minmax(0, 1fr); gap: 9px; padding: 10px; border: 1px solid #efedf4; border-radius: 11px; }
+.skillswap-session-marker { width: 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: #8a78df; box-shadow: 0 0 0 3px #f0edff; }
+.skillswap-session-content { min-width: 0; }
+.skillswap-session-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.skillswap-session-top > strong { overflow: hidden; color: #4b4b60; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.session-status { flex: 0 0 auto; padding: 4px 6px; border-radius: 6px; background: #f2efff; color: #6e5dc5; font-size: 8px; font-weight: 650; }
+.session-status.completed { background: #e9f7f1; color: #32896d; }
+.session-status.disputed, .session-status.declined { background: #fff0f1; color: #bf5964; }
+.session-status.cancelled { background: #f1f1f4; color: #82828f; }
+.skillswap-session-content > p { margin: 5px 0; color: #88899a; font-size: 9px; }
+.skillswap-session-content > small { display: flex; align-items: center; gap: 4px; color: #9293a3; font-size: 8px; line-height: 1.5; }
+.skillswap-session-content > .cycle-session-note { color: #7564cc; }
+.skillswap-session-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.skillswap-session-actions > .button { min-height: 30px; padding: 0 8px; font-size: 8px; }
+.skillswap-session-actions > .button svg { width: 12px; height: 12px; }
+.skillswap-review-form, .skillswap-dispute-form { display: grid; width: 100%; gap: 7px; margin-top: 8px; padding: 9px; border-radius: 9px; background: #faf9fd; }
+.skillswap-review-form .form-field, .skillswap-dispute-form .form-field { font-size: 8px; }
+.skillswap-review-form .form-field input, .skillswap-review-form .form-field select, .skillswap-dispute-form .form-field select, .skillswap-dispute-form .form-field textarea { min-height: 32px; font-size: 10px; }
+.skillswap-dispute-form .form-field textarea { min-height: 64px; }
+.skillswap-sessions-empty { display: flex; align-items: center; gap: 9px; padding: 13px; border-radius: 10px; background: #faf9fd; color: #9696a6; font-size: 9px; line-height: 1.5; }
+.skillswap-sessions-empty svg { flex: 0 0 auto; color: #9281dc; }
+.skillswap-notification-list { display: grid; gap: 5px; }
+.skillswap-notification { display: grid; grid-template-columns: minmax(0, 1fr) 22px; align-items: start; gap: 8px; padding: 9px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: inherit; }
+.skillswap-notification:hover, .skillswap-notification.unread { border-color: #efedf7; background: #fbfaff; }
+.notification-dot { width: 6px; height: 6px; margin-top: 4px; border-radius: 50%; background: #c3c2cd; }
+.skillswap-notification.unread .notification-dot { background: #806dde; box-shadow: 0 0 0 3px #f0edff; }
+.skillswap-notification-copy { display: grid; grid-template-columns: 7px minmax(0, 1fr); align-items: start; gap: 8px; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; text-align: left; }
+.skillswap-notification-copy:disabled { cursor: default; }
+.skillswap-notification-copy > span:nth-child(2) { display: grid; gap: 5px; }
+.skillswap-notification strong { color: #606075; font-size: 9px; font-weight: 550; line-height: 1.45; }
+.skillswap-notification small { color: #a0a0ae; font-size: 8px; }
+.skillswap-notification > a { display: grid; width: 22px; height: 22px; grid-column: 2; grid-row: 1; place-items: center; border-radius: 6px; color: #7764d2; }
+.skillswap-modal-backdrop { position: fixed; z-index: 60; inset: 0; display: grid; overflow: auto; place-items: center; padding: 20px; background: #19182b7a; backdrop-filter: blur(5px); }
+.skillswap-modal { position: relative; display: grid; width: min(500px, 100%); gap: 12px; padding: 24px; box-shadow: 0 25px 80px #18152c3b; }
+.skillswap-modal h2 { margin: 0; color: #303047; font-size: 19px; letter-spacing: -.45px; }
+.skillswap-modal > .muted { margin: -4px 0 0; }
+.skillswap-modal-close { position: absolute; top: 11px; right: 12px; display: grid; width: 29px; height: 29px; place-items: center; border: 0; border-radius: 8px; background: #f3f1f8; color: #77768a; cursor: pointer; font-size: 19px; }
+.skillswap-modal-slots { display: grid; gap: 6px; }
+.skillswap-modal-slots > strong { color: #727286; font-size: 9px; }
+.skillswap-modal-slots button { min-height: 33px; border: 1px solid #e9e5f6; border-radius: 8px; background: #fbfaff; color: #6556bc; cursor: pointer; font-size: 9px; }
+.skillswap-cycle-modal-list { display: grid; gap: 7px; margin: 0; padding: 10px; border-radius: 10px; background: #faf9fd; list-style: none; }
+.skillswap-cycle-modal-list li { display: grid; grid-template-columns: 22px 1fr; align-items: center; gap: 4px 8px; color: #77778a; font-size: 9px; }
+.skillswap-cycle-modal-list li > span { display: grid; width: 22px; height: 22px; grid-row: span 2; place-items: center; border-radius: 7px; background: #eeeafd; color: #7060c5; font-size: 9px; }
+.skillswap-cycle-modal-list li > strong { color: #5b5680; font-size: 8px; }
+.skillswap-modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.skillswap-modal-footer .button { min-height: 38px; }
+.skillswap-loading { padding: 24px; color: #7b7a8d; font-size: 12px; }
+
+html[data-theme="dark"] .skillswap-free-badge { border-color: #3e385b; background: #2a273c; color: #c4b8ff; }
+html[data-theme="dark"] .skillswap-stat strong,
+html[data-theme="dark"] .skillswap-section-heading h2,
+html[data-theme="dark"] .skillswap-match-title strong,
+html[data-theme="dark"] .skillswap-skill-row strong,
+html[data-theme="dark"] .skillswap-session-top > strong { color: #e1dfec; }
+html[data-theme="dark"] .skillswap-stat small,
+html[data-theme="dark"] .skillswap-empty p,
+html[data-theme="dark"] .skillswap-match-details > p,
+html[data-theme="dark"] .skillswap-match-meta,
+html[data-theme="dark"] .skillswap-tree-copy,
+html[data-theme="dark"] .skillswap-tree-hint,
+html[data-theme="dark"] .skillswap-subheading small,
+html[data-theme="dark"] .skillswap-subtle,
+html[data-theme="dark"] .skillswap-session-content > p,
+html[data-theme="dark"] .skillswap-session-content > small,
+html[data-theme="dark"] .skillswap-notification small { color: #a7a6b8; }
+html[data-theme="dark"] .skillswap-empty,
+html[data-theme="dark"] .skillswap-cycle-card,
+html[data-theme="dark"] .skillswap-tree,
+html[data-theme="dark"] .skillswap-verification-card,
+html[data-theme="dark"] .skillswap-skill-row,
+html[data-theme="dark"] .skillswap-availability-row,
+html[data-theme="dark"] .skillswap-session,
+html[data-theme="dark"] .skillswap-notification.unread,
+html[data-theme="dark"] .skillswap-notification:hover { border-color: #383949; background: #252634; }
+html[data-theme="dark"] .skillswap-empty strong,
+html[data-theme="dark"] .skillswap-subheading strong,
+html[data-theme="dark"] .skillswap-cycle-header strong,
+html[data-theme="dark"] .skillswap-verification-card strong,
+html[data-theme="dark"] .skillswap-availability-row strong { color: #d9d7e5; }
+html[data-theme="dark"] .skillswap-tree-node { border-color: #414254; background: #292a38; color: #d0cede; }
+html[data-theme="dark"] .skillswap-tree-node.known { border-color: #315d50; background: #24352f; color: #8bd1b5; }
+html[data-theme="dark"] .skillswap-tree-node.wanted { border-color: #51477c; background: #302b48; color: #c4b8ff; }
+html[data-theme="dark"] .skillswap-form-divider,
+html[data-theme="dark"] .skillswap-cycles { border-color: #383949; background-color: #383949; }
+html[data-theme="dark"] .skillswap-profile-card .form-field input,
+html[data-theme="dark"] .skillswap-profile-card .form-field select,
+html[data-theme="dark"] .skillswap-profile-card .form-field textarea,
+html[data-theme="dark"] .skillswap-inline-field input { border-color: #414254; background: #292a38; color: #e4e2ed; }
+html[data-theme="dark"] .skillswap-review-form,
+html[data-theme="dark"] .skillswap-dispute-form,
+html[data-theme="dark"] .skillswap-sessions-empty,
+html[data-theme="dark"] .skillswap-verification-form { background: #272735; }
+html[data-theme="dark"] .skillswap-notification strong { color: #d3d1e0; }
+html[data-theme="dark"] .skillswap-modal { border-color: #383949; background: #22232f; }
+html[data-theme="dark"] .skillswap-modal h2 { color: #e3e1ed; }
+html[data-theme="dark"] .skillswap-modal-close,
+html[data-theme="dark"] .skillswap-modal-slots button,
+html[data-theme="dark"] .skillswap-cycle-modal-list { border-color: #414254; background: #2a2b39; color: #d4d1e3; }
+html[data-theme="dark"] .skillswap-cycle-modal-list li { color: #c1bfd0; }
+
+@media (max-width: 1050px) {
+  .skillswap-layout { grid-template-columns: minmax(0, 1fr); }
+  .skillswap-side-column { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .skillswap-profile-card { grid-row: span 2; }
+}
+
+@media (max-width: 680px) {
+  .skillswap-page { gap: 13px; }
+  .skillswap-heading { align-items: flex-start; flex-direction: column; gap: 9px; }
+  .skillswap-heading h1 { font-size: 24px; }
+  .skillswap-heading .muted { font-size: 11px; line-height: 1.5; }
+  .skillswap-hero { min-height: 145px; grid-template-columns: minmax(0, 1fr) 42px; padding: 17px 15px 13px; border-radius: 15px; }
+  .skillswap-hero h2 { max-width: 280px; font-size: 16px; line-height: 1.35; }
+  .skillswap-hero p { max-width: 300px; font-size: 10px; line-height: 1.5; }
+  .skillswap-hero-kicker { font-size: 8px; line-height: 1.5; }
+  .skillswap-hero-mark { width: 41px; height: 41px; border-radius: 13px; }
+  .skillswap-hero-foot { gap: 7px 12px; font-size: 9px; }
+  .skillswap-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .skillswap-stat { min-height: 65px; gap: 8px; padding: 9px; }
+  .skillswap-stat-icon { width: 30px; height: 30px; border-radius: 9px; }
+  .skillswap-stat strong { font-size: 16px; }
+  .skillswap-stat small { font-size: 9px; }
+  .skillswap-layout { gap: 11px; }
+  .skillswap-main-column, .skillswap-side-column { gap: 11px; }
+  .skillswap-side-column { grid-template-columns: minmax(0, 1fr); }
+  .skillswap-profile-card { grid-row: auto; }
+  .skillswap-layout .card-surface { padding: 13px; border-radius: 13px; }
+  .skillswap-section-heading { align-items: flex-start; margin-bottom: 12px; }
+  .skillswap-section-heading h2 { font-size: 14px; }
+  .skillswap-match-card { grid-template-columns: 34px minmax(0, 1fr); gap: 8px; padding: 10px; }
+  .skillswap-match-avatar { width: 34px; height: 34px; border-radius: 11px; font-size: 12px; }
+  .skillswap-match-title { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .skillswap-match-title strong { max-width: 100%; }
+  .skillswap-score { font-size: 7px; }
+  .skillswap-match-details > p { font-size: 10px; }
+  .skillswap-match-meta { font-size: 9px; }
+  .skill-tag, .skill-verified { font-size: 9px; }
+  .skillswap-propose-button { min-height: 38px; grid-column: 1 / -1; justify-self: stretch; }
+  .skillswap-tree { justify-content: flex-start; gap: 5px; padding: 9px 5px; }
+  .skillswap-tree-step { gap: 4px; }
+  .skillswap-tree-node { min-height: 31px; gap: 4px; padding: 0 6px; font-size: 8px; }
+  .skillswap-tree-node span { width: 16px; height: 16px; }
+  .skillswap-tree-edge svg { width: 11px; }
+  .skillswap-verification-card { padding: 10px; }
+  .skillswap-profile-card .form-field { font-size: 11px; }
+  .skillswap-profile-card .form-field input,
+  .skillswap-profile-card .form-field select,
+  .skillswap-profile-card .form-field textarea { min-height: 44px; font-size: 16px; }
+  .skillswap-profile-card .form-field textarea { min-height: 100px; }
+  .skillswap-inline-field { font-size: 10px; }
+  .skillswap-inline-field input { min-height: 42px; font-size: 16px; }
+  .skillswap-chat-form input { min-height: 44px; font-size: 16px; }
+  .skillswap-session-top > strong { font-size: 11px; }
+  .skillswap-session-content > p { font-size: 10px; }
+  .skillswap-availability-add { grid-template-columns: 1fr 1fr; }
+  .skillswap-modal-backdrop { align-items: end; padding: 10px; }
+  .skillswap-modal { max-height: calc(100dvh - 20px); overflow: auto; padding: 19px 15px; border-radius: 16px; }
+  .skillswap-modal h2 { padding-right: 21px; font-size: 17px; }
+  .skillswap-modal-footer { flex-direction: column-reverse; }
+  .skillswap-modal-footer .button { width: 100%; min-height: 42px; }
+  .skillswap-toast { top: 72px; right: 12px; left: 12px; max-width: none; }
+}
+
+@media (max-width: 360px) {
+  .skillswap-hero { grid-template-columns: minmax(0, 1fr); }
+  .skillswap-hero-mark { display: none; }
+  .skillswap-hero-foot { grid-column: 1; }
+  .skillswap-skill-row { grid-template-columns: 7px minmax(0, 1fr) auto; }
+  .skillswap-verify-button { grid-column: 2; justify-self: start; }
+  .skillswap-remove { grid-column: 3; grid-row: 1; }
+}
+>>>>>>> Stashed changes
