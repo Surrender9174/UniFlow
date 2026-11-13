@@ -1,17 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/icons";
-import { parseScheduleText, getWeekdayName } from "@/lib/schedule-parser";
-import { extractScheduleFile, isSupportedScheduleFile } from "@/lib/schedule-file-reader";
+import ScheduleReview from "@/components/sections/schedule-review";
+import { useScheduleUpload } from "@/components/use-schedule-upload";
 import {
   getServerScheduleSnapshot,
   getStoredScheduleSnapshot,
   parseScheduleSnapshot,
-  saveSchedule,
   subscribeToSchedule,
-  type ScheduleEvent,
 } from "@/lib/schedule-storage";
 import {
   defaultProfile,
@@ -37,13 +35,6 @@ type DashboardTask = {
   done: boolean;
 };
 
-type UploadStatus = "idle" | "processing" | "preview";
-
-function getTimeValue(time: string) {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
 const tasks: DashboardTask[] = [
   { title: "Eseu: Etica în tehnologie", course: "Etică profesională", deadline: { daysFromToday: 0, time: "23:59" }, color: "lavender", done: false },
   { title: "Laborator — structuri de date", course: "Algoritmi și structuri de date", deadline: { daysFromToday: 1, time: "12:00" }, color: "mint", done: false },
@@ -57,12 +48,19 @@ const recommendations = [
 
 export default function Dashboard() {
   const now = useDeviceNow();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [taskItems, setTaskItems] = useState(tasks);
-  const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
-  const [uploadMessage, setUploadMessage] = useState("");
-  const [uploadError, setUploadError] = useState("");
-  const [pendingSchedule, setPendingSchedule] = useState<ScheduleEvent[]>([]);
+  const {
+    fileInputRef,
+    uploadStatus,
+    uploadMessage,
+    uploadError,
+    pendingSchedule,
+    openFilePicker,
+    handleFileChange,
+    updatePendingEvent,
+    savePendingSchedule,
+    cancelSchedulePreview,
+  } = useScheduleUpload();
   const savedProfile = useSyncExternalStore(
     subscribeToProfile,
     getStoredProfileSnapshot,
@@ -85,72 +83,6 @@ export default function Dashboard() {
   const careerWeekStart = now
     ? formatLocalDate(getDeadlineDate(now, { weekday: 1, time: "" }))
     : null;
-
-  const handleScheduleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const input = event.currentTarget;
-    const file = input.files?.[0];
-    setUploadError("");
-    setPendingSchedule([]);
-    if (!file) return;
-
-    if (file.size > 15 * 1024 * 1024) {
-      setUploadError("Fișierul depășește limita de 15 MB.");
-      input.value = "";
-      return;
-    }
-
-    if (!isSupportedScheduleFile(file)) {
-      setUploadError("Alege un PDF, o imagine, un fișier Excel, Word, CSV sau TXT.");
-      input.value = "";
-      return;
-    }
-
-    setUploadStatus("processing");
-    setUploadMessage("Se pregătește recunoașterea textului...");
-    try {
-      const text = await extractScheduleFile(file, setUploadMessage);
-      const parsedEvents = parseScheduleText(text);
-      if (!parsedEvents.length) {
-        throw new Error("Nu am putut identifica zile, ore și cursuri. Încearcă o scanare mai clară, cu zilele săptămânii vizibile.");
-      }
-      setPendingSchedule(parsedEvents);
-      setUploadStatus("preview");
-    } catch (error) {
-      setUploadStatus("idle");
-      setUploadError(
-        error instanceof Error ? error.message : "Nu am putut procesa fișierul. Încearcă din nou.",
-      );
-    } finally {
-      input.value = "";
-    }
-  };
-
-  const updatePendingEvent = (
-    eventId: string,
-    field: keyof Omit<ScheduleEvent, "id">,
-    value: string | number,
-  ) => {
-    setPendingSchedule((current) =>
-      current.map((event) => event.id === eventId ? { ...event, [field]: value } : event),
-    );
-  };
-
-  const savePendingSchedule = () => {
-    if (pendingSchedule.some((event) => !event.title.trim() || !event.start || !event.end || getTimeValue(event.end) <= getTimeValue(event.start))) {
-      setUploadError("Completează fiecare curs și verifică intervalul orar înainte de salvare.");
-      return;
-    }
-
-    setUploadError("");
-    saveSchedule(pendingSchedule);
-    setPendingSchedule([]);
-    setUploadStatus("idle");
-  };
-
-  const cancelSchedulePreview = () => {
-    setPendingSchedule([]);
-    setUploadStatus("idle");
-  };
 
   return (
     <div className="dashboard-page">
@@ -179,30 +111,12 @@ export default function Dashboard() {
                   <h2>Verifică orarul extras</h2>
                 </div>
               </div>
-              <div className="schedule-review-list">
-                {pendingSchedule.map((event) => (
-                  <div className="schedule-review-row" key={event.id}>
-                    <select
-                      aria-label={`Ziua pentru ${event.title}`}
-                      onChange={(change) => updatePendingEvent(event.id, "weekday", Number(change.target.value))}
-                      value={event.weekday}
-                    >
-                      {[1, 2, 3, 4, 5, 6, 0].map((weekday) => (
-                        <option key={weekday} value={weekday}>{getWeekdayName(weekday)}</option>
-                      ))}
-                    </select>
-                    <input aria-label={`Ora de început pentru ${event.title}`} onChange={(change) => updatePendingEvent(event.id, "start", change.target.value)} type="time" value={event.start} />
-                    <span>–</span>
-                    <input aria-label={`Ora de sfârșit pentru ${event.title}`} onChange={(change) => updatePendingEvent(event.id, "end", change.target.value)} type="time" value={event.end} />
-                    <input aria-label="Denumirea cursului" className="schedule-review-title" onChange={(change) => updatePendingEvent(event.id, "title", change.target.value)} value={event.title} />
-                    <input aria-label="Sala cursului" className="schedule-review-room" onChange={(change) => updatePendingEvent(event.id, "room", change.target.value)} placeholder="Sală (opțional)" value={event.room} />
-                  </div>
-                ))}
-              </div>
-              <div className="schedule-review-actions">
-                <button className="button button-secondary" onClick={savePendingSchedule} type="button">Salvează orarul</button>
-                <button className="schedule-cancel-button" onClick={cancelSchedulePreview} type="button">Anulează</button>
-              </div>
+              <ScheduleReview
+                events={pendingSchedule}
+                onCancel={cancelSchedulePreview}
+                onChange={updatePendingEvent}
+                onSave={savePendingSchedule}
+              />
             </>
           ) : uploadStatus === "processing" ? (
             <div className="next-class-content">
@@ -227,7 +141,7 @@ export default function Dashboard() {
               <button
                 aria-label="Încarcă fișierul cu orarul"
                 className="class-art class-art-upload"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={openFilePicker}
                 type="button"
               >
                 <Icon name="upload" size={28} />
@@ -244,7 +158,7 @@ export default function Dashboard() {
               accept="application/pdf,image/png,image/jpeg,image/webp,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,text/csv,text/plain,.pdf,.png,.jpg,.jpeg,.webp,.xlsx,.xls,.xlsm,.docx,.doc,.csv,.txt"
               className="visually-hidden"
               disabled={uploadStatus === "processing"}
-              onChange={handleScheduleUpload}
+              onChange={handleFileChange}
               ref={fileInputRef}
               type="file"
             />
@@ -256,10 +170,10 @@ export default function Dashboard() {
             {uploadStatus === "preview" ? null : hasSchedule ? (
               <>
                 <Link href="/schedule">Vezi orarul <Icon name="arrow" size={15} /></Link>
-                <button className="schedule-upload-link" disabled={uploadStatus === "processing"} onClick={() => fileInputRef.current?.click()} type="button">Înlocuiește</button>
+                <button className="schedule-upload-link" disabled={uploadStatus === "processing"} onClick={openFilePicker} type="button">Înlocuiește</button>
               </>
             ) : (
-              <button className="schedule-upload-link" disabled={uploadStatus === "processing"} onClick={() => fileInputRef.current?.click()} type="button">
+              <button className="schedule-upload-link" disabled={uploadStatus === "processing"} onClick={openFilePicker} type="button">
                 {uploadStatus === "processing" ? "Se procesează..." : "Încarcă fișierul"} <Icon name="arrow" size={15} />
               </button>
             )}
@@ -269,7 +183,7 @@ export default function Dashboard() {
         </article>
 
         <Link className="focus-card" href="/assistant">
-          <span className="focus-orbit"><Icon name="sparkles" size={25} /></span>
+          
           <span className="focus-label">STUDY BUDDY</span>
           <strong>Ai nevoie de<br />un plan de studiu?</strong>
           <span className="focus-link">Întreabă Uni <Icon name="arrow" size={15} /></span>
@@ -285,7 +199,7 @@ export default function Dashboard() {
         </article>
         <article className="stat-card">
           <span className="stat-icon stat-green"><Icon name="file" size={18} /></span>
-          <div><p>Practice finalizate</p><strong>{completed + 4}<small className="stat-total">/ 8</small></strong><small>Mai ai <b>4</b> de bifat</small></div>
+          <div><p>Proiecte practice finalizate</p><strong>{completed + 4}<small className="stat-total">/ 8</small></strong><small>Mai ai <b>4</b> de bifat</small></div>
           <span className="stat-sparkline sparkline-green" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></span>
         </article>
         <article className="stat-card">
