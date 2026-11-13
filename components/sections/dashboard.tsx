@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
 import { Icon } from "@/components/icons";
 import { parseScheduleText, getWeekdayName } from "@/lib/schedule-parser";
 import { extractScheduleFile, isSupportedScheduleFile } from "@/lib/schedule-file-reader";
@@ -20,6 +20,14 @@ import {
   subscribeToProfile,
 } from "@/lib/profile";
 import {
+  formatSavedTaskDueAt,
+  getSavedTasksSnapshot,
+  getServerSavedTasksSnapshot,
+  parseSavedTasksSnapshot,
+  setSavedTaskDone,
+  subscribeToSavedTasks,
+} from "@/lib/tasks";
+import {
   formatLocalDate,
   formatLocalTime,
   formatRelativeDeadline,
@@ -35,6 +43,17 @@ type DashboardTask = {
   deadline: RelativeDeadline;
   color: string;
   done: boolean;
+};
+
+type DashboardTaskRow = {
+  id: string;
+  title: string;
+  course: string;
+  date: string;
+  color: string;
+  done: boolean;
+  savedId?: string;
+  demoIndex?: number;
 };
 
 type UploadStatus = "idle" | "processing" | "preview";
@@ -63,11 +82,28 @@ export default function Dashboard() {
   const [uploadMessage, setUploadMessage] = useState("");
   const [uploadError, setUploadError] = useState("");
   const [pendingSchedule, setPendingSchedule] = useState<ScheduleEvent[]>([]);
+  const [taskError, setTaskError] = useState("");
   const savedProfile = useSyncExternalStore(
     subscribeToProfile,
     getStoredProfileSnapshot,
     getServerProfileSnapshot,
   );
+  const taskSnapshot = useSyncExternalStore(
+    subscribeToSavedTasks,
+    getSavedTasksSnapshot,
+    getServerSavedTasksSnapshot,
+  );
+  const { savedTasks, savedTasksError } = useMemo(() => {
+    try {
+      return { savedTasks: parseSavedTasksSnapshot(taskSnapshot), savedTasksError: "" };
+    } catch (error) {
+      return {
+        savedTasks: [],
+        savedTasksError:
+          error instanceof Error ? error.message : "Nu am putut încărca task-urile salvate.",
+      };
+    }
+  }, [taskSnapshot]);
   const savedSchedule = useSyncExternalStore(
     subscribeToSchedule,
     getStoredScheduleSnapshot,
@@ -79,12 +115,56 @@ export default function Dashboard() {
   const name = profileData?.name ?? defaultProfile.name;
   const scheduleEvents = parseScheduleSnapshot(savedSchedule);
   const hasSchedule = scheduleEvents.length > 0;
-  const completed = taskItems.filter((task) => task.done).length;
+  const completed =
+    taskItems.filter((task) => task.done).length +
+    savedTasks.filter((task) => task.done).length;
+  const taskRows: DashboardTaskRow[] = [
+    ...savedTasks.map((task) => ({
+      id: task.id,
+      savedId: task.id,
+      title: task.title,
+      course: task.subject,
+      date: formatSavedTaskDueAt(task.dueAt),
+      color: "lavender",
+      done: task.done,
+    })),
+    ...taskItems.map((task, index) => ({
+      id: `demo-${index}`,
+      demoIndex: index,
+      title: task.title,
+      course: task.course,
+      date: now ? formatRelativeDeadline(now, task.deadline) : "Se sincronizează",
+      color: task.color,
+      done: task.done,
+    })),
+  ];
+  const visibleTasks = taskRows.slice(0, 3);
 
   const firstName = name.trim().split(/\s+/)[0] || "student";
   const careerWeekStart = now
     ? formatLocalDate(getDeadlineDate(now, { weekday: 1, time: "" }))
     : null;
+
+  const toggleTask = (task: DashboardTaskRow) => {
+    setTaskError("");
+    if (task.savedId) {
+      try {
+        setSavedTaskDone(task.savedId, !task.done);
+      } catch (error) {
+        setTaskError(
+          error instanceof Error ? error.message : "Nu am putut actualiza task-ul.",
+        );
+      }
+      return;
+    }
+    if (task.demoIndex !== undefined) {
+      setTaskItems((current) =>
+        current.map((item, index) =>
+          index === task.demoIndex ? { ...item, done: !item.done } : item,
+        ),
+      );
+    }
+  };
 
   const handleScheduleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const input = event.currentTarget;
@@ -280,7 +360,7 @@ export default function Dashboard() {
       <section className="stats-grid" aria-label="Statistici academice">
         <article className="stat-card">
           <span className="stat-icon stat-violet"><Icon name="check" size={18} /></span>
-          <div><p>Task-uri active</p><strong>8</strong><small><span className="trend-up">↑ 2</span> față de săptămâna trecută</small></div>
+          <div><p>Task-uri active</p><strong>{taskRows.filter((task) => !task.done).length}</strong><small><span className="trend-up">↑ 2</span> față de săptămâna trecută</small></div>
           <span className="stat-sparkline sparkline-violet" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></span>
         </article>
         <article className="stat-card">
@@ -297,26 +377,28 @@ export default function Dashboard() {
 
       <section className="section-block">
         <div className="section-heading">
-          <div><p className="eyebrow">ȚINE RITMUL</p><h2>Task-urile tale <span className="heading-count">3</span></h2></div>
+          <div><p className="eyebrow">ȚINE RITMUL</p><h2>Task-urile tale <span className="heading-count">{taskRows.length}</span></h2></div>
           <Link className="text-link" href="/tasks">Vezi toate <Icon name="arrow" size={15} /></Link>
         </div>
+        {savedTasksError && <p className="gmail-status-error" role="alert">{savedTasksError}</p>}
+        {taskError && <p className="gmail-status-error" role="alert">{taskError}</p>}
         <div className="task-list card-surface">
-          {taskItems.map((task, index) => {
+          {visibleTasks.map((task, index) => {
             const isDone = task.done;
             return (
-              <div className={`task-row${isDone ? " task-done" : ""}`} key={task.title}>
+              <div className={`task-row${isDone ? " task-done" : ""}`} key={task.id}>
                 <button
                   aria-label={isDone ? `Marchează ${task.title} ca nefinalizat` : `Marchează ${task.title} ca finalizat`}
                   aria-pressed={isDone}
                   className={`task-check ${isDone ? "checked" : ""}`}
-                  onClick={() => setTaskItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, done: !item.done } : item))}
+                  onClick={() => toggleTask(task)}
                   type="button"
                 >
                   {isDone && <Icon name="check" size={13} />}
                 </button>
                 <span className={`task-color ${task.color}`} />
                 <div className="task-description"><strong>{task.title}</strong><small>{task.course}</small></div>
-                <span className={`task-due${index === 0 && !isDone ? " due-soon" : ""}`}><Icon name="clock" size={14} />{now ? formatRelativeDeadline(now, task.deadline) : "Se sincronizează"}</span>
+                <span className={`task-due${index === 0 && !isDone && task.date !== "Fără termen" ? " due-soon" : ""}`}><Icon name="clock" size={14} />{task.date}</span>
                 <button aria-label={`Opțiuni pentru ${task.title}`} className="quiet-icon task-more" type="button"><Icon name="more" size={18} /></button>
               </div>
             );

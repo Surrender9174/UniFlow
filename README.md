@@ -31,10 +31,16 @@ third-party connections.
 The assistant can also add school or university tasks when a task and its due
 date/time are clear; if the date or time is missing, it asks for those details.
 These tasks are saved in the current browser and appear on the dashboard and
-Tasks page. Saved tasks can be deleted or postponed to a selected future date
-and time from the Tasks page; the schedule updates to reflect the new deadline.
+Tasks page. Dated tasks appear on their selected day in the schedule; tasks
+without a deadline are grouped separately. Saved tasks can be deleted or
+postponed to a selected future date and time from the Tasks page.
 Gmail does not need to be connected for task requests, but Gemini must be
 configured.
+
+The assistant conversation is also saved in the current browser and restored
+when `/assistant` is opened again. It is not synced to other devices. The latest
+8 messages are sent to Gemini as context for each new request; clearing this
+browser's site data removes the saved conversation.
 
 The default model is `gemini-3.5-flash-lite`, which is available on Google's
 free tier and is optimized for low-latency tasks. Free-tier limits still apply,

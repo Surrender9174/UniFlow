@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
 import type {
@@ -39,6 +47,9 @@ type AnalysisResult = {
 };
 
 const MAX_WHATSAPP_EXPORT_BYTES = 200 * 1024;
+const CHAT_STORAGE_KEY = "uniflow-assistant-chat";
+const CHAT_STORAGE_UNAVAILABLE = "__uniflow_assistant_chat_storage_unavailable__";
+const CHAT_CHANGED_EVENT = "uniflow-assistant-chat-change";
 
 function isEmailTask(value: unknown): value is EmailTask {
   return (
@@ -157,6 +168,54 @@ function isWhatsAppAnalysis(value: unknown): value is WhatsAppAnalysis {
   );
 }
 
+function isStoredSavedTask(value: unknown): value is SavedTask {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    typeof value.id === "string" &&
+    "title" in value &&
+    typeof value.title === "string" &&
+    "subject" in value &&
+    typeof value.subject === "string" &&
+    "dueAt" in value &&
+    (value.dueAt === null ||
+      (typeof value.dueAt === "string" && Number.isFinite(Date.parse(value.dueAt)))) &&
+    "category" in value &&
+    (value.category === "Studiu" ||
+      value.category === "Practică" ||
+      value.category === "Test") &&
+    "done" in value &&
+    typeof value.done === "boolean" &&
+    "createdAt" in value &&
+    typeof value.createdAt === "string"
+  );
+}
+
+function isStoredMessage(value: unknown): value is Message {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "role" in value &&
+    (value.role === "assistant" || value.role === "student") &&
+    "text" in value &&
+    typeof value.text === "string" &&
+    "time" in value &&
+    typeof value.time === "string" &&
+    (!("tasks" in value) ||
+      (Array.isArray(value.tasks) && value.tasks.every(isEmailTask))) &&
+    (!("savedTasks" in value) ||
+      (Array.isArray(value.savedTasks) && value.savedTasks.every(isStoredSavedTask))) &&
+    (!("whatsappEvents" in value) ||
+      (Array.isArray(value.whatsappEvents) && value.whatsappEvents.every(isWhatsAppEvent))) &&
+    (!("savedWhatsAppEventIndexes" in value) ||
+      (Array.isArray(value.savedWhatsAppEventIndexes) &&
+        value.savedWhatsAppEventIndexes.every(
+          (index) => Number.isInteger(index) && index >= 0,
+        )))
+  );
+}
+
 const whatsappEventTypeLabels: Record<WhatsAppEvent["type"], string> = {
   test: "Test / examen",
   oral_assessment: "Ascultare",
@@ -180,6 +239,62 @@ const starterMessages: Message[] = [
     time: "Acum",
   },
 ];
+
+function getAssistantChatSnapshot() {
+  try {
+    return window.localStorage.getItem(CHAT_STORAGE_KEY) ?? "";
+  } catch {
+    return CHAT_STORAGE_UNAVAILABLE;
+  }
+}
+
+function getServerAssistantChatSnapshot() {
+  return "";
+}
+
+function subscribeToAssistantChat(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(CHAT_CHANGED_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(CHAT_CHANGED_EVENT, onChange);
+  };
+}
+
+function parseAssistantChatSnapshot(snapshot: string) {
+  if (snapshot === CHAT_STORAGE_UNAVAILABLE) {
+    return {
+      messages: starterMessages,
+      error: "Nu am putut accesa stocarea locală a conversației în acest browser.",
+    };
+  }
+  if (!snapshot) return { messages: starterMessages, error: "" };
+
+  try {
+    const parsed: unknown = JSON.parse(snapshot);
+    if (!Array.isArray(parsed) || !parsed.every(isStoredMessage)) {
+      throw new Error("Istoricul conversației salvate are un format invalid.");
+    }
+    return {
+      messages: parsed.length > 0 ? parsed : starterMessages,
+      error: "",
+    };
+  } catch (error: unknown) {
+    return {
+      messages: starterMessages,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Nu am putut încărca istoricul conversației din acest browser.",
+    };
+  }
+}
+
+function saveAssistantChat(messages: Message[]) {
+  window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+  window.dispatchEvent(new Event(CHAT_CHANGED_EVENT));
+}
+
 const suggestions = [
   "Ce trebuie să fac din emailurile recente?",
   "Găsește deadline-urile din inbox",
@@ -209,7 +324,18 @@ function getGmailNotice(status: string) {
 }
 
 export default function AssistantPage() {
-  const [messages, setMessages] = useState(starterMessages);
+  const chatSnapshot = useSyncExternalStore(
+    subscribeToAssistantChat,
+    getAssistantChatSnapshot,
+    getServerAssistantChatSnapshot,
+  );
+  const { messages: storedMessages, error: chatLoadError } = useMemo(
+    () => parseAssistantChatSnapshot(chatSnapshot),
+    [chatSnapshot],
+  );
+  const [volatileMessages, setVolatileMessages] = useState<Message[] | null>(null);
+  const messages = volatileMessages ?? storedMessages;
+  const [chatStorageError, setChatStorageError] = useState("");
   const [draft, setDraft] = useState("");
   const [gmailStatus, setGmailStatus] = useState<GmailStatus | null>(null);
   const [gmailStatusError, setGmailStatusError] = useState("");
@@ -220,6 +346,22 @@ export default function AssistantPage() {
   const [whatsappError, setWhatsAppError] = useState("");
   const whatsappFileInput = useRef<HTMLInputElement>(null);
   const savedWhatsAppEventKeys = useRef(new Set<string>());
+
+  const updateMessages = (update: (current: Message[]) => Message[]) => {
+    const current =
+      volatileMessages ?? parseAssistantChatSnapshot(getAssistantChatSnapshot()).messages;
+    const updated = update(current);
+    setVolatileMessages(updated);
+    try {
+      saveAssistantChat(updated);
+      setVolatileMessages(null);
+      setChatStorageError("");
+    } catch {
+      setChatStorageError(
+        "Nu am putut salva conversația în acest browser. Verifică spațiul disponibil pentru datele site-ului.",
+      );
+    }
+  };
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -270,7 +412,7 @@ export default function AssistantPage() {
     if (!text || loading) return;
 
     setError("");
-    setMessages((current) => [
+    updateMessages((current) => [
       ...current,
       { role: "student", text, time: currentTime() },
     ]);
@@ -285,10 +427,10 @@ export default function AssistantPage() {
           question: text,
           history: messages
             .slice(1)
-            .slice(-4)
+            .slice(-8)
             .map((message) => ({
               role: message.role === "student" ? "user" : "assistant",
-              content: message.text.slice(0, 800),
+              content: message.text.slice(0, 1_200),
             })),
           timeContext: {
             currentTime: new Date().toISOString(),
@@ -325,7 +467,7 @@ export default function AssistantPage() {
         result.inboxAvailable && result.emailCount === 0
           ? `${result.reply} Nu am găsit emailuri în Inbox din ultimele 30 de zile.`
           : result.reply;
-      setMessages((current) => [
+      updateMessages((current) => [
         ...current,
         {
           role: "assistant",
@@ -341,7 +483,7 @@ export default function AssistantPage() {
           ? requestError.message
           : "Nu am putut analiza emailurile.";
       setError(message);
-      setMessages((current) => [
+      updateMessages((current) => [
         ...current,
         { role: "assistant", text: message, time: currentTime() },
       ]);
@@ -369,7 +511,7 @@ export default function AssistantPage() {
 
     setWhatsAppError("");
     setLoading(true);
-    setMessages((current) => [
+    updateMessages((current) => [
       ...current,
       {
         role: "student",
@@ -403,7 +545,7 @@ export default function AssistantPage() {
         throw new Error("Răspuns invalid de la analiza WhatsApp.");
       }
 
-      setMessages((current) => [
+      updateMessages((current) => [
         ...current,
         {
           role: "assistant",
@@ -455,7 +597,7 @@ export default function AssistantPage() {
                 : "Studiu",
         },
       ]);
-      setMessages((current) =>
+      updateMessages((current) =>
         current.map((message, index) =>
           index === messageIndex
             ? {
@@ -489,7 +631,6 @@ export default function AssistantPage() {
       const response = await fetch("/api/gmail/disconnect", { method: "POST" });
       if (!response.ok) throw new Error("Nu am putut șterge sesiunea Gmail.");
       setGmailStatus({ connected: false, email: null });
-      setMessages(starterMessages);
       setNotice("Sesiunea Gmail a fost ștearsă din UniFlow.");
     } catch (requestError: unknown) {
       setError(
@@ -553,7 +694,8 @@ export default function AssistantPage() {
           ultimele 30 de zile sunt trimise către Gemini. Pentru celelalte întrebări,
           Gmail nu este accesat. Pe planul gratuit, Google poate folosi conținutul trimis
           pentru îmbunătățirea produselor. UniFlow nu salvează emailurile. Task-urile
-          sunt salvate local în browserul acesta. Deconectarea șterge sesiunea locală;
+          și istoricul conversației sunt salvate local în browserul acesta, fără
+          sincronizare între dispozitive. Deconectarea șterge sesiunea Gmail locală;
           poți revoca accesul aplicației și din setările contului Google.
         </p>
       </section>
@@ -602,6 +744,9 @@ export default function AssistantPage() {
             <Icon name="more" size={20} />
           </button>
         </header>
+        {(chatLoadError || chatStorageError) && (
+          <p className="gmail-status-error" role="alert">{chatLoadError || chatStorageError}</p>
+        )}
         <div aria-live="polite" className="chat-messages">
           <p className="chat-date">ASTĂZI</p>
           {messages.map((message, index) => (
