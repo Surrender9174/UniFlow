@@ -283,7 +283,7 @@ export default function AssistantPage() {
         {error && <p className="gmail-status-error" role="alert">{error}</p>}
         <p className="gmail-privacy-note">
           Accesul este doar pentru citire. Când trimiți o întrebare, până la 10 mesaje
-          din Inbox-ul ultimelor 30 de zile sunt trimise către OpenAI pentru analiză.
+          din Inbox-ul ultimelor 30 de zile sunt trimise către Gemini pentru analiză.
           UniFlow nu salvează conținutul emailurilor. Deconectarea șterge sesiunea
           locală; poți revoca accesul aplicației și din setările contului Google.
         </p>

@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         ? error.message
         : error instanceof InvalidGmailSessionError
           ? "Your Gmail session is invalid. Disconnect and reconnect your account."
-          : "Inbox analysis failed. Check your Gmail and OpenAI configuration, then try again.";
+        : "Inbox analysis failed. Check your Gmail and Gemini configuration, then try again.";
     const status = error instanceof ProviderRequestError ? 502 : 500;
     return NextResponse.json(
       { error: message },
