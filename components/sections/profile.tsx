@@ -7,9 +7,12 @@ import {
   getNotificationSnapshot,
   getServerNotificationSnapshot,
   getServerProfileSnapshot,
+  getServerThemeSnapshot,
+  getThemeSnapshot,
   getStoredProfileSnapshot,
   saveNotificationPreference,
   saveProfile,
+  saveThemePreference,
   subscribeToPreferences,
   subscribeToProfile,
   type StudentProfile,
@@ -26,6 +29,11 @@ export default function ProfilePage() {
     getNotificationSnapshot,
     getServerNotificationSnapshot,
   );
+  const savedTheme = useSyncExternalStore(
+    subscribeToPreferences,
+    getThemeSnapshot,
+    getServerThemeSnapshot,
+  );
   const persistedProfile = savedProfile
     ? { ...defaultProfile, ...JSON.parse(savedProfile) as Partial<StudentProfile> }
     : defaultProfile;
@@ -34,7 +42,10 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const notifications = savedNotifications === "on";
 
-  const updateField = (field: keyof StudentProfile, value: string) => {
+  const updateField = <K extends keyof StudentProfile>(
+    field: K,
+    value: StudentProfile[K],
+  ) => {
     setDraft((current) => ({ ...(current ?? profile), [field]: value }));
     setSaved(false);
   };
@@ -50,6 +61,10 @@ export default function ProfilePage() {
     saveNotificationPreference(!notifications);
   };
 
+  const toggleTheme = () => {
+    saveThemePreference(savedTheme === "dark" ? "light" : "dark");
+  };
+
   return (
     <div className="section-page profile-page">
       <div className="page-heading">
@@ -57,12 +72,13 @@ export default function ProfilePage() {
       </div>
       <div className="profile-layout">
         <aside className="profile-card card-surface">
-          <div className="profile-avatar">{profile.name.trim().slice(0, 1).toUpperCase() || "A"}<span aria-hidden="true" className="avatar-edit"><Icon name="plus" size={14} /></span></div>
-          <h2>{profile.name || "Numele tău"}</h2><p>{profile.program} · {profile.year}</p>
-          <span className="student-badge"><Icon name="graduation" size={15} /> Student UniFlow</span>
+          <div className="profile-avatar">{profile.name.trim().slice(0, 1).toUpperCase() || "A"}<span aria-hidden="true" className="avatar-edit"></span></div>
+          <h2>{profile.name || "Numele tău"}</h2><p>{profile.program} · {profile.year} · {profile.semester}</p>
+          <span className="student-badge"><Icon name="graduation" size={15} /> {profile.institutionType === "university" ? "Student UniFlow" : "Elev UniFlow"}</span>
           <div className="profile-card-divider" />
           <div className="profile-detail"><Icon name="mail" size={16} /><span>{profile.email}</span></div>
           <div className="profile-detail"><Icon name="map" size={16} /><span>{profile.university}</span></div>
+          <div className="profile-detail"><Icon name="calendar" size={16} /><span>{profile.schedule || "Orar necompletat"}</span></div>
           <div className="profile-streak"><span>✦</span><div><strong>7 zile la rând</strong><small>Ai grijă de progresul tău!</small></div></div>
         </aside>
         <div className="profile-settings">
@@ -71,9 +87,12 @@ export default function ProfilePage() {
             <div className="form-grid">
               <label className="form-field"><span>Nume complet</span><input onChange={(event) => updateField("name", event.target.value)} required value={profile.name} /></label>
               <label className="form-field"><span>Adresă de email</span><input onChange={(event) => updateField("email", event.target.value)} required type="email" value={profile.email} /></label>
-              <label className="form-field"><span>Universitate</span><input onChange={(event) => updateField("university", event.target.value)} required value={profile.university} /></label>
-              <label className="form-field"><span>Program de studiu</span><input onChange={(event) => updateField("program", event.target.value)} required value={profile.program} /></label>
-              <label className="form-field"><span>An de studiu</span><select onChange={(event) => updateField("year", event.target.value)} value={profile.year}><option>Anul I</option><option>Anul II</option><option>Anul III</option><option>Master</option><option>Doctorat</option></select></label>
+              <label className="form-field"><span>Tipul instituției</span><select onChange={(event) => { const type = event.target.value === "high-school" ? "high-school" : "university"; updateField("institutionType", type); updateField("year", type === "university" ? "Anul I" : "Clasa a IX-a"); }} value={profile.institutionType}><option value="university">Universitate</option><option value="high-school">Liceu</option></select></label>
+              <label className="form-field"><span>{profile.institutionType === "university" ? "Universitate" : "Liceu"}</span><input onChange={(event) => updateField("university", event.target.value)} required value={profile.university} /></label>
+              <label className="form-field"><span>{profile.institutionType === "university" ? "Specializare" : "Profil"}</span><input onChange={(event) => updateField("program", event.target.value)} required value={profile.program} /></label>
+              <label className="form-field"><span>{profile.institutionType === "university" ? "An de studiu" : "Clasa"}</span><select onChange={(event) => updateField("year", event.target.value)} required value={profile.year}>{(profile.institutionType === "university" ? ["Anul I", "Anul II", "Anul III", "Anul IV", "Master I", "Master II", "Doctorat"] : ["Clasa a IX-a", "Clasa a X-a", "Clasa a XI-a", "Clasa a XII-a"]).map((studyYear) => <option key={studyYear}>{studyYear}</option>)}</select></label>
+              <label className="form-field"><span>Semestru</span><select onChange={(event) => updateField("semester", event.target.value)} required value={profile.semester}><option>Semestrul I</option><option>Semestrul II</option></select></label>
+              <label className="form-field form-field-wide"><span>Orar</span><textarea onChange={(event) => updateField("schedule", event.target.value)} placeholder="Ex.: Luni, 08:00 — Matematică; 10:00 — Fizică" required rows={4} value={profile.schedule} /></label>
             </div>
             <div className="form-footer"><span className="save-feedback" role="status">{saved ? "Modificările au fost salvate." : ""}</span><button className="button button-primary" type="submit">Salvează modificările</button></div>
           </form>
@@ -81,10 +100,7 @@ export default function ProfilePage() {
             <div className="settings-title"><span className="settings-icon settings-icon-muted"><Icon name="bell" size={18} /></span><div><h2>Preferințe</h2><p>Controlează cum te ține UniFlow la curent.</p></div></div>
             <div className="preference-row"><div><strong>Notificări pentru deadline-uri</strong><small>Primești un reminder înainte de fiecare termen.</small></div><button aria-checked={notifications} aria-label="Notificări pentru deadline-uri" className={`toggle-switch${notifications ? " on" : ""}`} onClick={toggleNotifications} role="switch" type="button"><span /></button></div>
           </section>
-          <section className="card-surface preferences-card">
-            <div className="settings-title"><span className="settings-icon settings-icon-muted"><Icon name="sun" size={18} /></span><div><h2>Aparență</h2><p>Setarea temei pentru spațiul tău.</p></div></div>
-            <div className="theme-options"><button className="theme-option selected" type="button"><span className="theme-preview theme-light" />Luminos <span className="theme-selected">✓</span></button><button className="theme-option" disabled type="button"><span className="theme-preview theme-dark" />Întunecat <small>În curând</small></button></div>
-          </section>
+          
         </div>
       </div>
     </div>

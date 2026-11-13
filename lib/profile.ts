@@ -1,17 +1,26 @@
+export type InstitutionType = "university" | "high-school";
+export type ColorTheme = "light" | "dark";
+
 export type StudentProfile = {
   name: string;
   email: string;
+  institutionType: InstitutionType;
   university: string;
   program: string;
   year: string;
+  semester: string;
+  schedule: string;
 };
 
 export const defaultProfile: StudentProfile = {
   name: "Alexandra Popescu",
   email: "alexandra.popescu@student.unibuc.ro",
+  institutionType: "university",
   university: "Universitatea din București",
   program: "Informatică",
   year: "Anul II",
+  semester: "Semestrul II",
+  schedule: "",
 };
 
 export const profileStorageKey = "uniflow-profile";
@@ -59,5 +68,18 @@ export function getServerNotificationSnapshot() {
 
 export function saveNotificationPreference(enabled: boolean) {
   window.localStorage.setItem("uniflow-notifications", enabled ? "on" : "off");
+  window.dispatchEvent(new Event("uniflow-preferences-change"));
+}
+
+export function getThemeSnapshot(): ColorTheme {
+  return window.localStorage.getItem("uniflow-theme") === "dark" ? "dark" : "light";
+}
+
+export function getServerThemeSnapshot(): ColorTheme {
+  return "light";
+}
+
+export function saveThemePreference(theme: ColorTheme) {
+  window.localStorage.setItem("uniflow-theme", theme);
   window.dispatchEvent(new Event("uniflow-preferences-change"));
 }

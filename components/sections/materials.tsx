@@ -2,15 +2,23 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import { Icon } from "@/components/icons";
+import { useDeviceNow } from "@/components/use-device-now";
+import { formatMonthAbbreviation, getDeadlineDate } from "@/lib/device-time";
 
 type ImportState = "idle" | "processing" | "done";
 
 export default function MaterialsPage() {
+  const now = useDeviceNow();
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState("");
   const [importState, setImportState] = useState<ImportState>("idle");
   const [added, setAdded] = useState(false);
   const [error, setError] = useState("");
+  const demoEvents = [
+    { title: "Predare proiect — Baze de date", kind: "Deadline", time: "23:59", daysFromToday: 14, color: "" },
+    { title: "Test intermediar — Algoritmi", kind: "Examen", time: "10:00", daysFromToday: 21, color: "extracted-blue" },
+    { title: "Referat — Etică profesională", kind: "Deadline", time: "18:00", daysFromToday: 28, color: "extracted-peach" },
+  ];
 
   const chooseFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -53,7 +61,17 @@ export default function MaterialsPage() {
           <div className="ingestion-step"><span>03</span><div><strong>Organizează-te</strong><small>Adaugă-le în calendar</small></div></div>
         </aside>
       </div>
-      {importState === "done" && <section className="card-surface extracted-card"><div className="extracted-heading"><div><p className="eyebrow">REZULTATUL ANALIZEI</p><h2>Am găsit 3 evenimente</h2></div><span className="pill pill-success"><Icon name="check" size={13} /> GATA DE REVIZUIT</span></div><div className="extracted-list"><article><span className="extracted-date">27<br /><small>MAR</small></span><div><strong>Predare proiect — Baze de date</strong><small>Deadline · 23:59</small></div><button aria-label="Editează evenimentul" className="quiet-icon" type="button"><Icon name="more" size={18} /></button></article><article><span className="extracted-date extracted-blue">03<br /><small>APR</small></span><div><strong>Test intermediar — Algoritmi</strong><small>Examen · 10:00</small></div><button aria-label="Editează evenimentul" className="quiet-icon" type="button"><Icon name="more" size={18} /></button></article><article><span className="extracted-date extracted-peach">10<br /><small>APR</small></span><div><strong>Referat — Etică profesională</strong><small>Deadline · 18:00</small></div><button aria-label="Editează evenimentul" className="quiet-icon" type="button"><Icon name="more" size={18} /></button></article></div><button className="button button-primary" onClick={() => setAdded(true)} type="button"><Icon name={added ? "check" : "calendar"} size={16} />{added ? "Evenimente adăugate în plan" : "Adaugă evenimentele în plan"}</button><p aria-live="polite" className="import-note">{added ? "Gata! Evenimentele au fost adăugate în planul tău de studiu." : "Poți verifica detaliile înainte să le adaugi."}</p></section>}
+      {importState === "done" && <section className="card-surface extracted-card"><div className="extracted-heading"><div><p className="eyebrow">REZULTATUL ANALIZEI</p><h2>Am găsit 3 evenimente</h2></div><span className="pill pill-success"><Icon name="check" size={13} /> GATA DE REVIZUIT</span></div><div className="extracted-list">{demoEvents.map((event) => {
+        const date = now ? getDeadlineDate(now, { daysFromToday: event.daysFromToday, time: event.time }) : null;
+
+        return (
+          <article key={event.title}>
+            <span className={`extracted-date ${event.color}`}>{date?.getDate() ?? "--"}<br /><small>{date ? formatMonthAbbreviation(date) : "···"}</small></span>
+            <div><strong>{event.title}</strong><small>{event.kind} · {event.time}</small></div>
+            <button aria-label="Editează evenimentul" className="quiet-icon" type="button"><Icon name="more" size={18} /></button>
+          </article>
+        );
+      })}</div><button className="button button-primary" onClick={() => setAdded(true)} type="button"><Icon name={added ? "check" : "calendar"} size={16} />{added ? "Evenimente adăugate în plan" : "Adaugă evenimentele în plan"}</button><p aria-live="polite" className="import-note">{added ? "Gata! Evenimentele au fost adăugate în planul tău de studiu." : "Poți verifica detaliile înainte să le adaugi."}</p></section>}
     </div>
   );
 }
