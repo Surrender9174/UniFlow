@@ -10,6 +10,7 @@ const layoutStyles = `
     --darker-color: #121212;
     --error-color: #e74c3c;
     --transition: all .2s ease;
+    --transition-slow: all 1s ease;
   }
   * { box-sizing: border-box; }
   .auth-container {
@@ -73,13 +74,20 @@ const layoutStyles = `
     background: #2e2e2e;
     color: #fff;
     font-size: 1rem;
-    transition: var(--transition);
+    transition: var(--transition), border-color 1s ease;
+    transition: var(--transition), background 1s ease, box-shadow 1s ease;
   }
-  .input-icon input:focus {
+  
+.input-icon input:focus:not(:disabled) {
     border-color: var(--primary-color);
     background: #333;
     box-shadow: 0 0 0 3px rgba(0, 230, 118, .18);
-  }
+}
+.input-icon:has(button:hover, button:active) input:focus:not(:disabled) {
+    border-color: var(--primary-dark); 
+    background: initial;   
+    box-shadow: none;
+}
   .input-icon input::placeholder { color: #aaa; }
   .toggle-eye {
     position: absolute;
@@ -127,7 +135,7 @@ const layoutStyles = `
     border-radius: 999px;
     background: #2c2c2c;
   }
-  .password-strength-bar { height: 100%; transition: var(--transition); }
+  .password-strength-bar { height: 100%; transition: var(--transition), border-color 1s ease; }
   .password-strength-bar.weak { width: 33%; background: #e74c3c; }
   .password-strength-bar.medium { width: 66%; background: #f39c12; }
   .password-strength-bar.strong { width: 100%; background: var(--primary-color); }
@@ -155,12 +163,11 @@ const layoutStyles = `
     font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
-    transition: var(--transition);
+    transition: var(--transition), background 1s ease, box-shadow 1s ease;
   }
   .auth-box button:hover:not(:disabled) {
     background: var(--primary-dark);
     box-shadow: 0 5px 15px rgba(0, 230, 118, .3);
-    transform: translateY(-1px);
   }
   .auth-box button:disabled { cursor: not-allowed; opacity: .65; }
   .auth-box .text-button {
@@ -174,7 +181,6 @@ const layoutStyles = `
   .auth-box .text-button:hover:not(:disabled) {
     background: rgba(0, 230, 118, .1);
     box-shadow: none;
-    transform: none;
   }
   .form-footer { margin-top: 22px; color: #ddd; text-align: center; }
   .form-footer p {
