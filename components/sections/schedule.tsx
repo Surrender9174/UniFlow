@@ -153,8 +153,6 @@ export default function SchedulePage() {
             </button>
           )}
         </div>
-        <div><p className="eyebrow">AN UNIVERSITAR · {now ? getAcademicYearLabel(now) : "—"}</p><h1>Orarul meu</h1><p className="muted">Programul și task-urile tale, organizate pe zile.</p></div>
-        <Link className="button button-secondary" href="/dashboard#schedule-upload"><Icon name="upload" size={17} /> Încarcă un orar</Link>
       </div>
       <input
         accept={scheduleFileAccept}

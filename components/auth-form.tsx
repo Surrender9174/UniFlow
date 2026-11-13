@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import ThemeToggle from "@/components/theme-toggle";
 import { syncAuthenticatedProfile } from "@/lib/auth-profile";
+import { extractScheduleFile } from "@/lib/schedule-file-reader";
 import { isSupportedScheduleFile, maxScheduleFileSize, scheduleFileAccept } from "@/lib/schedule-file-types";
+import { parseScheduleText } from "@/lib/schedule-parser";
 import { supabase } from "@/lib/supabase";
 
 type AuthMessage = {
@@ -57,7 +59,7 @@ export default function AuthForm({
   const [message, setMessage] = useState<AuthMessage | null>(null);
   const strength = useMemo(() => getPasswordStrength(password), [password]);
 
-  const handleScheduleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleScheduleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const input = event.currentTarget;
     const file = input.files?.[0];
     setScheduleFileError("");

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/icons";
 import ScheduleReview from "@/components/sections/schedule-review";
 import { useScheduleUpload } from "@/components/use-schedule-upload";
@@ -44,6 +44,17 @@ type DashboardTask = {
   done: boolean;
 };
 
+type DashboardTaskRow = {
+  id: string;
+  title: string;
+  course: string;
+  date: string;
+  color: string;
+  done: boolean;
+  savedId?: string;
+  demoIndex?: number;
+};
+
 const tasks: DashboardTask[] = [
   { title: "Eseu: Etica în tehnologie", course: "Etică profesională", deadline: { daysFromToday: 0, time: "23:59" }, color: "lavender", done: false },
   { title: "Laborator — structuri de date", course: "Algoritmi și structuri de date", deadline: { daysFromToday: 1, time: "12:00" }, color: "mint", done: false },
@@ -70,10 +81,6 @@ export default function Dashboard() {
     savePendingSchedule,
     cancelSchedulePreview,
   } = useScheduleUpload();
-  const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
-  const [uploadMessage, setUploadMessage] = useState("");
-  const [uploadError, setUploadError] = useState("");
-  const [pendingSchedule, setPendingSchedule] = useState<ScheduleEvent[]>([]);
   const [taskError, setTaskError] = useState("");
   const savedProfile = useSyncExternalStore(
     subscribeToProfile,
@@ -156,72 +163,6 @@ export default function Dashboard() {
         ),
       );
     }
-  };
-
-  const handleScheduleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const input = event.currentTarget;
-    const file = input.files?.[0];
-    setUploadError("");
-    setPendingSchedule([]);
-    if (!file) return;
-
-    if (file.size > 15 * 1024 * 1024) {
-      setUploadError("Fișierul depășește limita de 15 MB.");
-      input.value = "";
-      return;
-    }
-
-    if (!isSupportedScheduleFile(file)) {
-      setUploadError("Alege un PDF, o imagine, un fișier Excel, Word, CSV sau TXT.");
-      input.value = "";
-      return;
-    }
-
-    setUploadStatus("processing");
-    setUploadMessage("Se pregătește recunoașterea textului...");
-    try {
-      const text = await extractScheduleFile(file, setUploadMessage);
-      const parsedEvents = parseScheduleText(text);
-      if (!parsedEvents.length) {
-        throw new Error("Nu am putut identifica zile, ore și cursuri. Încearcă o scanare mai clară, cu zilele săptămânii vizibile.");
-      }
-      setPendingSchedule(parsedEvents);
-      setUploadStatus("preview");
-    } catch (error) {
-      setUploadStatus("idle");
-      setUploadError(
-        error instanceof Error ? error.message : "Nu am putut procesa fișierul. Încearcă din nou.",
-      );
-    } finally {
-      input.value = "";
-    }
-  };
-
-  const updatePendingEvent = (
-    eventId: string,
-    field: keyof Omit<ScheduleEvent, "id">,
-    value: string | number,
-  ) => {
-    setPendingSchedule((current) =>
-      current.map((event) => event.id === eventId ? { ...event, [field]: value } : event),
-    );
-  };
-
-  const savePendingSchedule = () => {
-    if (pendingSchedule.some((event) => !event.title.trim() || !event.start || !event.end || getTimeValue(event.end) <= getTimeValue(event.start))) {
-      setUploadError("Completează fiecare curs și verifică intervalul orar înainte de salvare.");
-      return;
-    }
-
-    setUploadError("");
-    saveSchedule(pendingSchedule);
-    setPendingSchedule([]);
-    setUploadStatus("idle");
-  };
-
-  const cancelSchedulePreview = () => {
-    setPendingSchedule([]);
-    setUploadStatus("idle");
   };
 
   return (

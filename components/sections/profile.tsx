@@ -17,12 +17,9 @@ import {
   getNotificationSnapshot,
   getServerNotificationSnapshot,
   getServerProfileSnapshot,
-  getServerThemeSnapshot,
-  getThemeSnapshot,
   getStoredProfileSnapshot,
   saveNotificationPreference,
   saveProfile,
-  saveThemePreference,
   subscribeToPreferences,
   subscribeToProfile,
   type StudentProfile,
@@ -38,11 +35,6 @@ export default function ProfilePage() {
     subscribeToPreferences,
     getNotificationSnapshot,
     getServerNotificationSnapshot,
-  );
-  const savedTheme = useSyncExternalStore(
-    subscribeToPreferences,
-    getThemeSnapshot,
-    getServerThemeSnapshot,
   );
   const savedSchedule = useSyncExternalStore(
     subscribeToSchedule,
@@ -138,10 +130,6 @@ export default function ProfilePage() {
 
   const toggleNotifications = () => {
     saveNotificationPreference(!notifications);
-  };
-
-  const toggleTheme = () => {
-    saveThemePreference(savedTheme === "dark" ? "light" : "dark");
   };
 
   return (
