@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import AppShell from "@/components/app-shell";
 import "./globals.css";
 
+<<<<<<< HEAD
 const layoutStyles = `
   :root {
     --primary-color: #00e676;
@@ -213,6 +215,8 @@ const layoutStyles = `
   }
 `;
 
+=======
+>>>>>>> Logan
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -224,8 +228,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Green Track",
-  description: "Conectează-te sau creează un cont Green Track.",
+  title: "UniFlow — Spațiul tău de studiu",
+  description:
+    "Orarul, task-urile și resursele tale academice, într-un singur loc.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -234,10 +239,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="ro"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        <style>{layoutStyles}</style>
-      </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body>
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }

@@ -1,0 +1,119 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Icon, type IconName } from "@/components/icons";
+import {
+  defaultProfile,
+  getServerProfileSnapshot,
+  getStoredProfileSnapshot,
+  subscribeToProfile,
+} from "@/lib/profile";
+import { useSyncExternalStore } from "react";
+
+const navigation: { href: string; label: string; icon: IconName }[] = [
+  { href: "/", label: "Acasă", icon: "home" },
+  { href: "/schedule", label: "Orar", icon: "calendar" },
+  { href: "/tasks", label: "Task-uri", icon: "check" },
+  { href: "/assistant", label: "Asistent", icon: "sparkles" },
+  { href: "/profile", label: "Profil", icon: "user" },
+];
+
+export default function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const savedProfile = useSyncExternalStore(
+    subscribeToProfile,
+    getStoredProfileSnapshot,
+    getServerProfileSnapshot,
+  );
+  const name = savedProfile
+    ? (JSON.parse(savedProfile) as { name?: string }).name ?? defaultProfile.name
+    : defaultProfile.name;
+
+  return (
+    <div className="app-frame">
+      <aside className="sidebar">
+        <Link className="brand" href="/" aria-label="UniFlow, pagina principală">
+          <span className="brand-mark"><Icon name="sparkles" size={20} /></span>
+          <span>uni<span>flow</span></span>
+        </Link>
+        <p className="sidebar-caption">SPAȚIUL TĂU</p>
+        <nav className="sidebar-nav" aria-label="Navigare principală">
+          {navigation.map((item) => {
+            const active =
+              item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            return (
+              <Link
+                aria-current={active ? "page" : undefined}
+                className={`nav-link${active ? " active" : ""}`}
+                href={item.href}
+                key={item.href}
+              >
+                <Icon name={item.icon} size={19} />
+                <span>{item.label}</span>
+                {item.href === "/tasks" && <span className="nav-count">3</span>}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="sidebar-bottom">
+          <Link className="sidebar-ingestion" href="/materials">
+            <span className="ingestion-icon"><Icon name="upload" size={18} /></span>
+            <span><strong>Importă materiale</strong><small>PDF → plan de studiu</small></span>
+            <Icon name="chevron" size={16} />
+          </Link>
+          <Link className="sidebar-profile" href="/profile">
+            <span className="avatar avatar-small">{name.slice(0, 1).toUpperCase()}</span>
+            <span className="profile-summary"><strong>{name}</strong><small>Cont student</small></span>
+            <Icon name="more" size={18} />
+          </Link>
+        </div>
+      </aside>
+
+      <div className="app-main">
+        <header className="topbar">
+          <div className="mobile-brand">
+            <span className="brand-mark"><Icon name="sparkles" size={18} /></span>
+            <span>uni<span>flow</span></span>
+          </div>
+          <div className="topbar-context"><span>Semestrul II</span><span className="context-dot" /> 2025–2026</div>
+          <div className="topbar-actions">
+            <label className="search-field">
+              <Icon name="search" size={18} />
+              <input aria-label="Caută în UniFlow" placeholder="Caută orice..." />
+              <kbd>⌘ K</kbd>
+            </label>
+            <button aria-label="Notificări" className="icon-button notification-button" type="button">
+              <Icon name="bell" size={19} /><span />
+            </button>
+            <Link aria-label="Deschide profilul" className="avatar avatar-top" href="/profile">
+              {name.slice(0, 1).toUpperCase()}
+            </Link>
+          </div>
+        </header>
+
+        <main className="page-content" key={pathname}>
+          <div className="page-enter">{children}</div>
+        </main>
+      </div>
+
+      <nav aria-label="Navigare mobilă" className="bottom-nav">
+        {navigation.map((item) => {
+          const active =
+            item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+          return (
+            <Link
+              aria-current={active ? "page" : undefined}
+              className={`bottom-nav-link${active ? " active" : ""}`}
+              href={item.href}
+              key={item.href}
+            >
+              <Icon name={item.icon} size={20} />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
