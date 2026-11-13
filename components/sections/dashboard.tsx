@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/icons";
 import {
   defaultProfile,
@@ -9,6 +9,14 @@ import {
   getStoredProfileSnapshot,
   subscribeToProfile,
 } from "@/lib/profile";
+import {
+  formatSavedTaskDueAt,
+  getSavedTasksSnapshot,
+  getServerSavedTasksSnapshot,
+  parseSavedTasksSnapshot,
+  setSavedTaskDone,
+  subscribeToSavedTasks,
+} from "@/lib/tasks";
 
 const tasks = [
   { title: "Eseu: Etica în tehnologie", course: "Etică profesională", date: "Astăzi, 23:59", color: "lavender", done: false },
@@ -23,17 +31,74 @@ const recommendations = [
 
 export default function Dashboard() {
   const [taskItems, setTaskItems] = useState(tasks);
+  const [taskError, setTaskError] = useState("");
   const savedProfile = useSyncExternalStore(
     subscribeToProfile,
     getStoredProfileSnapshot,
     getServerProfileSnapshot,
   );
+  const taskSnapshot = useSyncExternalStore(
+    subscribeToSavedTasks,
+    getSavedTasksSnapshot,
+    getServerSavedTasksSnapshot,
+  );
+  const { savedTasks, savedTasksError } = useMemo(() => {
+    try {
+      return { savedTasks: parseSavedTasksSnapshot(taskSnapshot), savedTasksError: "" };
+    } catch (error) {
+      return {
+        savedTasks: [],
+        savedTasksError:
+          error instanceof Error ? error.message : "Nu am putut încărca task-urile salvate.",
+      };
+    }
+  }, [taskSnapshot]);
   const name = savedProfile
     ? (JSON.parse(savedProfile) as { name?: string }).name ?? defaultProfile.name
     : defaultProfile.name;
-  const completed = taskItems.filter((task) => task.done).length;
+  const completed =
+    taskItems.filter((task) => task.done).length +
+    savedTasks.filter((task) => task.done).length;
+  const taskRows = [
+    ...savedTasks.map((task) => ({
+      id: task.id,
+      savedId: task.id,
+      title: task.title,
+      course: task.subject,
+      date: formatSavedTaskDueAt(task.dueAt),
+      color: "lavender",
+      done: task.done,
+    })),
+    ...taskItems.map((task, index) => ({
+      id: `demo-${index}`,
+      demoIndex: index,
+      ...task,
+    })),
+  ];
+  const visibleTasks = taskRows.slice(0, 3);
 
   const firstName = name.trim().split(/\s+/)[0] || "student";
+
+  const toggleTask = (task: (typeof taskRows)[number]) => {
+    setTaskError("");
+    if ("savedId" in task) {
+      try {
+        setSavedTaskDone(task.savedId, !task.done);
+      } catch (error) {
+        setTaskError(
+          error instanceof Error ? error.message : "Nu am putut actualiza task-ul.",
+        );
+      }
+      return;
+    }
+    if ("demoIndex" in task) {
+      setTaskItems((current) =>
+        current.map((item, index) =>
+          index === task.demoIndex ? { ...item, done: !item.done } : item,
+        ),
+      );
+    }
+  };
 
   return (
     <div className="dashboard-page">
@@ -99,26 +164,28 @@ export default function Dashboard() {
 
       <section className="section-block">
         <div className="section-heading">
-          <div><p className="eyebrow">ȚINE RITMUL</p><h2>Task-urile tale <span className="heading-count">3</span></h2></div>
+          <div><p className="eyebrow">ȚINE RITMUL</p><h2>Task-urile tale <span className="heading-count">{taskRows.length}</span></h2></div>
           <Link className="text-link" href="/tasks">Vezi toate <Icon name="arrow" size={15} /></Link>
         </div>
+        {savedTasksError && <p className="gmail-status-error" role="alert">{savedTasksError}</p>}
+        {taskError && <p className="gmail-status-error" role="alert">{taskError}</p>}
         <div className="task-list card-surface">
-          {taskItems.map((task, index) => {
+          {visibleTasks.map((task) => {
             const isDone = task.done;
             return (
-              <div className={`task-row${isDone ? " task-done" : ""}`} key={task.title}>
+              <div className={`task-row${isDone ? " task-done" : ""}`} key={task.id}>
                 <button
                   aria-label={isDone ? `Marchează ${task.title} ca nefinalizat` : `Marchează ${task.title} ca finalizat`}
                   aria-pressed={isDone}
                   className={`task-check ${isDone ? "checked" : ""}`}
-                  onClick={() => setTaskItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, done: !item.done } : item))}
+                  onClick={() => toggleTask(task)}
                   type="button"
                 >
                   {isDone && <Icon name="check" size={13} />}
                 </button>
                 <span className={`task-color ${task.color}`} />
                 <div className="task-description"><strong>{task.title}</strong><small>{task.course}</small></div>
-                <span className={`task-due${index === 0 && !isDone ? " due-soon" : ""}`}><Icon name="clock" size={14} />{task.date}</span>
+                <span className={`task-due${!isDone && task === visibleTasks[0] ? " due-soon" : ""}`}><Icon name="clock" size={14} />{task.date}</span>
                 <button aria-label={`Opțiuni pentru ${task.title}`} className="quiet-icon task-more" type="button"><Icon name="more" size={18} /></button>
               </div>
             );
