@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Icon, type IconName } from "@/components/icons";
+import ThemeToggle from "@/components/theme-toggle";
 import { syncAuthenticatedProfile } from "@/lib/auth-profile";
 import {
   defaultProfile,
@@ -16,6 +17,8 @@ import {
 } from "@/lib/profile";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { getAcademicYearLabel } from "@/lib/device-time";
+import { useDeviceNow } from "@/components/use-device-now";
 
 const navigation: { href: string; label: string; icon: IconName }[] = [
   { href: "/dashboard", label: "Acasă", icon: "home" },
@@ -26,6 +29,7 @@ const navigation: { href: string; label: string; icon: IconName }[] = [
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
+  const now = useDeviceNow();
   const pathname = usePathname();
   const router = useRouter();
   const isAuthRoute = pathname === "/auth" || pathname.startsWith("/auth/");
@@ -178,13 +182,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <span className="brand-mark"><Icon name="sparkles" size={18} /></span>
             <span>uni<span>flow</span></span>
           </div>
-          <div className="topbar-context"><span>{profile.semester}</span><span className="context-dot" /> 2025–2026</div>
+          <div className="topbar-context"><span>{profile.semester}</span><span className="context-dot" /> {now ? getAcademicYearLabel(now) : "—"}</div>
           <div className="topbar-actions">
             <label className="search-field">
               <Icon name="search" size={18} />
               <input aria-label="Caută în UniFlow" placeholder="Caută orice..." />
-              <kbd>⌘ K</kbd>
             </label>
+            <ThemeToggle />
             <button aria-label="Notificări" className="icon-button notification-button" type="button">
               <Icon name="bell" size={19} /><span />
             </button>
