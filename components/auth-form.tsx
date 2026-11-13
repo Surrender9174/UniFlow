@@ -41,6 +41,7 @@ export default function AuthForm() {
   const [message, setMessage] = useState<AuthMessage | null>(null);
   const strength = useMemo(() => getPasswordStrength(password), [password]);
 
+
   useEffect(() => {
     if (!supabase) return;
 
@@ -240,7 +241,7 @@ export default function AuthForm() {
                   onClick={() => setShowPassword((visible) => !visible)}
                   type="button"
                 >
-                  {showPassword ? "Ascunde" : "Arată"}
+                  <Icon name={showPassword ? "eyeOff" : "eye"} size={18} />
                 </button>
               </span>
             </label>

@@ -449,12 +449,14 @@ h1 { margin-bottom: 8px; color: #24253a; font-size: clamp(24px, 2.2vw, 30px); fo
 .auth-card-heading > p:last-child { margin: 0; color: #9294a6; font-size: 11px; }
 .auth-form { display: grid; gap: 16px; }
 .auth-field { display: grid; gap: 7px; color: #56576d; font-size: 10px; font-weight: 600; }
-.auth-field input { width: 100%; min-height: 43px; padding: 0 12px; border: 1px solid #e8e8f0; border-radius: 10px; outline: 0; background: #fcfcfe; color: #34354a; font-size: 11px; font-weight: 450; transition: border-color .2s ease, box-shadow .2s ease, background .2s ease; }
+.auth-field input { width: 100%; min-height: 43px; padding: 0 12px; border: 1px solid #e8e8f0; border-radius: 10px; outline: 0; background: #fcfcfe; color: #34354a; cursor: crosshair; font-size: 11px; font-weight: 450; transition: border-color .2s ease, box-shadow .2s ease, background .2s ease; }
 .auth-field input::placeholder { color: #b0b1bf; }
-.auth-field input:focus { border-color: #a89ce4; background: #fff; box-shadow: 0 0 0 3px #7763db14; }
 .auth-password-wrap { position: relative; display: block; }
-.auth-password-wrap input { padding-right: 68px; }
-.auth-password-toggle { position: absolute; top: 50%; right: 11px; padding: 5px 0; border: 0; background: transparent; color: #7968cf; cursor: pointer; font-size: 9px; font-weight: 650; transform: translateY(-50%); }
+.auth-password-wrap input { padding-right: 48px; }
+.auth-password-toggle { position: absolute; top: 50%; right: 8px; display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; padding: 0; border: 0; background: transparent; color: #7968cf; cursor: pointer; transform: translateY(-50%); }
+.auth-password-toggle:hover{transition: color 0.2s ease; border-radius: 50%;}
+.auth-password-toggle:hover { color: #6f5dd9;  background: #8b5cf61a; filter: drop-shadow(0 0 3px #8b5cf6); }
+.auth-field input:focus { border-color: #8b5cf6; background: #fff; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2); }
 .auth-submit { width: 100%; min-height: 44px; margin-top: 3px; font-size: 11px; }
 .auth-submit:disabled { cursor: wait; opacity: .7; }
 .auth-message { margin: 0 0 15px; padding: 11px 12px; border: 1px solid transparent; border-radius: 10px; font-size: 10px; line-height: 1.55; }
