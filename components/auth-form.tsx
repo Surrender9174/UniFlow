@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import ThemeToggle from "@/components/theme-toggle";
 import { syncAuthenticatedProfile } from "@/lib/auth-profile";
+import { extractScheduleFile } from "@/lib/schedule-file-reader";
 import { isSupportedScheduleFile, maxScheduleFileSize, scheduleFileAccept } from "@/lib/schedule-file-types";
+import { parseScheduleText } from "@/lib/schedule-parser";
 import { supabase } from "@/lib/supabase";
 
 type AuthMessage = {
@@ -48,6 +50,8 @@ export default function AuthForm({
   const [schedule, setSchedule] = useState("");
   const [scheduleFileName, setScheduleFileName] = useState("");
   const [scheduleFileError, setScheduleFileError] = useState("");
+  const [scheduleFileProgress, setScheduleFileProgress] = useState("");
+  const [scheduleFileProcessing, setScheduleFileProcessing] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -55,10 +59,11 @@ export default function AuthForm({
   const [message, setMessage] = useState<AuthMessage | null>(null);
   const strength = useMemo(() => getPasswordStrength(password), [password]);
 
-  const handleScheduleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleScheduleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const input = event.currentTarget;
     const file = input.files?.[0];
     setScheduleFileError("");
+    setScheduleFileProgress("");
     if (!file) {
       setScheduleFileName("");
       return;
@@ -79,6 +84,25 @@ export default function AuthForm({
     }
 
     setScheduleFileName(file.name);
+    setScheduleFileProcessing(true);
+    setScheduleFileProgress("Se citește orarul...");
+    try {
+      const text = await extractScheduleFile(file, setScheduleFileProgress);
+      if (!parseScheduleText(text).length) {
+        throw new Error("Nu am putut identifica zile, ore și cursuri în fișier.");
+      }
+      setSchedule(text);
+      setScheduleFileProgress("Orarul a fost extras. Poți verifica sau edita textul.");
+    } catch (error) {
+      setScheduleFileName("");
+      setScheduleFileProgress("");
+      setScheduleFileError(
+        getErrorMessage(error, "Nu am putut procesa fișierul. Încearcă din nou."),
+      );
+      input.value = "";
+    } finally {
+      setScheduleFileProcessing(false);
+    }
   };
 
   useEffect(() => {
@@ -116,6 +140,10 @@ export default function AuthForm({
     }
 
     if (mode === "signup") {
+      if (scheduleFileProcessing) {
+        setMessage({ type: "error", text: "Așteaptă terminarea procesării orarului." });
+        return;
+      }
       if (
         [name, university, program, year, semester].some(
           (value) => !value.trim(),
@@ -124,6 +152,13 @@ export default function AuthForm({
         setMessage({
           type: "error",
           text: "Completează toate informațiile despre studiile tale.",
+        });
+        return;
+      }
+      if (schedule.trim() && !parseScheduleText(schedule).length) {
+        setMessage({
+          type: "error",
+          text: "Nu am putut identifica zile, ore și cursuri în orar. Verifică textul sau încarcă un fișier clar.",
         });
         return;
       }
@@ -342,11 +377,15 @@ export default function AuthForm({
                         accept={scheduleFileAccept}
                         aria-label="Selectează un fișier cu orarul"
                         className="visually-hidden"
+                        disabled={scheduleFileProcessing}
                         onChange={handleScheduleFileChange}
                         type="file"
                       />
                     </label>
                     {scheduleFileError && <small className="auth-message error" role="alert">{scheduleFileError}</small>}
+                    {!scheduleFileError && scheduleFileProgress && !scheduleFileProcessing && (
+                      <small className="muted" role="status">{scheduleFileProgress}</small>
+                    )}
                     <label className="auth-field">
                       <textarea
                         className="auth-schedule-textarea"

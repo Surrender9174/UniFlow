@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import Link from "next/link";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/icons";
 import ScheduleReview from "@/components/sections/schedule-review";
 import { useScheduleUpload } from "@/components/use-schedule-upload";
@@ -22,6 +23,13 @@ import {
   parseScheduleSnapshot,
   subscribeToSchedule,
 } from "@/lib/schedule-storage";
+import {
+  formatSavedTaskDueAt,
+  getSavedTasksSnapshot,
+  getServerSavedTasksSnapshot,
+  parseSavedTasksSnapshot,
+  subscribeToSavedTasks,
+} from "@/lib/tasks";
 
 const eventColors = ["schedule-lilac", "schedule-blue", "schedule-green", "schedule-peach"];
 
@@ -65,6 +73,22 @@ export default function SchedulePage() {
     getStoredScheduleSnapshot,
     getServerScheduleSnapshot,
   );
+  const taskSnapshot = useSyncExternalStore(
+    subscribeToSavedTasks,
+    getSavedTasksSnapshot,
+    getServerSavedTasksSnapshot,
+  );
+  const { savedTasks, savedTasksError } = useMemo(() => {
+    try {
+      return { savedTasks: parseSavedTasksSnapshot(taskSnapshot), savedTasksError: "" };
+    } catch (error) {
+      return {
+        savedTasks: [],
+        savedTasksError:
+          error instanceof Error ? error.message : "Nu am putut încărca task-urile salvate.",
+      };
+    }
+  }, [taskSnapshot]);
   const events = parseScheduleSnapshot(scheduleSnapshot);
   const hasSchedule = events.length > 0;
   const weekAnchor = now
@@ -73,6 +97,15 @@ export default function SchedulePage() {
   const weekDates = weekAnchor ? getWeekDates(weekAnchor) : [];
   const activeWeekday = selectedWeekday ?? now?.getDay() ?? 1;
   const selectedDate = weekDates.find((date) => date.getDay() === activeWeekday) ?? null;
+  const dayTasks = selectedDate
+    ? savedTasks
+        .filter((task) => task.dueAt !== null &&
+          isSameDate(new Date(task.dueAt), selectedDate))
+        .sort((left, right) =>
+          (left.dueAt ?? "").localeCompare(right.dueAt ?? ""),
+        )
+    : [];
+  const unscheduledTasks = savedTasks.filter((task) => task.dueAt === null);
   const dayEvents = events
     .filter((event) => event.weekday === activeWeekday)
     .sort((left, right) => left.start.localeCompare(right.start));
@@ -159,6 +192,10 @@ export default function SchedulePage() {
         <div className="week-days">{Array.from({ length: 7 }, (_, index) => {
           const date = weekDates[index];
           const selected = !!date && date.getDay() === activeWeekday;
+          const hasTasks = date
+            ? savedTasks.some((task) => task.dueAt !== null &&
+              isSameDate(new Date(task.dueAt), date))
+            : false;
 
           return (
             <button
@@ -171,18 +208,19 @@ export default function SchedulePage() {
             >
               <span>{date ? formatWeekdayShort(date) : "···"}</span>
               <strong>{date?.getDate() ?? "--"}</strong>
-              {isToday && selected && <i />}
+              {(hasTasks || (isToday && selected)) && <i />}
             </button>
           );
         })}</div>
         <button aria-label="Săptămâna următoare" className="week-arrow" onClick={() => setWeekOffset((offset) => offset + 1)} type="button"><span>›</span></button>
         <span className="week-range">{weekAnchor ? formatWeekRange(weekAnchor) : "Se sincronizează"}</span>
       </section>
+      {savedTasksError && <p className="gmail-status-error" role="alert">{savedTasksError}</p>}
       <section className="schedule-board">
         <div className="schedule-date">
           <span className="today-tag">{isToday && now ? `ASTĂZI · ${formatLocalTime(now)}` : getWeekdayName(activeWeekday).toLocaleUpperCase("ro-RO")}</span>
           <h2>{selectedDate ? formatLocalDate(selectedDate) : "Data locală"}</h2>
-          <p>{dayEvents.length} cursuri <span>·</span> {formatDuration(totalMinutes)} în campus</p>
+          <p>{dayEvents.length} cursuri <span>·</span> {dayTasks.length} task-uri <span>·</span> {formatDuration(totalMinutes)} în campus</p>
         </div>
         <div className="schedule-timeline">
           {!events.length ? (
@@ -206,9 +244,54 @@ export default function SchedulePage() {
               <p>Nu ai cursuri trecute în orar pentru {getWeekdayName(activeWeekday).toLocaleLowerCase("ro-RO")}.</p>
             </div>
           )}
+          {dayTasks.length > 0 && (
+            <>
+              <p className="eyebrow">TASK-URI PENTRU ZIUA ALEASĂ</p>
+              {dayTasks.map((task, index) => (
+                <article className="schedule-item" key={task.id}>
+                  <div className="schedule-time">
+                    <strong>{formatLocalTime(new Date(task.dueAt!))}</strong>
+                    <span>Termen</span>
+                  </div>
+                  <div className={`schedule-event ${eventColors[(dayEvents.length + index) % eventColors.length]}`}>
+                    <span className="event-type">
+                      {task.category}{task.done ? " · Finalizat" : ""}
+                    </span>
+                    <h3>{task.title}</h3>
+                    {task.subject && <p>{task.subject}</p>}
+                  </div>
+                </article>
+              ))}
+            </>
+          )}
         </div>
       </section>
       {hasSchedule && <div className="schedule-tip"><span><Icon name="sparkles" size={18} /></span><p><strong>Orar salvat:</strong> îl poți șterge de aici sau înlocui din cardul orarului de pe pagina Acasă.</p></div>}
+      {unscheduledTasks.length > 0 && (
+        <section className="section-block">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">DE PROGRAMAT</p>
+              <h2>Task-uri fără termen <span className="heading-count">{unscheduledTasks.length}</span></h2>
+            </div>
+            <Link className="text-link" href="/tasks">Gestionează task-urile</Link>
+          </div>
+          <div className="card-surface tasks-full-list">
+            {unscheduledTasks.map((task, index) => (
+              <article className={`task-row${task.done ? " task-done" : ""}`} key={task.id}>
+                <span className={`task-color ${index % 2 ? "mint" : "lavender"}`} />
+                <div className="task-description">
+                  <strong>{task.title}</strong>
+                  <small>{task.subject}</small>
+                </div>
+                <span className="task-category">{task.category}</span>
+                <span className="task-due"><Icon name="clock" size={14} />{formatSavedTaskDueAt(task.dueAt)}</span>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+      {!!events.length && <div className="schedule-tip"><span><Icon name="sparkles" size={18} /></span><p><strong>Orar salvat:</strong> programul a fost extras din fișierul tău și îl poți actualiza din pagina Acasă.</p></div>}
     </div>
   );
 }
