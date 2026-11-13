@@ -7,8 +7,12 @@ import { syncAuthenticatedProfile } from "@/lib/auth-profile";
 import {
   defaultProfile,
   getServerProfileSnapshot,
+  getServerThemeSnapshot,
+  getThemeSnapshot,
   getStoredProfileSnapshot,
   subscribeToProfile,
+  subscribeToPreferences,
+  type StudentProfile,
 } from "@/lib/profile";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -27,14 +31,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [authState, setAuthState] = useState<"loading" | "authenticated" | "unauthenticated" | "error">("loading");
   const [authError, setAuthError] = useState("");
   const [signingOut, setSigningOut] = useState(false);
+  const savedTheme = useSyncExternalStore(
+    subscribeToPreferences,
+    getThemeSnapshot,
+    getServerThemeSnapshot,
+  );
   const savedProfile = useSyncExternalStore(
     subscribeToProfile,
     getStoredProfileSnapshot,
     getServerProfileSnapshot,
   );
-  const name = savedProfile
-    ? (JSON.parse(savedProfile) as { name?: string }).name ?? defaultProfile.name
-    : defaultProfile.name;
+  const profile: StudentProfile = savedProfile
+    ? { ...defaultProfile, ...JSON.parse(savedProfile) as Partial<StudentProfile> }
+    : defaultProfile;
+  const name = profile.name || defaultProfile.name;
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = savedTheme;
+  }, [savedTheme]);
 
   useEffect(() => {
     if (pathname === "/auth") return;
@@ -107,20 +121,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   if (pathname === "/auth") return children;
-  if (authState === "loading" || authState === "unauthenticated") {
-    return <main className="auth-gate-loading" aria-label="Se verifică sesiunea" />;
-  }
-  if (authState === "error") {
-    return (
-      <main className="auth-gate-error" role="alert">
-        <p>Nu am putut verifica sesiunea: {authError}</p>
-        <Link className="button button-primary" href="/auth">Continuă către autentificare</Link>
-      </main>
-    );
-  }
 
   return (
-    <div className="app-frame">
+    <>
+    <div className="app-frame" hidden={authState !== "authenticated"}>
       <aside className="sidebar">
         <Link className="brand" href="/" aria-label="UniFlow, pagina principală">
           <span className="brand-mark"><Icon name="sparkles" size={20} /></span>
@@ -174,7 +178,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <span className="brand-mark"><Icon name="sparkles" size={18} /></span>
             <span>uni<span>flow</span></span>
           </div>
-          <div className="topbar-context"><span>Semestrul II</span><span className="context-dot" /> 2025–2026</div>
+          <div className="topbar-context"><span>{profile.semester}</span><span className="context-dot" /> 2025–2026</div>
           <div className="topbar-actions">
             <label className="search-field">
               <Icon name="search" size={18} />
@@ -222,5 +226,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         })}
       </nav>
     </div>
+    {authState === "error" ? (
+      <main className="auth-gate-error" role="alert">
+        <p>Nu am putut verifica sesiunea: {authError}</p>
+        <Link className="button button-primary" href="/auth">Continuă către autentificare</Link>
+      </main>
+    ) : authState !== "authenticated" ? (
+      <main className="auth-gate-loading" aria-label="Se verifică sesiunea" />
+    ) : null}
+    </>
   );
 }

@@ -9,6 +9,9 @@ the project's publishable (or legacy anon) key from Supabase. These are
 browser-safe public credentials; never use a service-role key here. Restart the
 development server after changing environment variables.
 
+Sign-up also saves the student's institution, field of study, year, semester,
+and timetable. The dark theme can be enabled from **Profil → Apariție**.
+
 ## Getting Started
 
 First, run the development server:
