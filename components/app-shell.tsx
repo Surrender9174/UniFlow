@@ -18,7 +18,7 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 const navigation: { href: string; label: string; icon: IconName }[] = [
-  { href: "/", label: "Acasă", icon: "home" },
+  { href: "/dashboard", label: "Acasă", icon: "home" },
   { href: "/schedule", label: "Orar", icon: "calendar" },
   { href: "/tasks", label: "Task-uri", icon: "check" },
   { href: "/assistant", label: "Asistent", icon: "sparkles" },
@@ -28,6 +28,7 @@ const navigation: { href: string; label: string; icon: IconName }[] = [
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const isAuthRoute = pathname === "/auth" || pathname.startsWith("/auth/");
   const [authState, setAuthState] = useState<"loading" | "authenticated" | "unauthenticated" | "error">("loading");
   const [authError, setAuthError] = useState("");
   const [signingOut, setSigningOut] = useState(false);
@@ -51,7 +52,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }, [savedTheme]);
 
   useEffect(() => {
-    if (pathname === "/auth") return;
+    if (pathname === "/" || pathname === "/auth" || pathname.startsWith("/auth/")) return;
 
     if (!supabase) {
       router.replace("/auth");
@@ -120,21 +121,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }
   };
 
-  if (pathname === "/auth") return children;
+  if (isAuthRoute || pathname === "/") return children;
 
   return (
     <>
     <div className="app-frame" hidden={authState !== "authenticated"}>
       <aside className="sidebar">
-        <Link className="brand" href="/" aria-label="UniFlow, pagina principală">
+        <Link className="brand" href="/dashboard" aria-label="UniFlow, pagina principală">
           <span className="brand-mark"><Icon name="sparkles" size={20} /></span>
           <span>uni<span>flow</span></span>
         </Link>
         <p className="sidebar-caption">SPAȚIUL TĂU</p>
         <nav className="sidebar-nav" aria-label="Navigare principală">
           {navigation.map((item) => {
-            const active =
-              item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 aria-current={active ? "page" : undefined}
@@ -152,7 +152,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="sidebar-bottom">
           <Link className="sidebar-ingestion" href="/materials">
             <span className="ingestion-icon"><Icon name="upload" size={18} /></span>
-            <span><strong>Importă materiale</strong><small>PDF → plan de studiu</small></span>
+            <span><strong>Încarcă materiale</strong><small>PDF → plan de studiu</small></span>
             <Icon name="chevron" size={16} />
           </Link>
           <Link className="sidebar-profile" href="/profile">
@@ -210,8 +210,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       <nav aria-label="Navigare mobilă" className="bottom-nav">
         {navigation.map((item) => {
-          const active =
-            item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
               aria-current={active ? "page" : undefined}

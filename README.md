@@ -2,8 +2,10 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Supabase setup
 
-The sign-in and sign-up page is available at `/auth` and uses Supabase Auth.
-Unauthenticated visitors are sent there before they can use the study dashboard.
+The public home page (`/`) introduces UniFlow. **Get started** opens sign-up at
+`/auth/signup`; existing users can sign in at `/auth`. After authentication,
+the study dashboard is available at `/dashboard`, and protected study pages
+redirect unauthenticated visitors to sign-in.
 Copy `.env.example` to `.env.local`, then set `NEXT_PUBLIC_SUPABASE_ANON_KEY` to
 the project's publishable (or legacy anon) key from Supabase. These are
 browser-safe public credentials; never use a service-role key here. Restart the

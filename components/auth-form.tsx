@@ -29,9 +29,13 @@ function getPasswordStrength(password: string) {
   return { label: "Puternică", tone: "strong", value: score };
 }
 
-export default function AuthForm() {
+export default function AuthForm({
+  initialMode = "login",
+}: {
+  initialMode?: "login" | "signup";
+}) {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [institutionType, setInstitutionType] = useState<"university" | "high-school">("university");
@@ -60,7 +64,7 @@ export default function AuthForm() {
         });
       } else if (data.session?.user) {
         syncAuthenticatedProfile(data.session.user);
-        router.replace("/");
+        router.replace("/dashboard");
       }
     });
 
@@ -124,7 +128,7 @@ export default function AuthForm() {
         if (!data.user) throw new Error("Autentificarea nu a returnat un utilizator.");
 
         syncAuthenticatedProfile(data.user);
-        router.replace("/");
+        router.replace("/dashboard");
         return;
       }
 
@@ -148,7 +152,7 @@ export default function AuthForm() {
 
       if (data.session) {
         syncAuthenticatedProfile(data.user);
-        router.replace("/");
+        router.replace("/dashboard");
       } else {
         setMessage({
           type: "success",
@@ -171,8 +175,10 @@ export default function AuthForm() {
   };
 
   const switchMode = () => {
-    setMode((current) => (current === "login" ? "signup" : "login"));
+    const nextMode = mode === "login" ? "signup" : "login";
+    setMode(nextMode);
     setMessage(null);
+    router.replace(nextMode === "signup" ? "/auth/signup" : "/auth");
   };
 
   return (
