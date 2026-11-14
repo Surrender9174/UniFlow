@@ -9,7 +9,6 @@ import {
   useSyncExternalStore,
   type MouseEvent,
 } from "react";
-import { Icon } from "@/components/icons";
 import ScheduleReview from "@/components/sections/schedule-review";
 import StudyPlannerWidget from "@/components/sections/study-planner-widget";
 import { useScheduleUpload } from "@/components/use-schedule-upload";
@@ -53,8 +52,8 @@ type DashboardTaskRow = {
 };
 
 const recommendations = [
-  { category: "CAMPUS", title: "Săptămâna carierei începe luni", description: "Ateliere, întâlniri cu alumni și oportunități de internship.", tone: "recommendation-lilac", icon: "graduation" as const },
-  { category: "PENTRU TINE", title: "Ghid de pregătire pentru sesiune", description: "Un plan simplu ca să intri în sesiune fără stres.", tone: "recommendation-peach", icon: "target" as const },
+  { category: "CAMPUS", title: "Săptămâna carierei începe luni", description: "Ateliere, întâlniri cu alumni și oportunități de internship.", tone: "recommendation-lilac" },
+  { category: "PENTRU TINE", title: "Ghid de pregătire pentru sesiune", description: "Un plan simplu ca să intri în sesiune fără stres.", tone: "recommendation-peach" },
 ];
 
 export default function Dashboard() {
@@ -209,23 +208,30 @@ export default function Dashboard() {
       <section className="welcome-row">
         <div>
           <p className="eyebrow">{now ? `${formatLocalDate(now).toLocaleUpperCase("ro-RO")} · ${formatLocalTime(now)}` : "SE SINCRONIZEAZĂ"} <span className="eyebrow-dot" /> SĂPTĂMÂNA {now ? getIsoWeekNumber(now) : "—"}</p>
-          <h1>Bună , {firstName} </h1>
-          <p className="muted welcome-copy">Un pas mic azi, un semestru mai ușor mâine.</p>
+          <h1>Bună, {firstName}</h1>
+          <p className="muted welcome-copy">Aici vezi ce urmează și ce poți lăsa pe mâine.</p>
         </div>
         <Link className="button button-secondary desktop-add" href="/tasks">
-          <Icon name="plus" size={17} /> Adaugă un task
+          Adaugă un task
         </Link>
       </section>
 
       <section className="dashboard-grid">
         <article className="next-class-card" id="schedule-upload">
-          <div className="next-class-top">
-            <span className="pill pill-light">{uploadStatus === "processing" ? "SE PROCESEAZĂ" : uploadStatus === "preview" ? "VERIFICĂ ORARUL" : hasSchedule ? <><span className="live-dot" /> ORAR ÎNCĂRCAT</> : "ORAR NEÎNCĂRCAT"}</span>
-          </div>
+          {(uploadStatus === "processing" || uploadStatus === "preview" || !hasSchedule) && (
+            <div className="next-class-top">
+              <span className="pill pill-light">
+                {uploadStatus === "processing"
+                  ? "SE PROCESEAZĂ"
+                  : uploadStatus === "preview"
+                    ? "VERIFICĂ ORARUL"
+                    : "ORAR NEÎNCĂRCAT"}
+              </span>
+            </div>
+          )}
           {uploadStatus === "preview" ? (
             <>
               <div className="next-class-content schedule-upload-intro">
-                <div className="class-art"><Icon name="calendar" size={26} /></div>
                 <div>
                   <p className="next-class-time">AU FOST DETECTATE {pendingSchedule.length} ORE</p>
                   <h2>Verifică orarul extras</h2>
@@ -240,7 +246,6 @@ export default function Dashboard() {
             </>
           ) : uploadStatus === "processing" ? (
             <div className="next-class-content">
-              <div className="class-art"><Icon name="sparkles" size={27} /></div>
               <div>
                 <p className="next-class-time">RECUNOAȘTERE OCR</p>
                 <h2>{uploadMessage}</h2>
@@ -249,9 +254,8 @@ export default function Dashboard() {
             </div>
           ) : hasSchedule ? (
             <div className="next-class-content">
-              <div className="class-art"><Icon name="book" size={28} /></div>
               <div>
-                <p className="next-class-time"><Icon name="calendar" size={15} /> {scheduleEvents.length} cursuri detectate</p>
+                <p className="next-class-time">{scheduleEvents.length} cursuri detectate</p>
                 <h2>Orarul tău este pregătit</h2>
                 <p className="next-class-meta">Poți vedea programul organizat pe zile.</p>
               </div>
@@ -264,7 +268,7 @@ export default function Dashboard() {
                 onClick={openFilePicker}
                 type="button"
               >
-                <Icon name="upload" size={28} />
+                +
               </button>
               <div>
                 <h2>Încarcă un orar</h2>
@@ -283,18 +287,18 @@ export default function Dashboard() {
               type="file"
             />
             {uploadStatus === "preview" ? (
-              <span><Icon name="check" size={16} /> Verifică informațiile înainte de salvare</span>
+              <span>Verifică informațiile înainte de salvare</span>
             ) : (
-              <span><Icon name={hasSchedule ? "calendar" : "lock"} size={16} />{hasSchedule ? "Orarul este salvat pe dispozitiv" : "Fișiere locale, cu excepția Word .doc"}</span>
+              <span>{hasSchedule ? "Orarul este salvat pe dispozitiv" : "Fișiere locale, cu excepția Word .doc"}</span>
             )}
             {uploadStatus === "preview" ? null : hasSchedule ? (
               <>
-                <Link href="/schedule">Vezi orarul <Icon name="arrow" size={15} /></Link>
+                <Link href="/schedule">Vezi orarul</Link>
                 <button className="schedule-upload-link" disabled={uploadStatus === "processing"} onClick={openFilePicker} type="button">Înlocuiește</button>
               </>
             ) : (
               <button className="schedule-upload-link" disabled={uploadStatus === "processing"} onClick={openFilePicker} type="button">
-                {uploadStatus === "processing" ? "Se procesează..." : "Încarcă fișierul"} <Icon name="arrow" size={15} />
+                {uploadStatus === "processing" ? "Se procesează..." : "Încarcă fișierul"}
               </button>
             )}
           </div>
@@ -304,27 +308,24 @@ export default function Dashboard() {
 
         <Link className="focus-card" href="#study-planner" onClick={scrollToStudyPlanner}>
           
-          <span className="focus-label">PLAN ADAPTIV</span>
-          <strong>Ai un examen<br />în față?</strong>
-          <span className="focus-link">Planifică sesiuni <Icon name="arrow" size={15} /></span>
+          <span className="focus-label">TIMP DE STUDIU</span>
+          <strong>Pregătește-te<br />pentru examen.</strong>
+          <span className="focus-link">Planifică sesiuni</span>
           
         </Link>
       </section>
 
       <section className="stats-grid" aria-label="Statistici academice">
         <article className="stat-card">
-          <span className="stat-icon stat-violet"><Icon name="check" size={18} /></span>
           <div><p>Task-uri active</p><strong>{taskRows.filter((task) => !task.done).length}</strong><small>Task-uri încă de făcut</small></div>
           <span className="stat-sparkline sparkline-violet" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></span>
         </article>
         <article className="stat-card">
-          <span className="stat-icon stat-green"><Icon name="file" size={18} /></span>
           <div><p>Task-uri finalizate</p><strong>{completed}<small className="stat-total">/ {taskRows.length}</small></strong><small>Mai ai <b>{taskRows.length - completed}</b> de bifat</small></div>
           <span className="stat-sparkline sparkline-green" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></span>
         </article>
         <article className="stat-card">
-          <span className="stat-icon stat-orange"><Icon name="target" size={18} /></span>
-          <div><p>Teste promovate</p><strong>6<small className="stat-total">/ 8</small></strong><small>Ritm bun, continuă!</small></div>
+          <div><p>Cursuri în orar</p><strong>{scheduleEvents.length}</strong><small>Salvate pe dispozitivul tău</small></div>
           <span className="stat-sparkline sparkline-orange" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></span>
         </article>
       </section>
@@ -339,14 +340,13 @@ export default function Dashboard() {
       <section className="section-block">
         <div className="section-heading">
           <div><p className="eyebrow">ȚINE RITMUL</p><h2>Task-urile tale <span className="heading-count">{taskRows.length}</span></h2></div>
-          <Link className="text-link" href="/tasks">Vezi toate <Icon name="arrow" size={15} /></Link>
+          <Link className="text-link" href="/tasks">Vezi toate</Link>
         </div>
         {savedTasksError && <p className="gmail-status-error" role="alert">{savedTasksError}</p>}
         {taskError && <p className="gmail-status-error" role="alert">{taskError}</p>}
         <div className="task-list card-surface">
           {visibleTasks.length === 0 && (
             <div className="schedule-empty">
-              <Icon name="check" size={20} />
               <p>Nu ai task-uri salvate încă.</p>
             </div>
           )}
@@ -361,12 +361,12 @@ export default function Dashboard() {
                   onClick={() => toggleTask(task)}
                   type="button"
                 >
-                  {isDone && <Icon name="check" size={13} />}
+                  {isDone && "✓"}
                 </button>
                 <span className={`task-color ${task.color}`} />
                 <div className="task-description"><strong>{task.title}</strong><small>{task.course}</small></div>
-                <span className={`task-due${index === 0 && !isDone && task.date !== "Fără termen" ? " due-soon" : ""}`}><Icon name="clock" size={14} />{task.date}</span>
-                <button aria-label={`Opțiuni pentru ${task.title}`} className="quiet-icon task-more" type="button"><Icon name="more" size={18} /></button>
+                <span className={`task-due${index === 0 && !isDone && task.date !== "Fără termen" ? " due-soon" : ""}`}>{task.date}</span>
+                <button aria-label={`Opțiuni pentru ${task.title}`} className="quiet-icon task-more" type="button">...</button>
               </div>
             );
           })}
@@ -376,19 +376,18 @@ export default function Dashboard() {
       <section className="section-block recommendations-section">
         <div className="section-heading">
           <div><p className="eyebrow">DESCOPERĂ</p><h2>Recomandări pentru tine</h2></div>
-          <Link className="text-link" href="/materials">Vezi noutățile <Icon name="arrow" size={15} /></Link>
+          <Link className="text-link" href="/materials">Vezi noutățile</Link>
         </div>
         <div className="recommendation-grid">
           {recommendations.map((item) => (
             <article className={`recommendation-card ${item.tone}`} key={item.title}>
-              <div className="recommendation-illustration"><Icon name={item.icon} size={25} /></div>
-              <div className="recommendation-copy"><span>{item.category}</span><h3>{item.category === "CAMPUS" && careerWeekStart ? `Săptămâna carierei începe ${careerWeekStart}` : item.title}</h3><p>{item.description}</p><Link href="/materials">Află mai multe <Icon name="arrow" size={14} /></Link></div>
+              <div className="recommendation-copy"><span>{item.category}</span><h3>{item.category === "CAMPUS" && careerWeekStart ? `Săptămâna carierei începe ${careerWeekStart}` : item.title}</h3><p>{item.description}</p><Link href="/materials">Află mai multe</Link></div>
               
             </article>
           ))}
         </div>
       </section>
-      <p className="dashboard-footnote">Ai finalizat {completed} task-uri. Bravo! <span>✦</span></p>
+      <p className="dashboard-footnote">Ai finalizat {completed} task-uri în total.</p>
     </div>
   );
 }

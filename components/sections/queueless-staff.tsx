@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Icon } from "@/components/icons";
 import { fetchQueueLess } from "@/lib/queueless/client";
 import type { QueueLessStaffLocation } from "@/lib/queueless/types";
 import { supabase } from "@/lib/supabase";
@@ -104,7 +103,7 @@ export default function QueueLessStaffSection() {
           <p className="muted">Gestionează bonurile și cheamă următoarea persoană.</p>
         </div>
         <Link className="button button-secondary" href="/queueless">
-          <Icon name="arrow" size={16} /> Înapoi la QueueLess
+          Înapoi la QueueLess
         </Link>
       </header>
 
@@ -115,7 +114,6 @@ export default function QueueLessStaffSection() {
         <div className="queueless-empty card-surface">Se verifică accesul...</div>
       ) : !locations.length ? (
         <div className="queueless-empty card-surface">
-          <Icon name="lock" size={23} />
           <strong>Nu ai o locație atribuită</strong>
           <p>
             Un administrator trebuie să adauge contul tău în tabelul
@@ -185,7 +183,7 @@ export default function QueueLessStaffSection() {
                 onClick={() => void advanceQueue(selectedLocation.id)}
                 type="button"
               >
-                <Icon name="arrow" size={16} /> Finalizează / cheamă următorul
+                Finalizează / cheamă următorul
               </button>
               <p className="queueless-disclaimer">
                 Butonul finalizează bonul servit sau începe servirea celui chemat anterior,

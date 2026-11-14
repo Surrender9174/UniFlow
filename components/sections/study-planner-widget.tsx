@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Icon } from "@/components/icons";
 import {
   addSavedTasks,
   type TopicFlashcards,
@@ -170,7 +169,7 @@ export default function StudyPlannerWidget({
           <p className="eyebrow">PLAN ADAPTIV</p>
           <h2>Pregătește-te pentru un examen</h2>
         </div>
-        <span className="study-planner-duration"><Icon name="clock" size={14} /> Sesiuni de 30 min</span>
+        <span className="study-planner-duration">Sesiuni de 30 min</span>
       </div>
       <form className="card-surface study-planner-form" onSubmit={generatePlan}>
         <label className="form-field">
@@ -253,8 +252,8 @@ export default function StudyPlannerWidget({
         {error && <p className="form-error study-planner-message" role="alert">{error}</p>}
         {notice && <p className="study-planner-success study-planner-message" role="status">{notice}</p>}
         <div className="study-planner-actions">
-          <button className="button button-primary" disabled={!now || generating} type="submit">
-            <Icon name="sparkles" size={15} /> {generating ? "Se generează planul și flashcardurile..." : "Generează planul"}
+          <button className="button button-primary" disabled={!now} type="submit">
+            Generează planul
           </button>
           <span>Planul se adaugă în Task-uri și apare în Orar.</span>
         </div>
