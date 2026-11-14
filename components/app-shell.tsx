@@ -260,7 +260,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <span className="brand-mark"><Icon name="logo" size={20} /></span>
           <span>uni<span>flow</span></span>
         </Link>
-        <p className="sidebar-caption">SPAȚIUL TĂU</p>
         <nav className="sidebar-nav" aria-label="Navigare principală">
           {navigation.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -301,7 +300,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="mobile-brand">
             <span className="brand-mark"><Icon name="logo" size={18} /></span>
             <span>uni<span>flow</span></span>
-          </div>
+            
+          </div> 
           <div className="topbar-context"><span>{profile.semester}</span><span className="context-dot" /> {now ? getAcademicYearLabel(now) : "—"}</div>
           <div className="topbar-actions">
             <label className="search-field">
