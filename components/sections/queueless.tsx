@@ -41,6 +41,20 @@ function getCrowdLevel(waitMinutes: number) {
   return { label: "Aglomerat", tone: "peak" };
 }
 
+function getCurrentWaitMinutes(location: QueueLessLocation, now: number | null) {
+  if (now === null || !location.stats_updated_at) {
+    return location.estimated_wait_minutes;
+  }
+
+  const updatedAt = new Date(location.stats_updated_at).getTime();
+  if (!Number.isFinite(updatedAt) || updatedAt > now) {
+    return location.estimated_wait_minutes;
+  }
+
+  const elapsedMinutes = Math.floor((now - updatedAt) / 60_000);
+  return Math.max(0, location.estimated_wait_minutes - elapsedMinutes);
+}
+
 function formatCountdown(milliseconds: number) {
   const minutes = Math.max(0, Math.ceil(milliseconds / 60_000));
   if (minutes < 1) return "sub 1 min";
@@ -157,9 +171,12 @@ export default function QueueLessSection() {
     0,
   );
   const communityWaitMinutes = locations.reduce(
-    (total, location) => total + location.estimated_wait_minutes,
+    (total, location) => total + getCurrentWaitMinutes(location, now),
     0,
   );
+  const selectedWaitMinutes = selectedLocation
+    ? getCurrentWaitMinutes(selectedLocation, now)
+    : 0;
   const ticketEta = ticket && ticketLocation && now !== null
     ? new Date(ticket.updated_at).getTime() +
       ticket.queue_position * ticketLocation.average_service_minutes * 60_000 - now
@@ -305,7 +322,8 @@ export default function QueueLessSection() {
         ) : (
           <div className="queueless-location-grid">
             {filteredLocations.map((location) => {
-              const crowd = getCrowdLevel(location.estimated_wait_minutes);
+              const waitMinutes = getCurrentWaitMinutes(location, now);
+              const crowd = getCrowdLevel(waitMinutes);
               return (
                 <button
                   aria-pressed={selectedLocationId === location.id}
@@ -324,7 +342,7 @@ export default function QueueLessSection() {
                   <small>{location.description}</small>
                   <span className="queueless-location-metrics">
                     <span><b>{location.waiting_count}</b> în coadă</span>
-                    <span><b>{location.estimated_wait_minutes}</b> min așteptare</span>
+                    <span><b>{waitMinutes}</b> min așteptare</span>
                   </span>
                   <span className="queueless-location-address">
                     <Icon name="map" size={13} /> {location.address}
@@ -372,7 +390,7 @@ export default function QueueLessSection() {
           {notice && <p className="queueless-success" role="status">{notice}</p>}
           <div className="queueless-join-footer">
             <span>
-              Estimare live: <strong>{selectedLocation.estimated_wait_minutes} min</strong>
+              Estimare live: <strong>{selectedWaitMinutes} min</strong>
             </span>
             <button
               className="button button-primary"

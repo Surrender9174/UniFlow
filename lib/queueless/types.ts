@@ -23,6 +23,7 @@ export type QueueLessLocation = {
   required_documents: string[];
   waiting_count: number;
   estimated_wait_minutes: number;
+  stats_updated_at?: string | null;
 };
 
 export type QueueLessTicket = {
