@@ -1110,7 +1110,9 @@ export default function SkillSwapSection() {
                       <div className="skillswap-session-content">
                         <div className="skillswap-session-top">
                           <strong>{session.skill}</strong>
-                          <span className={`session-status ${session.status}`}>{sessionStatusLabels[session.status]}</span>
+                          <span className={`session-status ${session.status}${session.status === "awaiting_confirmation" ? " cancelled" : ""}`}>
+                            {sessionStatusLabels[session.status]}
+                          </span>
                         </div>
                         <p>{isTeacher ? "Predai" : "Înveți"} cu {partnerName}</p>
                         <small>{formatSkillSwapTime(session.starts_at, profile?.timezone ?? "UTC")} · 60 min · Gratuit</small>
@@ -1260,7 +1262,7 @@ export default function SkillSwapSection() {
             <button aria-label="Închide fereastra" className="skillswap-modal-close" onClick={() => setProposalTarget(null)} type="button">×</button>
             <p className="eyebrow">PROPUNE UN SCHIMB GRATUIT</p>
             <h2>{proposalTarget.kind === "direct" ? "Alege o oră pentru sesiune" : "Planifică schimbul în trei"}</h2>
-            <p className="muted">
+            <p className="muted">overflow: hidden
               {proposalTarget.kind === "direct"
                 ? `O sesiune de 60 de minute cu ${proposalTarget.match.partner.displayName}, pentru ${proposalTarget.match.learnsSkill}.`
                 : "Sunt programate trei sesiuni consecutive de câte 60 de minute. Fiecare participant trebuie să confirme schimbul."}

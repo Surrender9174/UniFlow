@@ -198,6 +198,14 @@ export default function Dashboard() {
     }
   };
 
+  function boolOre(){
+    if(scheduleEvents.length > 1){ 
+      return true;
+    }
+    else
+      return false;
+  }
+
   return (
     <div className="dashboard-page">
       <section className="welcome-row">
@@ -242,7 +250,7 @@ export default function Dashboard() {
           ) : uploadStatus === "processing" ? (
             <div className="next-class-content">
               <div>
-                <p className="next-class-time">RECUNOAȘTERE OCR</p>
+                <p className="next-class-time"> RECUNOAȘTERE OCR </p>
                 <h2>{uploadMessage}</h2>
                 <p className="next-class-meta">Fișierul este procesat pe dispozitivul tău.</p>
               </div>
@@ -250,7 +258,7 @@ export default function Dashboard() {
           ) : hasSchedule ? (
             <div className="next-class-content">
               <div>
-                <p className="next-class-time">{scheduleEvents.length} cursuri detectate</p>
+                <p className="next-class-time"> {boolOre() ? `${scheduleEvents.length} de cursuri detectate` : `${scheduleEvents.length} curs detectate`}</p>
                 <h2>Orarul tău este pregătit</h2>
                 <p className="next-class-meta">Poți vedea programul organizat pe zile.</p>
               </div>
