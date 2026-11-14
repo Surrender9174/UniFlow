@@ -261,8 +261,15 @@ a:hover .arrow-icon, button:hover .arrow-icon { transform: translateX(6px); }
 .task-flashcard { display: grid; gap: 8px; padding: 13px; border: 1px solid #eeebf7; border-radius: 10px; background: #fff; }
 .task-flashcard > span, .task-flashcard-answer > span { color: #9992b4; font-size: 8px; font-weight: 700; letter-spacing: .65px; }
 .task-flashcard p { margin: 0; color: #4a4b60; font-size: 11px; line-height: 1.6; white-space: pre-wrap; }
+.task-flashcard-response { display: grid; gap: 6px; }
+.task-flashcard-response > span { color: #9992b4; font-size: 8px; font-weight: 700; letter-spacing: .65px; }
+.task-flashcard-response textarea { min-height: 74px; padding: 9px 10px; border: 1px solid #e8e4f0; border-radius: 8px; background: #fff; color: #4a4b60; font: inherit; font-size: 10px; line-height: 1.5; resize: vertical; }
+.task-flashcard-response textarea:focus-visible { border-color: #9c8ce4; outline: 2px solid #9c8ce455; }
+.task-flashcard-response textarea:disabled { background: #f7f6fa; color: #777689; }
 .task-flashcard-answer { display: grid; gap: 6px; margin-top: 3px; padding-top: 10px; border-top: 1px solid #f0eef6; }
+.task-flashcard-self-check { color: #858294 !important; font-size: 9px !important; }
 .task-flashcard .button, .task-flashcard-navigation .button { min-height: 32px; font-size: 9px; }
+.task-flashcard .button:disabled { cursor: not-allowed; opacity: .5; transform: none; }
 .task-flashcard-navigation { justify-content: flex-end; }
 .task-flashcard-navigation .button:disabled { cursor: not-allowed; opacity: .5; transform: none; }
 .task-done .task-description strong { color: #a8a9b6; text-decoration: line-through; }
@@ -1396,7 +1403,11 @@ html[data-theme="dark"] .task-flashcards { border-color: #3b3655; background: #2
 html[data-theme="dark"] .task-flashcards-heading strong { color: #d3d0e2; }
 html[data-theme="dark"] .task-flashcard { border-color: #38354a; background: #1d1e2a; }
 html[data-theme="dark"] .task-flashcard p { color: #e1dfeb; }
+html[data-theme="dark"] .task-flashcard-response > span { color: #aaa3c1; }
+html[data-theme="dark"] .task-flashcard-response textarea { border-color: #474359; background: #252634; color: #e1dfeb; }
+html[data-theme="dark"] .task-flashcard-response textarea:disabled { background: #20212d; color: #a7a5b4; }
 html[data-theme="dark"] .task-flashcard-answer { border-color: #38354a; }
+html[data-theme="dark"] .task-flashcard-self-check { color: #aaa8b8 !important; }
 html[data-theme="dark"] .task-description small,
 html[data-theme="dark"] .task-due,
 html[data-theme="dark"] .stat-card p,

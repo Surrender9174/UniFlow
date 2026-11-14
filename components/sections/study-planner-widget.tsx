@@ -8,12 +8,14 @@ import {
   type SavedTask,
 } from "@/lib/tasks";
 import type { ScheduleEvent } from "@/lib/schedule-storage";
+import type { StudentProfile } from "@/lib/profile";
 import { generateStudyPlanTasks } from "@/lib/study-planner";
 import { supabase } from "@/lib/supabase";
 
 type StudyPlannerWidgetProps = {
   now: Date | null;
   schedule: ScheduleEvent[];
+  studyLevel: Pick<StudentProfile, "institutionType" | "year">;
   tasks: SavedTask[];
 };
 
@@ -60,6 +62,7 @@ function isTopicFlashcardsResponse(value: unknown): value is { topics: TopicFlas
 export default function StudyPlannerWidget({
   now,
   schedule,
+  studyLevel,
   tasks,
 }: StudyPlannerWidgetProps) {
   const [subject, setSubject] = useState("");
@@ -116,6 +119,7 @@ export default function StudyPlannerWidget({
         body: JSON.stringify({
           subject,
           confidence,
+          studyLevel,
           topics: topics.split(/\r?\n/),
         }),
       });
@@ -244,7 +248,7 @@ export default function StudyPlannerWidget({
         )}
         <p className="study-planner-note study-planner-topics-note">
           Introdu temele manual. Planul evită orele de curs și intervalele din jurul task-urilor active.
-          Gemini creează flashcarduri pentru fiecare temă; nivelul de încredere le ajustează numărul și dificultatea.
+          Gemini creează flashcarduri pentru fiecare temă; încrederea și anul/clasa din profil ajustează dificultatea.
         </p>
         {error && <p className="form-error study-planner-message" role="alert">{error}</p>}
         {notice && <p className="study-planner-success study-planner-message" role="status">{notice}</p>}

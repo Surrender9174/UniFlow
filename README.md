@@ -50,8 +50,10 @@ assistant, you can also ask to move a saved task to a new date and time; Gemini
 must identify the task and a future date/time before UniFlow changes it.
 Gmail does not need to be connected for task requests, but Gemini must be
 configured. The adaptive study planner also uses Gemini to generate
-confidence-adjusted flashcards for each topic; generated cards are saved with
-the plan's local tasks and can be studied by opening a task on the Tasks page.
+flashcards for each topic, adjusting difficulty for confidence and the
+student's school or university year; generated cards are saved with the plan's
+local tasks. On the Tasks page, students can write an answer before revealing
+the suggested answer for comparison.
 
 The assistant conversation is also saved in the current browser and restored
 when `/assistant` is opened again. It is not synced to other devices. The latest

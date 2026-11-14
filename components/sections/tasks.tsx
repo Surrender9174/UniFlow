@@ -47,6 +47,7 @@ export default function TasksPage() {
   const [flashcardTaskId, setFlashcardTaskId] = useState<string | null>(null);
   const [flashcardIndex, setFlashcardIndex] = useState(0);
   const [showFlashcardAnswer, setShowFlashcardAnswer] = useState(false);
+  const [flashcardResponse, setFlashcardResponse] = useState("");
   const taskSnapshot = useSyncExternalStore(
     subscribeToSavedTasks,
     getSavedTasksSnapshot,
@@ -115,10 +116,19 @@ export default function TasksPage() {
     if (!task.flashcards?.length) return;
     if (flashcardTaskId === task.id) {
       setFlashcardTaskId(null);
+      setFlashcardResponse("");
+      setShowFlashcardAnswer(false);
       return;
     }
     setFlashcardTaskId(task.id);
     setFlashcardIndex(0);
+    setFlashcardResponse("");
+    setShowFlashcardAnswer(false);
+  };
+
+  const moveFlashcard = (direction: -1 | 1) => {
+    setFlashcardIndex((current) => current + direction);
+    setFlashcardResponse("");
     setShowFlashcardAnswer(false);
   };
 
@@ -291,25 +301,48 @@ export default function TasksPage() {
               >
                 <div className="task-flashcards-heading">
                   <strong>Flashcard {flashcardIndex + 1} din {openFlashcards.length}</strong>
-                  <button onClick={() => setFlashcardTaskId(null)} type="button">
+                  <button
+                    onClick={() => {
+                      setFlashcardTaskId(null);
+                      setFlashcardResponse("");
+                      setShowFlashcardAnswer(false);
+                    }}
+                    type="button"
+                  >
                     Închide
                   </button>
                 </div>
                 <div className="task-flashcard">
                   <span>ÎNTREBARE</span>
                   <p>{activeFlashcard.question}</p>
+                  <label className="task-flashcard-response">
+                    <span>RĂSPUNSUL TĂU</span>
+                    <textarea
+                      disabled={showFlashcardAnswer}
+                      onChange={(event) => setFlashcardResponse(event.target.value)}
+                      placeholder="Scrie răspunsul înainte să verifici..."
+                      rows={3}
+                      value={flashcardResponse}
+                    />
+                  </label>
                   {showFlashcardAnswer ? (
-                    <div className="task-flashcard-answer">
-                      <span>RĂSPUNS</span>
-                      <p>{activeFlashcard.answer}</p>
-                    </div>
+                    <>
+                      <div className="task-flashcard-answer">
+                        <span>RĂSPUNS AȘTEPTAT</span>
+                        <p>{activeFlashcard.answer}</p>
+                      </div>
+                      <p className="task-flashcard-self-check">
+                        Compară răspunsul tău cu cel așteptat, apoi continuă.
+                      </p>
+                    </>
                   ) : (
                     <button
                       className="button button-secondary"
+                      disabled={!flashcardResponse.trim()}
                       onClick={() => setShowFlashcardAnswer(true)}
                       type="button"
                     >
-                      Arată răspunsul
+                      Verifică răspunsul
                     </button>
                   )}
                 </div>
@@ -317,10 +350,7 @@ export default function TasksPage() {
                   <button
                     className="button button-secondary"
                     disabled={flashcardIndex === 0}
-                    onClick={() => {
-                      setFlashcardIndex((current) => current - 1);
-                      setShowFlashcardAnswer(false);
-                    }}
+                    onClick={() => moveFlashcard(-1)}
                     type="button"
                   >
                     Înapoi
@@ -328,10 +358,7 @@ export default function TasksPage() {
                   <button
                     className="button button-secondary"
                     disabled={flashcardIndex >= openFlashcards.length - 1}
-                    onClick={() => {
-                      setFlashcardIndex((current) => current + 1);
-                      setShowFlashcardAnswer(false);
-                    }}
+                    onClick={() => moveFlashcard(1)}
                     type="button"
                   >
                     Următorul
