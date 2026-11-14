@@ -50,7 +50,7 @@ export async function saveStudentProfileToDatabase(profile: StudentProfile) {
     .from("profiles")
     .update({
       name: profile.name.trim(),
-      education_level: profile.institutionType === "Liceu" ? "high-school" : "university",
+      education_level: profile.institutionType === "Liceu" ? "highschool" : "university",
       institution: profile.university.trim(),
       study_year: getStudyYearValue(profile.year),
       semester: getSemesterValue(profile.semester),
@@ -98,7 +98,8 @@ export async function saveAuthenticatedProfileToDatabase(user: User) {
   if (name && isEmpty(existingProfile.name)) update.name = name;
   if (metadata.institutionType === "university" || metadata.institutionType === "high-school") {
     if (isEmpty(existingProfile.education_level)) {
-      update.education_level = metadata.institutionType;
+      update.education_level =
+        metadata.institutionType === "high-school" ? "highschool" : "university";
     }
   }
   if (institution && isEmpty(existingProfile.institution)) update.institution = institution;
