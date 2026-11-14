@@ -107,7 +107,7 @@ export default function Dashboard() {
     const startTime = performance.now();
     const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ? 400
-      : 1800;
+      : 800;
     const interruptScroll = () => cancelScrollAnimation.current?.();
     const cleanup = () => {
       window.removeEventListener("wheel", interruptScroll);

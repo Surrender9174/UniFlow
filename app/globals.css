@@ -1839,7 +1839,7 @@ html[data-theme="dark"] .skillswap-room-footer { color: #a5a4b5; }
 .skillswap-empty-icon { display: grid; width: 39px; height: 39px; flex: 0 0 auto; place-items: center; border-radius: 12px; background: #f0edff; color: #7663d7; }
 .skillswap-empty strong { color: #45455b; font-size: 11px; }
 .skillswap-empty p { margin: 4px 0 0; color: #9293a4; font-size: 10px; line-height: 1.5; }
-.skillswap-match-list { display: grid; gap: 10px; }
+.skillswap-match-list { display: grid; gap: 100px;  }
 .skillswap-match-card { display: grid; grid-template-columns: 39px minmax(0, 1fr) auto; align-items: start; gap: 11px; padding: 13px; border: 1px solid #eeedf4; border-radius: 13px; background: #fff; transition: border-color .2s ease, box-shadow .2s ease; }
 .skillswap-match-card:hover { border-color: #ded8f5; box-shadow: 0 6px 16px #2c25440b; }
 .skillswap-match-avatar { display: grid; width: 39px; height: 39px; place-items: center; border-radius: 13px; background: linear-gradient(145deg, #d9d2fa, #aa9ce9); color: white; font-size: 14px; font-weight: 750; }
