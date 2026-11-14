@@ -151,11 +151,19 @@ not run automatically from a local `npm run dev` process.
    `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, the `privateKey` in `VAPID_PRIVATE_KEY`, and
    a valid `mailto:` contact in `VAPID_SUBJECT`. Keep the private key and cron
    secret server-only.
-5. Deploy UniFlow, then configure your host or another scheduler to send an
-   **hourly GET** request to `/api/cron/gmail-monitor` with the header
-   `Authorization: Bearer <MONITOR_CRON_SECRET>`. Do not put that secret in a
-   public URL. The endpoint returns an error if any account fails so the
-   scheduler can report failed runs.
+5. Add the required server-side environment variables to the Vercel project and
+   deploy UniFlow. Vercel Hobby cron jobs can run only once per day, so this
+   repository uses GitHub Actions for hourly checks. In the GitHub repository,
+   open **Settings → Secrets and variables → Actions** and add:
+   - `APP_BASE_URL`: the production HTTPS URL of the Vercel deployment, without
+     a trailing slash.
+   - `MONITOR_CRON_SECRET`: the same random secret configured in Vercel.
+
+   Push this workflow to the repository's default branch and make sure GitHub
+   Actions are enabled. It calls `/api/cron/gmail-monitor` hourly and can also
+   be started manually from the Actions tab. Scheduled runs use UTC and GitHub
+   may delay them; the endpoint returns an error if any account fails so the
+   run is reported as failed.
 6. In UniFlow, reconnect Gmail while signed in, then allow browser notifications
    from the notification menu. Reconnecting is required to associate and
    encrypt the refresh token for background checks.
@@ -165,3 +173,5 @@ identify concrete school-related updates, and stores only the generated alert
 and Gmail message ID in Supabase—not the full email body. Gmail access remains
 read-only. Until the migration, server secrets, deployment, scheduler, and
 browser permission are configured, background Gmail alerts are not active.
+
+Bla bla

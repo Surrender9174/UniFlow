@@ -67,3 +67,8 @@ export function saveSchedule(events: ScheduleEvent[]) {
   window.localStorage.setItem(storageKey, JSON.stringify(events));
   window.dispatchEvent(new Event(scheduleChangedEvent));
 }
+
+export function clearSchedule() {
+  window.localStorage.removeItem(storageKey);
+  window.dispatchEvent(new Event(scheduleChangedEvent));
+}

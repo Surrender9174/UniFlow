@@ -1,5 +1,6 @@
 export type IconName =
   | "home"
+  | "logo"
   | "lock"
   | "calendar"
   | "check"
@@ -48,6 +49,7 @@ export function Icon({
   };
 
   const paths: Record<IconName, React.ReactNode> = {
+    logo: <image href="/crwnA.png" width="24" height="24" />,
     home: <><path d="m3 10 9-7 9 7" /><path d="M5 9v11h14V9M9 20v-6h6v6" /></>,
     lock: <><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /><path d="M12 14v3" /></>,
     calendar: <><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M16 3v4M8 3v4M3 10h18" /><path d="m9 15 2 2 4-4" /></>,
@@ -87,7 +89,8 @@ export function Icon({
       height={size}
       viewBox="0 0 24 24"
       {...common}
-    >
+      >
+    
       {paths[name]}
     </svg>
   );

@@ -767,12 +767,14 @@ export default function AssistantPage() {
 
   return (
     <div className="section-page assistant-page">
+
       <div className="page-heading">
         <div>
           <p className="eyebrow">ÎNTREABĂ, PLANIFICĂ, ÎNVAȚĂ</p>
           <h1>Study buddy-ul tău</h1>
           <p className="muted">Întreabă despre emailuri sau planifică task-uri pentru școală și facultate.</p>
         </div>
+
         <span className="assistant-online">
           <i />
           {gmailStatus?.connected ? "Gmail conectat" : "Uni e pregătit"}
@@ -855,13 +857,15 @@ export default function AssistantPage() {
         </form>
         {whatsappFile && <p className="whatsapp-file-selected">{whatsappFile.name}</p>}
         {whatsappError && <p className="gmail-status-error" role="alert">{whatsappError}</p>}
-        <p className="gmail-privacy-note">
-          Fișierul este trimis la Gemini pentru analiză și nu este salvat în UniFlow.
-          Pe planul gratuit, Google poate folosi conținutul pentru îmbunătățirea produselor.
-          Înainte de încărcare, elimină informațiile private pe care nu vrei să le partajezi.
-        </p>
+        <details className="gmail-privacy-disclosure">
+          <summary>Detalii privind confidențialitatea exportului</summary>
+          <p className="gmail-privacy-note">
+            Fișierul este trimis la Gemini pentru analiză și nu este salvat în UniFlow.
+            Pe planul gratuit, Google poate folosi conținutul pentru îmbunătățirea produselor.
+            Înainte de încărcare, elimină informațiile private pe care nu vrei să le partajezi.
+          </p>
+        </details>
       </section>
-
       <section className="chat-panel card-surface">
         <header className="chat-header">
           <span className="chat-avatar"><Icon name="sparkles" size={21} /></span>

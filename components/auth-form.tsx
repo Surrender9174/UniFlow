@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
 import ThemeToggle from "@/components/theme-toggle";
+import { extractScheduleFile, isSupportedScheduleFile } from "@/lib/schedule-file-reader";
+import { parseScheduleText } from "@/lib/schedule-parser";
+import { maxScheduleFileSize, scheduleFileAccept } from "@/lib/schedule-file-types";
 import {
   saveAuthenticatedProfileToDatabase,
   syncAuthenticatedProfile,
@@ -48,12 +51,62 @@ export default function AuthForm({
   const [year, setYear] = useState("");
   const [semester, setSemester] = useState("");
   const [schedule, setSchedule] = useState("");
+  const [scheduleFileName, setScheduleFileName] = useState("");
+  const [scheduleFileError, setScheduleFileError] = useState("");
+  const [scheduleFileProgress, setScheduleFileProgress] = useState("");
+  const [scheduleFileProcessing, setScheduleFileProcessing] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<AuthMessage | null>(null);
   const strength = useMemo(() => getPasswordStrength(password), [password]);
+
+  const handleScheduleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    setScheduleFileError("");
+    setScheduleFileProgress("");
+    if (!file) {
+      setScheduleFileName("");
+      return;
+    }
+
+    if (file.size > maxScheduleFileSize) {
+      setScheduleFileName("");
+      setScheduleFileError("Fișierul depășește limita de 15 MB.");
+      input.value = "";
+      return;
+    }
+
+    if (!isSupportedScheduleFile(file)) {
+      setScheduleFileName("");
+      setScheduleFileError("Alege un PDF, o imagine PNG/JPG/WebP, un fișier Excel, Word, CSV sau TXT.");
+      input.value = "";
+      return;
+    }
+
+    setScheduleFileName(file.name);
+    setScheduleFileProcessing(true);
+    setScheduleFileProgress("Se citește orarul...");
+    try {
+      const text = await extractScheduleFile(file, setScheduleFileProgress);
+      if (!parseScheduleText(text).length) {
+        throw new Error("Nu am putut identifica zile, ore și cursuri în fișier.");
+      }
+      setSchedule(text);
+      setScheduleFileProgress("Orarul a fost extras. Poți verifica sau edita textul.");
+    } catch (error) {
+      setScheduleFileName("");
+      setScheduleFileProgress("");
+      setScheduleFileError(
+        getErrorMessage(error, "Nu am putut procesa fișierul. Încearcă din nou."),
+      );
+      input.value = "";
+    } finally {
+      setScheduleFileProcessing(false);
+    }
+  };
 
   useEffect(() => {
     if (!supabase) return;
@@ -90,14 +143,25 @@ export default function AuthForm({
     }
 
     if (mode === "signup") {
+      if (scheduleFileProcessing) {
+        setMessage({ type: "error", text: "Așteaptă terminarea procesării orarului." });
+        return;
+      }
       if (
-        [name, university, program, year, semester, schedule].some(
+        [name, university, program, year, semester].some(
           (value) => !value.trim(),
         )
       ) {
         setMessage({
           type: "error",
           text: "Completează toate informațiile despre studiile tale.",
+        });
+        return;
+      }
+      if (schedule.trim() && !parseScheduleText(schedule).length) {
+        setMessage({
+          type: "error",
+          text: "Nu am putut identifica zile, ore și cursuri în orar. Verifică textul sau încarcă un fișier clar.",
         });
         return;
       }
@@ -193,7 +257,7 @@ export default function AuthForm({
         <section className="auth-intro">
           <div className="auth-intro-header">
             <Link className="auth-brand" href="/">
-              <span className="brand-mark"><Icon name="sparkles" size={20} /></span>
+              <span className="brand-mark"><Icon name="logo" size={20} /></span>
               <span>uni<span>flow</span></span>
             </Link>
             <ThemeToggle variant="accent" />
@@ -307,16 +371,36 @@ export default function AuthForm({
                       <option value="Semestrul II">Semestrul II</option>
                     </select>
                   </label>
-                  <label className="auth-field auth-schedule-field">
-                    <span>Orar</span>
-                    <textarea
-                      onChange={(event) => setSchedule(event.target.value)}
-                      placeholder="Ex.: Luni, 08:00 — Matematică; 10:00 — Fizică"
-                      required
-                      rows={3}
-                      value={schedule}
-                    />
-                  </label>
+                  <div className="auth-field auth-schedule-field">
+                    <span>Orar (opțional)</span>
+                    <label
+                      className={`auth-file-picker${scheduleFileName ? " selected" : ""}`}
+                    >
+                      <Icon name="upload" size={16} />
+                      {scheduleFileName || "Încarcă PDF, imagine, Excel, Word, CSV sau TXT"}
+                      <input
+                        accept={scheduleFileAccept}
+                        aria-label="Selectează un fișier cu orarul"
+                        className="visually-hidden"
+                        disabled={scheduleFileProcessing}
+                        onChange={handleScheduleFileChange}
+                        type="file"
+                      />
+                    </label>
+                    {scheduleFileError && <small className="auth-message error" role="alert">{scheduleFileError}</small>}
+                    {!scheduleFileError && scheduleFileProgress && !scheduleFileProcessing && (
+                      <small className="muted" role="status">{scheduleFileProgress}</small>
+                    )}
+                    <label className="auth-field">
+                      <textarea
+                        className="auth-schedule-textarea"
+                        onChange={(event) => setSchedule(event.target.value)}
+                        placeholder="Text Simplu"
+                        rows={2}
+                        value={schedule}
+                      />
+                    </label>
+                  </div>
                 </div>
               </>
             )}
@@ -350,7 +434,7 @@ export default function AuthForm({
                   onClick={() => setShowPassword((visible) => !visible)}
                   type="button"
                 >
-                  {showPassword ? "Ascunde" : "Arată"}
+                  <Icon name={showPassword ? "eyeOff" : "eye"} size={18} />
                 </button>
               </span>
             </label>

@@ -32,7 +32,7 @@ export default function Init() {
       <div className="landing-shell">
         <header className="landing-header">
           <Link aria-label="UniFlow, pagina principală" className="landing-brand" href="/">
-            <span className="brand-mark"><Icon name="sparkles" size={20} /></span>
+            <span className="brand-mark"><Icon name="logo" size={20} /></span>
             <span>uni<span>flow</span></span>
           </Link>
           <nav aria-label="Navigare" className="landing-nav">
