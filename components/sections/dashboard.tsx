@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type MouseEvent,
+} from "react";
 import { Icon } from "@/components/icons";
 import ScheduleReview from "@/components/sections/schedule-review";
 import StudyPlannerWidget from "@/components/sections/study-planner-widget";
@@ -52,6 +59,14 @@ const recommendations = [
 
 export default function Dashboard() {
   const now = useDeviceNow();
+  const scrollAnimationFrame = useRef<number | null>(null);
+  const cancelScrollAnimation = useRef<(() => void) | null>(null);
+  useEffect(
+    () => () => {
+      cancelScrollAnimation.current?.();
+    },
+    [],
+  );
   const {
     fileInputRef,
     uploadStatus,
@@ -65,6 +80,67 @@ export default function Dashboard() {
     cancelSchedulePreview,
   } = useScheduleUpload();
   const [taskError, setTaskError] = useState("");
+  const scrollToStudyPlanner = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    const target = document.getElementById("study-planner");
+    if (!target) return;
+
+    event.preventDefault();
+    cancelScrollAnimation.current?.();
+
+    const start = window.scrollY;
+    const targetPosition = Math.max(
+      0,
+      window.scrollY + target.getBoundingClientRect().top - 92,
+    );
+    const distance = targetPosition - start;
+    if (Math.abs(distance) < 1) return;
+    const startTime = performance.now();
+    const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? 400
+      : 1800;
+    const interruptScroll = () => cancelScrollAnimation.current?.();
+    const cleanup = () => {
+      window.removeEventListener("wheel", interruptScroll);
+      window.removeEventListener("touchstart", interruptScroll);
+      cancelScrollAnimation.current = null;
+    };
+    const cancel = () => {
+      if (scrollAnimationFrame.current !== null) {
+        cancelAnimationFrame(scrollAnimationFrame.current);
+      }
+      scrollAnimationFrame.current = null;
+      cleanup();
+    };
+    cancelScrollAnimation.current = cancel;
+    window.addEventListener("wheel", interruptScroll, { passive: true });
+    window.addEventListener("touchstart", interruptScroll, { passive: true });
+
+    const animateScroll = (time: number) => {
+      const progress = Math.min((time - startTime) / duration, 1);
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      window.scrollTo(0, start + distance * easedProgress);
+
+      if (progress < 1) {
+        scrollAnimationFrame.current = requestAnimationFrame(animateScroll);
+      } else {
+        window.scrollTo(0, targetPosition);
+        scrollAnimationFrame.current = null;
+        cleanup();
+      }
+    };
+
+    scrollAnimationFrame.current = requestAnimationFrame(animateScroll);
+  };
   const savedProfile = useSyncExternalStore(
     subscribeToProfile,
     getStoredProfileSnapshot,
@@ -226,7 +302,7 @@ export default function Dashboard() {
           <div className="class-decoration class-decoration-two" />
         </article>
 
-        <Link className="focus-card" href="#study-planner">
+        <Link className="focus-card" href="#study-planner" onClick={scrollToStudyPlanner}>
           
           <span className="focus-label">PLAN ADAPTIV</span>
           <strong>Ai un examen<br />în față?</strong>
