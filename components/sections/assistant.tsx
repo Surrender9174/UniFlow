@@ -10,7 +10,6 @@ import {
   type FormEvent,
 } from "react";
 import Link from "next/link";
-import { Icon } from "@/components/icons";
 import {
   maxAssistantAttachmentTextLength,
   type AssistantAttachment,
@@ -854,15 +853,13 @@ export default function AssistantPage() {
           <p className="muted">Întreabă despre emailuri sau planifică task-uri pentru școală și facultate.</p>
         </div>
 
-        <span className="assistant-online">
-          <i />
-          {gmailStatus?.connected ? "Gmail conectat" : "Uni e pregătit"}
-        </span>
+        {gmailStatus?.connected && (
+          <span className="assistant-online">Gmail conectat</span>
+        )}
       </div>
 
       <section aria-label="Conexiune Gmail" className="gmail-connection card-surface">
         <div className="gmail-connection-main">
-          <span className="gmail-connection-icon"><Icon name="mail" size={19} /></span>
           <div className="gmail-connection-copy">
             <strong>
               {gmailStatus?.connected
@@ -912,7 +909,6 @@ export default function AssistantPage() {
 
       <section aria-label="Importă export WhatsApp" className="gmail-connection card-surface whatsapp-upload">
         <form className="gmail-connection-main whatsapp-upload-main" onSubmit={analyzeWhatsAppChat}>
-          <span className="gmail-connection-icon"><Icon name="file" size={19} /></span>
           <div className="gmail-connection-copy">
             <strong>Analizează un export WhatsApp</strong>
             <p>Alege conversația exportată ca fișier .txt, până la 200 KB.</p>
@@ -947,14 +943,10 @@ export default function AssistantPage() {
       </section>
       <section className="chat-panel card-surface">
         <header className="chat-header">
-          <span className="chat-avatar"><Icon name="sparkles" size={21} /></span>
+          <span className="chat-avatar">U</span>
           <div>
             <strong>Uni <span>AI study buddy</span></strong>
-            <small><i /> {gmailStatus?.connected ? "Pregătit să te ajut" : "Uni e pregătit"}</small>
           </div>
-          <button aria-label="Mai multe opțiuni" className="quiet-icon" type="button">
-            <Icon name="more" size={20} />
-          </button>
         </header>
         {(chatLoadError || chatStorageError) && (
           <p className="gmail-status-error" role="alert">{chatLoadError || chatStorageError}</p>
@@ -967,12 +959,12 @@ export default function AssistantPage() {
               key={`${message.time}-${index}`}
             >
               <span className="chat-message-avatar">
-                {message.role === "assistant" ? <Icon name="sparkles" size={15} /> : "A"}
+                {message.role === "assistant" ? "U" : "A"}
               </span>
               <div className="chat-message-content">
                 {message.attachmentName && (
                   <span className="chat-message-attachment">
-                    <Icon name="file" size={13} /> {message.attachmentName}
+                    {message.attachmentName}
                   </span>
                 )}
                 <div className="chat-bubble">{message.text}</div>
@@ -1070,7 +1062,7 @@ export default function AssistantPage() {
                   onClick={() => void submitQuestion(suggestion)}
                   type="button"
                 >
-                  {suggestion}<Icon name="arrow" size={13} />
+                  {suggestion}
                 </button>
               ))}
             </div>
@@ -1086,7 +1078,6 @@ export default function AssistantPage() {
         )}
         {attachment && (
           <div className="chat-attachment-preview">
-            <Icon name="file" size={14} />
             <span title={attachment.name}>{attachment.name}</span>
             <button
               aria-label={`Elimină fișierul ${attachment.name}`}
@@ -1114,7 +1105,7 @@ export default function AssistantPage() {
             onClick={() => attachmentInput.current?.click()}
             type="button"
           >
-            <Icon name="plus" size={18} />
+            <span aria-hidden="true">+</span>
           </button>
           <input
             aria-label="Întreabă-l pe Uni sau adaugă un task"
@@ -1130,7 +1121,7 @@ export default function AssistantPage() {
             disabled={(!draft.trim() && !attachment) || loading || attachmentProcessing}
             type="submit"
           >
-            <Icon name="send" size={17} />
+            <span>Trimite</span>
           </button>
         </form>
         <p className="chat-disclaimer">

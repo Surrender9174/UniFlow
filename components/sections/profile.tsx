@@ -179,7 +179,6 @@ export default function ProfilePage() {
           <div className="profile-detail"><Icon name="mail" size={16} /><span>{profile.email}</span></div>
           <div className="profile-detail"><Icon name="map" size={16} /><span>{profile.university}</span></div>
           <div className="profile-detail"><Icon name="calendar" size={16} /><span>{hasSchedule ? "Completat" : "Necompletat"}</span></div>
-          <div className="profile-streak"><span>✦</span><div><strong>7 zile la rând</strong><small>Ai grijă de progresul tău!</small></div></div>
           <div className="profile-account-actions">
             <button
               className="button button-secondary"

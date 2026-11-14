@@ -644,7 +644,7 @@ export default function SkillSwapSection() {
             Schimbă ce știi cu ce vrei să înveți, alături de comunitatea UniFlow.
           </p>
         </div>
-        <span className="skillswap-free-badge"><Icon name="sparkles" size={16} /> Gratuit pentru toți</span>
+        <span className="skillswap-free-badge">Gratuit pentru toți</span>
       </header>
 
       <section className="skillswap-hero">
@@ -653,12 +653,9 @@ export default function SkillSwapSection() {
           <h2>Tu știi ceva. Cineva vrea să învețe.</h2>
           <p>Potriviri după abilități complementare, timp disponibil și evaluări.</p>
         </div>
-        <div className="skillswap-hero-mark" aria-hidden="true">
-          <Icon name="swap" size={32} />
-        </div>
         <div className="skillswap-hero-foot">
-          <span><Icon name="check" size={15} /> Fără plăți, solduri sau credite</span>
-          <span><Icon name="clock" size={15} /> Sesiuni individuale de 60 de minute</span>
+          <span>Fără plăți, solduri sau credite</span>
+          <span>Sesiuni individuale de 60 de minute</span>
         </div>
       </section>
 
@@ -677,27 +674,23 @@ export default function SkillSwapSection() {
 
       {toast && (
         <div className="skillswap-toast" role="status">
-          <Icon name="bell" size={17} /> {toast}
+          {toast}
         </div>
       )}
 
       <div className="skillswap-overview">
         <article className="skillswap-stat card-surface">
-          <span className="skillswap-stat-icon"><Icon name="sparkles" size={18} /></span>
           <div><strong>{directMatches.length}</strong><small>potriviri directe</small></div>
         </article>
         <article className="skillswap-stat card-surface">
-          <span className="skillswap-stat-icon mint"><Icon name="calendar" size={18} /></span>
           <div><strong>{sessions.filter((session) =>
             ["requested", "accepted", "awaiting_confirmation"].includes(session.status)
           ).length}</strong><small>sesiuni active</small></div>
         </article>
         <article className="skillswap-stat card-surface">
-          <span className="skillswap-stat-icon peach"><Icon name="graduation" size={18} /></span>
           <div><strong>{profile?.verifiedSkills?.length ?? 0}</strong><small>abilități verificate</small></div>
         </article>
         <article className="skillswap-stat card-surface">
-          <span className="skillswap-stat-icon rose"><Icon name="bell" size={18} /></span>
           <div><strong>{unreadCount}</strong><small>notificări noi</small></div>
         </article>
       </div>
@@ -715,7 +708,6 @@ export default function SkillSwapSection() {
 
             {!matchingReady ? (
               <div className="skillswap-empty">
-                <span className="skillswap-empty-icon"><Icon name="target" size={22} /></span>
                 <div>
                   <strong>Completează-ți profilul pentru potriviri</strong>
                   <p>Adaugă o abilitate pe care o oferi, una pe care o cauți și un interval disponibil.</p>
@@ -723,7 +715,6 @@ export default function SkillSwapSection() {
               </div>
             ) : directMatches.length === 0 && cycleMatches.length === 0 ? (
               <div className="skillswap-empty">
-                <span className="skillswap-empty-icon"><Icon name="search" size={22} /></span>
                 <div>
                   <strong>Nu există încă potriviri</strong>
                   <p>Revino după ce alți colegi adaugă abilități complementare.</p>
@@ -740,21 +731,20 @@ export default function SkillSwapSection() {
                       <div className="skillswap-match-details">
                         <div className="skillswap-match-title">
                           <strong>{match.partner.displayName}</strong>
-                          <span className="skillswap-score">{match.score}% compatibil</span>
                         </div>
                         <p>{match.partner.bio || "Membru UniFlow, gata să împărtășească ce știe."}</p>
                         <div className="skillswap-match-skills">
-                          <span className="skill-tag learn"><Icon name="book" size={13} /> Înveți {match.learnsSkill}</span>
-                          <span className="skill-tag teach"><Icon name="sparkles" size={13} /> Oferi {match.teachesSkill}</span>
+                          <span className="skill-tag learn">Înveți {match.learnsSkill}</span>
+                          <span className="skill-tag teach">Oferi {match.teachesSkill}</span>
                           {match.partner.verifiedSkills.includes(
                             match.learnsSkill.toLocaleLowerCase("en-US"),
-                          ) && <span className="skill-verified"><Icon name="check" size={13} /> Verificat</span>}
+                          ) && <span className="skill-verified">Verificat</span>}
                         </div>
                         <div className="skillswap-match-meta">
-                          <span><Icon name="star" size={13} /> {match.partner.ratingCount
+                          <span>{match.partner.ratingCount
                             ? `${match.partner.rating.toFixed(1)} (${match.partner.ratingCount})`
                             : "Fără evaluări"}</span>
-                          <span><Icon name="clock" size={13} /> {match.nextSlots.length
+                          <span>{match.nextSlots.length
                             ? `${match.nextSlots.length} intervale comune`
                             : "Actualizați disponibilitatea"}</span>
                         </div>
@@ -772,7 +762,7 @@ export default function SkillSwapSection() {
                         onClick={() => startProposal({ kind: "direct", match })}
                         type="button"
                       >
-                        Propune schimb <Icon name="arrow" size={15} />
+                        Propune schimb
                       </button>
                     </article>
                   ))}
@@ -781,7 +771,6 @@ export default function SkillSwapSection() {
                 {cycleMatches.length > 0 && (
                   <div className="skillswap-cycles">
                     <div className="skillswap-subheading">
-                      <span className="skillswap-cycle-icon"><Icon name="swap" size={16} /></span>
                       <div>
                         <strong>Schimburi circulare</strong>
                         <small>O potrivire în trei, când nu există o cale directă.</small>
@@ -793,13 +782,12 @@ export default function SkillSwapSection() {
                           <strong>{cycle.members.map((member) =>
                             member.userId === userId ? "Tu" : member.displayName
                           ).join(" → ")}</strong>
-                          <span className="skillswap-score">{cycle.score}%</span>
                         </div>
                         <ol>
                           {cycle.legs.map((leg) => (
                             <li key={`${leg.teacherId}-${leg.learnerId}-${leg.skill}`}>
                               <span>{leg.teacherId === userId ? "Tu" : leg.teacherName}</span>
-                              <Icon name="arrow" size={12} />
+                              <span aria-hidden="true">→</span>
                               <span>{leg.learnerId === userId ? "tu" : leg.learnerName}</span>
                               <small>{leg.skill}</small>
                             </li>
@@ -849,7 +837,7 @@ export default function SkillSwapSection() {
                       <span>{index + 1}</span>{node}
                     </button>
                     {index < skillTree.nodes.length - 1 && (
-                      <span className="skillswap-tree-edge" aria-hidden="true"><Icon name="arrow" size={14} /></span>
+                      <span className="skillswap-tree-edge" aria-hidden="true">→</span>
                     )}
                   </div>
                 );
@@ -902,7 +890,7 @@ export default function SkillSwapSection() {
                 <p className="eyebrow">PROFILUL TĂU</p>
                 <h2>Setează schimbul</h2>
               </div>
-              {profileSaved && <span className="skillswap-saved"><Icon name="check" size={13} /> Salvat</span>}
+              {profileSaved && <span className="skillswap-saved">Salvat</span>}
             </div>
             <form onSubmit={saveProfile}>
               <label className="form-field">
@@ -937,7 +925,6 @@ export default function SkillSwapSection() {
 
               <div className="skillswap-form-divider" />
               <div className="skillswap-subheading">
-                <span className="skillswap-subheading-icon"><Icon name="sparkles" size={15} /></span>
                 <div><strong>Abilități</strong><small>Ce poți preda și ce vrei să înveți.</small></div>
               </div>
               <div className="skillswap-skill-list">
@@ -948,12 +935,11 @@ export default function SkillSwapSection() {
                   );
                   return (
                     <div className="skillswap-skill-row" key={skill.id || `${skill.skillKey}-${index}`}>
-                      <span className={`skill-direction-dot ${skill.direction}`} />
                       <div>
                         <strong>{skill.name}</strong>
                         <small>{skill.direction === "offered" ? "Oferi" : "Cauți"} · {skill.category} · {skill.level}</small>
                       </div>
-                      {verified && <span className="verified-mini" title="Abilitate verificată"><Icon name="check" size={12} /></span>}
+                      {verified && <span className="verified-mini" title="Abilitate verificată">Verificat</span>}
                       {skill.direction === "offered" && !verified && (
                         <button
                           className="skillswap-verify-button"
@@ -1013,7 +999,7 @@ export default function SkillSwapSection() {
                   </label>
                 </div>
                 <button className="button button-secondary skillswap-add-button" disabled={!skillName.trim()} onClick={addSkill} type="button">
-                  <Icon name="plus" size={15} /> Adaugă abilitate
+                  Adaugă abilitate
                 </button>
               </div>
 
@@ -1055,7 +1041,7 @@ export default function SkillSwapSection() {
                   <input onChange={(event) => setAvailabilityEnd(event.target.value)} type="time" value={availabilityEnd} />
                 </label>
                 <button className="button button-secondary" onClick={addAvailability} type="button">
-                  <Icon name="plus" size={14} /> Interval
+                  Interval
                 </button>
               </div>
               <p className="skillswap-timezone-note">
@@ -1070,7 +1056,6 @@ export default function SkillSwapSection() {
             {verificationSkillId && (
               <form className="skillswap-verification-form" onSubmit={submitVerification}>
                 <div className="skillswap-subheading">
-                  <span className="skillswap-subheading-icon peach"><Icon name="graduation" size={15} /></span>
                   <div><strong>Verifică această abilitate</strong><small>Un coleg care oferă aceeași abilitate va evalua dovada.</small></div>
                 </div>
                 <label className="form-field">
@@ -1109,7 +1094,6 @@ export default function SkillSwapSection() {
             </div>
             {sessions.length === 0 ? (
               <div className="skillswap-sessions-empty">
-                <Icon name="calendar" size={18} />
                 <span>Propune un schimb și sesiunile tale vor apărea aici.</span>
               </div>
             ) : (
@@ -1129,7 +1113,7 @@ export default function SkillSwapSection() {
                           <span className={`session-status ${session.status}`}>{sessionStatusLabels[session.status]}</span>
                         </div>
                         <p>{isTeacher ? "Predai" : "Înveți"} cu {partnerName}</p>
-                        <small><Icon name="clock" size={12} /> {formatSkillSwapTime(session.starts_at, profile?.timezone ?? "UTC")} · 60 min · Gratuit</small>
+                        <small>{formatSkillSwapTime(session.starts_at, profile?.timezone ?? "UTC")} · 60 min · Gratuit</small>
                         {session.cycle_id && <small className="cycle-session-note">Parte dintr-un schimb în {cycleCount} pași.</small>}
                         <div className="skillswap-session-actions">
                           {session.status === "requested" && isTeacher && (
@@ -1144,7 +1128,7 @@ export default function SkillSwapSection() {
                           {session.status === "accepted" && (
                             <>
                               <Link className="button button-primary" href={`/skillswap/room/${session.id}`}>
-                                Intră în sala live <Icon name="arrow" size={14} />
+                                Intră în sala live
                               </Link>
                               <button className="button button-secondary" onClick={() => {
                                 setDisputeSessionId(session.id);
@@ -1155,7 +1139,7 @@ export default function SkillSwapSection() {
                           {session.status === "awaiting_confirmation" && (
                             <>
                               <Link className="button button-secondary" href={`/skillswap/room/${session.id}`}>
-                                Sala live <Icon name="arrow" size={14} />
+                                Sala live
                               </Link>
                               <button className="button button-primary" onClick={() => void updateSession(session.id, "confirm")} type="button">
                                 Confirmă încheierea
@@ -1259,7 +1243,7 @@ export default function SkillSwapSection() {
                       <span className="notification-dot" />
                       <span><strong>{notification.message}</strong><small>{formatSkillSwapTime(notification.created_at, profile?.timezone ?? "UTC")}</small></span>
                     </button>
-                    {notification.session_id && <Link aria-label="Deschide sesiunea" href={`/skillswap/room/${notification.session_id}`}><Icon name="arrow" size={14} /></Link>}
+                    {notification.session_id && <Link href={`/skillswap/room/${notification.session_id}`}>Deschide</Link>}
                   </div>
                 ))}
               </div>

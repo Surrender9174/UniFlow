@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Icon } from "@/components/icons";
 import {
   fetchQueueLess,
   hasQueueLessActiveTicketHint,
@@ -121,7 +120,6 @@ export default function QueueLessActiveTicket() {
   if (error) {
     return (
       <Link className="queueless-global-pill queueless-global-error" href="/queueless">
-        <Icon name="clock" size={16} />
         <span>Verifică bonul QueueLess</span>
       </Link>
     );
@@ -144,7 +142,6 @@ export default function QueueLessActiveTicket() {
 
   return (
     <Link className="queueless-global-pill" href="/queueless">
-      <span className={`queueless-global-dot${called ? " called" : ""}`} />
       <span>
         <strong>{ticket.ticket_code}</strong>
         <small>
@@ -155,7 +152,6 @@ export default function QueueLessActiveTicket() {
               : `${location?.name ?? "QueueLess"} · ~${remaining} min`}
         </small>
       </span>
-      <Icon name="arrow" size={15} />
     </Link>
   );
 }

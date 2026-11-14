@@ -42,10 +42,10 @@ export default function MaterialsPage() {
 
   return (
     <div className="section-page materials-page">
-      <div className="page-heading"><div><p className="eyebrow">IMPORT INTELIGENT</p><h1>Materialele tale</h1><p className="muted">Transformă un PDF cu programă sau orar într-un plan clar.</p></div></div>
+      <div className="page-heading"><div><p className="eyebrow">MATERIALE DE CURS</p><h1>Materialele tale</h1><p className="muted">Încarcă programa sau orarul și verifică datele pe care vrei să le păstrezi.</p></div></div>
       <div className="ingestion-layout">
         <section className="card-surface upload-card">
-          <div className="upload-title"><span className="upload-icon"><Icon name="upload" size={21} /></span><div><h2>Încarcă un document</h2><p>Extragem automat cursuri, deadline-uri și examene.</p></div></div>
+          <div className="upload-title"><span className="upload-icon"><Icon name="upload" size={21} /></span><div><h2>Încarcă un PDF</h2><p>Revizuiește cursurile, termenele și examenele înainte să le salvezi.</p></div></div>
           <button className={`drop-zone${importState === "done" ? " upload-complete" : ""}`} onClick={() => inputRef.current?.click()} type="button">
             <span className="drop-icon"><Icon name={importState === "done" ? "check" : "file"} size={25} /></span>
             {importState === "idle" ? <><strong>Trage fișierul aici sau <em>alege un fișier</em></strong><small>PDF până la 15 MB · Programa sau orarul tău</small></> : importState === "processing" ? <><strong>Analizăm documentul tău...</strong><small>{fileName} · identificăm datele importante</small><span className="processing-line"><i /></span></> : <><strong>Document analizat cu succes</strong><small>{fileName} · am găsit 3 evenimente</small></>}
@@ -55,7 +55,7 @@ export default function MaterialsPage() {
           <div className="privacy-note"><Icon name="settings" size={15} /><span>Fișierele tale sunt folosite doar pentru organizarea spațiului tău de studiu.</span></div>
         </section>
         <aside className="ingestion-side-card">
-          <span className="ingestion-spark"><Icon name="sparkles" size={23} /></span><p className="eyebrow">MAI MULT TIMP PENTRU TINE</p><h2>Din documente,<br />direct în planul tău.</h2><p>UniFlow identifică automat ce contează, ca tu să te concentrezi pe învățat.</p>
+          <span className="ingestion-spark"><Icon name="file" size={23} /></span><p className="eyebrow">CUM FUNCȚIONEAZĂ</p><h2>Din PDF,<br />în planul tău.</h2><p>Încarcă fișierul, verifică datele găsite și alege ce vrei să adaugi.</p>
           <div className="ingestion-step"><span>01</span><div><strong>Încarcă</strong><small>Programa sau orarul tău</small></div></div>
           <div className="ingestion-step"><span>02</span><div><strong>Verifică</strong><small>Confirmă evenimentele găsite</small></div></div>
           <div className="ingestion-step"><span>03</span><div><strong>Organizează-te</strong><small>Adaugă-le în calendar</small></div></div>

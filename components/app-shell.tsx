@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Icon, type IconName } from "@/components/icons";
+import { Icon } from "@/components/icons";
 import ThemeToggle from "@/components/theme-toggle";
 import { syncAuthenticatedProfile } from "@/lib/auth-profile";
 import {
@@ -28,14 +28,14 @@ import {
   type SavedTask,
 } from "@/lib/tasks";
 
-const navigation: { href: string; label: string; icon: IconName }[] = [
-  { href: "/dashboard", label: "Acasă", icon: "home" },
-  { href: "/schedule", label: "Orar", icon: "calendar" },
-  { href: "/tasks", label: "Task-uri", icon: "check" },
-  { href: "/assistant", label: "Asistent", icon: "sparkles" },
-  { href: "/skillswap", label: "SkillSwap", icon: "swap" },
-  { href: "/queueless", label: "QueueLess", icon: "clock" },
-  { href: "/profile", label: "Profil", icon: "user" },
+const navigation = [
+  { href: "/dashboard", label: "Acasă" },
+  { href: "/schedule", label: "Orar" },
+  { href: "/tasks", label: "Task-uri" },
+  { href: "/assistant", label: "Asistent" },
+  { href: "/skillswap", label: "SkillSwap" },
+  { href: "/queueless", label: "QueueLess" },
+  { href: "/profile", label: "Profil" },
 ];
 
 type AppNotification = {
@@ -271,7 +271,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 key={item.href}
               >
-                <Icon name={item.icon} size={19} />
                 <span>{item.label}</span>
                 {item.href === "/tasks" && (
                   <span aria-label={`${activeTaskCount} task-uri active`} className="nav-count">
@@ -420,7 +419,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               href={item.href}
               key={item.href}
             >
-              <Icon name={item.icon} size={20} />
               <span>{item.label}</span>
             </Link>
           );

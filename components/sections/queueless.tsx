@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Icon } from "@/components/icons";
 import {
   fetchQueueLess,
   setQueueLessActiveTicketPresent,
@@ -240,13 +239,12 @@ export default function QueueLessSection() {
           </p>
         </div>
         <Link className="button button-secondary" href="/queueless/staff">
-          <Icon name="settings" size={16} /> Mod personal
+          Mod personal
         </Link>
       </header>
 
       <section className="queueless-community card-surface" aria-label="Situația live a cozilor">
         <div>
-          <span className={`queueless-live-dot${realtimeStatus === "live" ? "" : " reconnecting"}`} />
           <span>
             {realtimeStatus === "live"
               ? "COZI LIVE ÎN CAMPUS"
@@ -296,7 +294,6 @@ export default function QueueLessSection() {
           <div className="queueless-empty card-surface">Se încarcă locațiile...</div>
         ) : !locations.length ? (
           <div className="queueless-empty card-surface">
-            <Icon name="map" size={23} />
             <strong>QueueLess nu este încă inițializat</strong>
             <p>
               Aplică migrarea QueueLess din Supabase, apoi reîncarcă pagina.
@@ -317,7 +314,7 @@ export default function QueueLessSection() {
                   <span className="queueless-location-top">
                     <span>{categoryLabels[location.category]}</span>
                     <span className={`queueless-crowd ${crowd.tone}`}>
-                      <i /> {crowd.label}
+                      {crowd.label}
                     </span>
                   </span>
                   <strong>{location.name}</strong>
@@ -327,7 +324,7 @@ export default function QueueLessSection() {
                     <span><b>{location.estimated_wait_minutes}</b> min așteptare</span>
                   </span>
                   <span className="queueless-location-address">
-                    <Icon name="map" size={13} /> {location.address}
+                    {location.address}
                   </span>
                 </button>
               );
@@ -381,7 +378,6 @@ export default function QueueLessSection() {
               type="button"
             >
               {busy ? "Se emite bonul..." : "Ia un bon virtual"}
-              <Icon name="arrow" size={15} />
             </button>
           </div>
         </section>
