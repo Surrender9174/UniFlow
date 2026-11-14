@@ -118,6 +118,40 @@ are transient and are not saved as session history. The session timer moves an
 accepted session to mutual confirmation; only after both participants confirm
 does it become completed. Reviews and dispute/no-show reports are stored in
 Supabase.
+
+## Adaptive study planning
+
+The dashboard can create 30-minute study sessions from a manually entered
+course, exam date, topic list, and confidence level. It avoids recurring class
+times from the saved timetable and the time around active task deadlines.
+Generated sessions are saved with the existing browser-local task list, so
+they also appear in Tasks and Schedule and can be marked complete or postponed.
+The first version uses manually entered topics; it does not yet extract study
+units from uploaded materials or sync plans across devices.
+
+## QueueLess
+
+QueueLess MVP is available at `/queueless` for the live location directory,
+crowd estimates, authenticated virtual tickets, the one-position delay action,
+and required-document checklists. Queue counts and a user's ticket update through
+Supabase Realtime. Staff use `/queueless/staff` to view assigned queues and call
+the next ticket.
+
+Before using it, run
+[`supabase/migrations/20261114040000_queueless.sql`](./supabase/migrations/20261114040000_queueless.sql)
+in the Supabase SQL Editor. It creates the location and queue tables, access
+policies, atomic queue functions, example locations, and Realtime publication
+entries. Replace the example location names, addresses, and document
+requirements with verified campus details before using it operationally. To
+authorize staff, add their Supabase Auth user ID and location ID to
+`public.queueless_staff`; users without an assignment cannot operate the staff
+kiosk.
+
+The current version provides estimates from the configured average service
+time and active tickets. It does not yet include food pre-orders, library book
+holds or seat occupancy, historical/AI crowd forecasts, group queues, or
+community time-saved analytics.
+
 ## Search and notifications
 
 The global search covers UniFlow pages, saved tasks, and timetable entries in

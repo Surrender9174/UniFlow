@@ -19,6 +19,7 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { getAcademicYearLabel } from "@/lib/device-time";
 import { useDeviceNow } from "@/components/use-device-now";
+import QueueLessActiveTicket from "@/components/queueless-active-ticket";
 import {
   getSavedTasksSnapshot,
   getServerSavedTasksSnapshot,
@@ -33,6 +34,7 @@ const navigation: { href: string; label: string; icon: IconName }[] = [
   { href: "/tasks", label: "Task-uri", icon: "check" },
   { href: "/assistant", label: "Asistent", icon: "sparkles" },
   { href: "/skillswap", label: "SkillSwap", icon: "swap" },
+  { href: "/queueless", label: "QueueLess", icon: "clock" },
   { href: "/profile", label: "Profil", icon: "user" },
 ];
 
@@ -419,6 +421,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           );
         })}
       </nav>
+      {authState === "authenticated" && <QueueLessActiveTicket />}
     </div>
     {authState === "error" ? (
       <main className="auth-gate-error" role="alert">

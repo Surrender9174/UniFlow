@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/icons";
 import ScheduleReview from "@/components/sections/schedule-review";
+import StudyPlannerWidget from "@/components/sections/study-planner-widget";
 import { useScheduleUpload } from "@/components/use-schedule-upload";
 import { scheduleFileAccept } from "@/lib/schedule-file-types";
 import {
@@ -220,11 +221,11 @@ export default function Dashboard() {
           <div className="class-decoration class-decoration-two" />
         </article>
 
-        <Link className="focus-card" href="/assistant">
+        <Link className="focus-card" href="#study-planner">
           
-          <span className="focus-label">STUDY BUDDY</span>
-          <strong>Ai nevoie de<br />un plan de studiu?</strong>
-          <span className="focus-link">Întreabă Uni <Icon name="arrow" size={15} /></span>
+          <span className="focus-label">PLAN ADAPTIV</span>
+          <strong>Ai un examen<br />în față?</strong>
+          <span className="focus-link">Planifică sesiuni <Icon name="arrow" size={15} /></span>
           
         </Link>
       </section>
@@ -246,6 +247,8 @@ export default function Dashboard() {
           <span className="stat-sparkline sparkline-orange" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></span>
         </article>
       </section>
+
+      <StudyPlannerWidget now={now} schedule={scheduleEvents} tasks={savedTasks} />
 
       <section className="section-block">
         <div className="section-heading">

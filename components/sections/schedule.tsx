@@ -176,11 +176,11 @@ export default function SchedulePage() {
                 <article className="schedule-item" key={task.id}>
                   <div className="schedule-time">
                     <strong>{formatLocalTime(new Date(task.dueAt!))}</strong>
-                    <span>Termen</span>
+                    <span>{task.category === "Studiu" ? "Studiu" : "Termen"}</span>
                   </div>
                   <div className={`schedule-event ${eventColors[(dayEvents.length + index) % eventColors.length]}`}>
                     <span className="event-type">
-                      {task.category}{task.done ? " · Finalizat" : ""}
+                      {task.category === "Studiu" ? "Sesiune de studiu" : task.category}{task.done ? " · Finalizat" : ""}
                     </span>
                     <h3>{task.title}</h3>
                     {task.subject && <p>{task.subject}</p>}
