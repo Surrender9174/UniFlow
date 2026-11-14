@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore, type FormEvent } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { Icon } from "@/components/icons";
 import {
   addSavedTasks,
@@ -24,6 +24,8 @@ type TaskRow = {
   done: boolean;
 };
 
+type TaskFilter = "all" | "active" | "done";
+
 function formatLocalDateTimeInput(date: Date) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
     .toISOString()
@@ -40,7 +42,8 @@ export default function TasksPage() {
   const [storageError, setStorageError] = useState("");
   const [actionTaskId, setActionTaskId] = useState<string | null>(null);
   const [postponeMinimum, setPostponeMinimum] = useState("");
-  const [postponeValue, setPostponeValue] = useState("");
+  const [taskFilter, setTaskFilter] = useState<TaskFilter>("all");
+  const postponeInput = useRef<HTMLInputElement>(null);
   const taskSnapshot = useSyncExternalStore(
     subscribeToSavedTasks,
     getSavedTasksSnapshot,
@@ -67,6 +70,12 @@ export default function TasksPage() {
       done: task.done,
   }));
   const activeCount = savedTasks.filter((task) => !task.done).length;
+  const completedCount = taskRows.length - activeCount;
+  const visibleTasks = taskRows.filter((task) => {
+    if (taskFilter === "active") return !task.done;
+    if (taskFilter === "done") return task.done;
+    return true;
+  });
 
   const toggleTask = (task: TaskRow) => {
     setStorageError("");
@@ -87,7 +96,6 @@ export default function TasksPage() {
     }
     setActionTaskId(task.id);
     setPostponeMinimum(getPostponeMinimum(task.dueAt));
-    setPostponeValue("");
   };
 
   const deleteTask = (task: TaskRow) => {
@@ -106,7 +114,11 @@ export default function TasksPage() {
     event.preventDefault();
     setStorageError("");
     try {
-      const newDueAt = new Date(postponeValue);
+      const selectedDueAt = new FormData(event.currentTarget).get("dueAt");
+      if (typeof selectedDueAt !== "string" || !selectedDueAt) {
+        throw new Error("Alege o dată și o oră valide.");
+      }
+      const newDueAt = new Date(selectedDueAt);
       if (!Number.isFinite(newDueAt.getTime())) {
         throw new Error("Alege o dată și o oră valide.");
       }
@@ -118,11 +130,21 @@ export default function TasksPage() {
       }
       postponeSavedTask(task.id, newDueAt.toISOString());
       setActionTaskId(null);
-      setPostponeValue("");
     } catch (error) {
       setStorageError(
         error instanceof Error ? error.message : "Nu am putut amâna task-ul.",
       );
+    }
+  };
+
+  const openPostponeDatePicker = () => {
+    const input = postponeInput.current;
+    if (!input) return;
+    if (typeof input.showPicker === "function") {
+      input.showPicker();
+    } else {
+      input.focus();
+      input.click();
     }
   };
 
@@ -163,24 +185,54 @@ export default function TasksPage() {
       {savedTasksError && <p className="gmail-status-error" role="alert">{savedTasksError}</p>}
       {storageError && <p className="gmail-status-error" role="alert">{storageError}</p>}
       <div className="task-filters">
-        <button className="filter-chip selected" type="button">
+        <button
+          aria-pressed={taskFilter === "all"}
+          className={`filter-chip${taskFilter === "all" ? " selected" : ""}`}
+          onClick={() => setTaskFilter("all")}
+          type="button"
+        >
           Toate <span>{taskRows.length}</span>
         </button>
-        <button className="filter-chip" type="button">
+        <button
+          aria-pressed={taskFilter === "active"}
+          className={`filter-chip${taskFilter === "active" ? " selected" : ""}`}
+          onClick={() => setTaskFilter("active")}
+          type="button"
+        >
           De făcut <span>{activeCount}</span>
         </button>
-        <button className="filter-chip" type="button">
-          Finalizate <span>{taskRows.length - activeCount}</span>
+        <button
+          aria-pressed={taskFilter === "done"}
+          className={`filter-chip${taskFilter === "done" ? " selected" : ""}`}
+          onClick={() => setTaskFilter("done")}
+          type="button"
+        >
+          Finalizate <span>{completedCount}</span>
         </button>
       </div>
-      <section className="card-surface tasks-full-list">
-        {taskRows.length === 0 && (
-          <div className="schedule-empty">
+      <section
+        className={`card-surface tasks-full-list${visibleTasks.length === 0 ? " tasks-empty-list" : ""}`}
+        aria-label={
+          taskFilter === "active"
+            ? "Task-uri de făcut"
+            : taskFilter === "done"
+              ? "Task-uri finalizate"
+              : "Toate task-urile"
+        }
+      >
+        {visibleTasks.length === 0 && (
+          <div className="schedule-empty tasks-empty-state" role="status">
             <Icon name="check" size={20} />
-            <p>Nu ai task-uri salvate încă. Cere-i asistentului să adauge unul.</p>
+            <p>
+              {taskFilter === "active"
+                ? "Nu ai task-uri de făcut."
+                : taskFilter === "done"
+                  ? "Nu ai task-uri finalizate încă."
+                  : "Nu ai task-uri salvate încă. Cere-i asistentului să adauge unul."}
+            </p>
           </div>
         )}
-        {taskRows.map((task, index) => (
+        {visibleTasks.map((task, index) => (
           <article
             className={`task-row${task.done ? " task-done" : ""}${actionTaskId === task.id ? " task-row-actions-open" : ""}`}
             key={task.id}
@@ -224,14 +276,25 @@ export default function TasksPage() {
                     Șterge task-ul
                   </button>
                   <form onSubmit={(event) => postponeTask(event, task)}>
-                    <label htmlFor={`postpone-${task.id}`}>Amână până la</label>
+                    <label htmlFor={`postpone-${task.id}`}>
+                      {task.dueAt ? "Amână până la" : "Data și ora task-ului"}
+                    </label>
+                    <button
+                      aria-controls={`postpone-${task.id}`}
+                      className="task-date-picker-button"
+                      onClick={openPostponeDatePicker}
+                      type="button"
+                    >
+                      <Icon name="calendar" size={14} />
+                      {task.dueAt ? "Schimbă data și ora" : "Alege data și ora"}
+                    </button>
                     <input
                       id={`postpone-${task.id}`}
                       min={postponeMinimum}
-                      onChange={(event) => setPostponeValue(event.target.value)}
+                      name="dueAt"
+                      ref={postponeInput}
                       required
                       type="datetime-local"
-                      value={postponeValue}
                     />
                     <button className="button button-primary" type="submit">
                       Salvează noul termen

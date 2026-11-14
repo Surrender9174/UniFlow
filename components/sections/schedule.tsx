@@ -89,6 +89,9 @@ export default function SchedulePage() {
         )
     : [];
   const unscheduledTasks = savedTasks.filter((task) => task.dueAt === null);
+  const scheduledTasks = savedTasks
+    .filter((task) => task.dueAt !== null)
+    .sort((left, right) => (left.dueAt ?? "").localeCompare(right.dueAt ?? ""));
   const dayEvents = events
     .filter((event) => event.weekday === activeWeekday)
     .sort((left, right) => left.start.localeCompare(right.start));
@@ -141,7 +144,7 @@ export default function SchedulePage() {
         <span className="week-range">{weekAnchor ? formatWeekRange(weekAnchor) : "Se sincronizează"}</span>
       </section>
       {savedTasksError && <p className="gmail-status-error" role="alert">{savedTasksError}</p>}
-      <section className="schedule-board">
+      <section className={`schedule-board${dayEvents.length === 0 ? " schedule-board-empty" : ""}`}>
         <div className="schedule-date">
           <span className="today-tag">{isToday && now ? `ASTĂZI · ${formatLocalTime(now)}` : getWeekdayName(activeWeekday).toLocaleUpperCase("ro-RO")}</span>
           <h2>{selectedDate ? formatLocalDate(selectedDate) : "Data locală"}</h2>
@@ -164,7 +167,7 @@ export default function SchedulePage() {
               {now && markerIndex === index && <span aria-label={`Ora locală ${formatLocalTime(now)}`} className="current-time-line"><i /> ACUM · {formatLocalTime(now)}</span>}
             </article>
           )) : (
-            <div className="schedule-empty">
+            <div className="schedule-empty schedule-empty-highlight">
               <Icon name="calendar" size={20} />
               <p>Nu ai cursuri trecute în orar pentru {getWeekdayName(activeWeekday).toLocaleLowerCase("ro-RO")}.</p>
             </div>
@@ -202,6 +205,30 @@ export default function SchedulePage() {
           </div>
           <div className="card-surface tasks-full-list">
             {unscheduledTasks.map((task, index) => (
+              <article className={`task-row${task.done ? " task-done" : ""}`} key={task.id}>
+                <span className={`task-color ${index % 2 ? "mint" : "lavender"}`} />
+                <div className="task-description">
+                  <strong>{task.title}</strong>
+                  <small>{task.subject}</small>
+                </div>
+                <span className="task-category">{task.category}</span>
+                <span className="task-due"><Icon name="clock" size={14} />{formatSavedTaskDueAt(task.dueAt)}</span>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+      {scheduledTasks.length > 0 && (
+        <section className="section-block">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">CU TERMEN</p>
+              <h2>Task-uri cu termen <span className="heading-count">{scheduledTasks.length}</span></h2>
+            </div>
+            <Link className="text-link" href="/tasks">Gestionează task-urile</Link>
+          </div>
+          <div className="card-surface tasks-full-list">
+            {scheduledTasks.map((task, index) => (
               <article className={`task-row${task.done ? " task-done" : ""}`} key={task.id}>
                 <span className={`task-color ${index % 2 ? "mint" : "lavender"}`} />
                 <div className="task-description">
