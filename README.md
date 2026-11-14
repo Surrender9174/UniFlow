@@ -133,9 +133,9 @@ units from uploaded materials or sync plans across devices.
 
 QueueLess MVP is available at `/queueless` for the live location directory,
 crowd estimates, authenticated virtual tickets, the one-position delay action,
-and required-document checklists. Queue counts and a user's ticket update through
-Supabase Realtime. Staff use `/queueless/staff` to view assigned queues and call
-the next ticket.
+ticket cancellation, and required-document checklists. Queue counts and a user's
+ticket update through Supabase Realtime. Staff use `/queueless/staff` to view
+assigned queues and call the next ticket.
 
 Before using it, run
 [`supabase/migrations/20261114040000_queueless.sql`](./supabase/migrations/20261114040000_queueless.sql)
@@ -146,6 +146,11 @@ requirements with verified campus details before using it operationally. To
 authorize staff, add their Supabase Auth user ID and location ID to
 `public.queueless_staff`; users without an assignment cannot operate the staff
 kiosk.
+
+For an existing QueueLess installation, also run
+[`supabase/migrations/20261114050000_queueless_leave_queue.sql`](./supabase/migrations/20261114050000_queueless_leave_queue.sql)
+to allow users to cancel their own waiting ticket and update the remaining queue
+positions.
 
 The current version provides estimates from the configured average service
 time and active tickets. It does not yet include food pre-orders, library book

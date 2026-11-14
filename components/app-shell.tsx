@@ -272,7 +272,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               >
                 <Icon name={item.icon} size={19} />
                 <span>{item.label}</span>
-                {item.href === "/tasks" && <span className="nav-count">3</span>}
+                {item.href === "/tasks" && (
+                  <span className="nav-count">{taskData.tasks.length}</span>
+                )}
               </Link>
             );
           })}

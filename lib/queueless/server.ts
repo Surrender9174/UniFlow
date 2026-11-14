@@ -105,6 +105,9 @@ export function queueLessActionError(error: unknown, fallback: string) {
     if (message.includes("Ticket can no longer be delayed")) {
       return Response.json({ error: "Acest bon nu mai poate fi amânat." }, { status: 409 });
     }
+    if (message.includes("Ticket can no longer be left")) {
+      return Response.json({ error: "Acest bon nu mai poate fi anulat." }, { status: 409 });
+    }
     if (message.includes("Ticket not found")) {
       return Response.json({ error: "Bonul nu a fost găsit." }, { status: 404 });
     }

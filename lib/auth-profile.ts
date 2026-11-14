@@ -61,6 +61,81 @@ export async function saveStudentProfileToDatabase(profile: StudentProfile) {
   if (error) throw error;
 }
 
+function getStoredProfileForEmail(email: string): StudentProfile {
+  const savedProfile = getStoredProfileSnapshot();
+  if (!savedProfile) return { ...defaultProfile, email };
+
+  const profile = JSON.parse(savedProfile) as Partial<StudentProfile>;
+  if (profile.email?.toLowerCase() !== email.toLowerCase()) {
+    return { ...defaultProfile, email };
+  }
+  return { ...defaultProfile, ...profile, email };
+}
+
+function getDatabaseStudyYear(
+  studyYear: unknown,
+  institutionType: StudentProfile["institutionType"],
+  currentYear: string,
+) {
+  if (typeof studyYear !== "number") return currentYear;
+  const currentYearType = currentYear.startsWith("Clasa") ? "Liceu" : "Universitate";
+  if (currentYearType === institutionType && studyYearValues[currentYear] === studyYear) {
+    return currentYear;
+  }
+
+  const labels = institutionType === "Liceu"
+    ? { 9: "Clasa a IX-a", 10: "Clasa a X-a", 11: "Clasa a XI-a", 12: "Clasa a XII-a" }
+    : { 1: "Anul I", 2: "Anul II", 3: "Anul III", 4: "Anul IV" };
+  return labels[studyYear as keyof typeof labels] ?? currentYear;
+}
+
+export async function loadAuthenticatedProfileFromDatabase() {
+  if (!supabase) throw new Error("Supabase nu este configurat.");
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!userData.user?.email) {
+    throw new Error("Trebuie să fii autentificat pentru a încărca profilul.");
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("name, education_level, institution, study_year, semester, class_name")
+    .eq("id", userData.user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("Nu există un profil în baza de date pentru acest cont.");
+
+  const profile = getStoredProfileForEmail(userData.user.email);
+  const institutionType = data.education_level === "highschool" ||
+      data.education_level === "high-school"
+    ? "Liceu"
+    : data.education_level === "university"
+      ? "Universitate"
+      : profile.institutionType;
+
+  return {
+    ...profile,
+    name: typeof data.name === "string" && data.name.trim()
+      ? data.name.trim()
+      : profile.name,
+    institutionType,
+    university: typeof data.institution === "string" && data.institution.trim()
+      ? data.institution.trim()
+      : profile.university,
+    program: typeof data.class_name === "string" && data.class_name.trim()
+      ? data.class_name.trim()
+      : profile.program,
+    year: getDatabaseStudyYear(data.study_year, institutionType, profile.year),
+    semester: data.semester === 1
+      ? "Semestrul I"
+      : data.semester === 2
+        ? "Semestrul II"
+        : profile.semester,
+  } satisfies StudentProfile;
+}
+
 export async function saveAuthenticatedProfileToDatabase(user: User) {
   if (!supabase) throw new Error("Supabase nu este configurat.");
 
