@@ -4,10 +4,12 @@ import { useState, type FormEvent } from "react";
 import { Icon } from "@/components/icons";
 import {
   addSavedTasks,
+  type TopicFlashcards,
   type SavedTask,
 } from "@/lib/tasks";
 import type { ScheduleEvent } from "@/lib/schedule-storage";
 import { generateStudyPlanTasks } from "@/lib/study-planner";
+import { supabase } from "@/lib/supabase";
 
 type StudyPlannerWidgetProps = {
   now: Date | null;
@@ -17,6 +19,42 @@ type StudyPlannerWidgetProps = {
 
 function formatLocalDateInput(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isSavedFlashcard(value: unknown): value is TopicFlashcards["flashcards"][number] {
+  return (
+    isRecord(value) &&
+    typeof value.question === "string" &&
+    value.question.trim().length > 0 &&
+    value.question.length <= 300 &&
+    typeof value.answer === "string" &&
+    value.answer.trim().length > 0 &&
+    value.answer.length <= 800
+  );
+}
+
+function isTopicFlashcards(value: unknown): value is TopicFlashcards {
+  return (
+    isRecord(value) &&
+    typeof value.topic === "string" &&
+    value.topic.trim().length > 0 &&
+    Array.isArray(value.flashcards) &&
+    value.flashcards.length > 0 &&
+    value.flashcards.length <= 4 &&
+    value.flashcards.every(isSavedFlashcard)
+  );
+}
+
+function isTopicFlashcardsResponse(value: unknown): value is { topics: TopicFlashcards[] } {
+  return (
+    isRecord(value) &&
+    Array.isArray(value.topics) &&
+    value.topics.every(isTopicFlashcards)
+  );
 }
 
 export default function StudyPlannerWidget({
@@ -30,10 +68,11 @@ export default function StudyPlannerWidget({
   const [confidence, setConfidence] = useState(3);
   const [studyStart, setStudyStart] = useState("17:00");
   const [studyEnd, setStudyEnd] = useState("21:00");
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  const generatePlan = (event: FormEvent<HTMLFormElement>) => {
+  const generatePlan = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
     setNotice("");
@@ -43,6 +82,7 @@ export default function StudyPlannerWidget({
       return;
     }
 
+    setGenerating(true);
     try {
       const plannedTasks = generateStudyPlanTasks(
         {
@@ -57,9 +97,56 @@ export default function StudyPlannerWidget({
         tasks,
         now,
       );
-      addSavedTasks(plannedTasks);
+      if (!supabase) {
+        throw new Error("Conexiunea la serviciu nu este configurată.");
+      }
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        throw new Error("Autentifică-te din nou pentru a genera flashcardurile.");
+      }
+
+      const response = await fetch("/api/study-plan/flashcards", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          subject,
+          confidence,
+          topics: topics.split(/\r?\n/),
+        }),
+      });
+      const payload: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        const message =
+          typeof payload === "object" &&
+          payload !== null &&
+          "error" in payload &&
+          typeof payload.error === "string"
+            ? payload.error
+            : "Nu am putut genera flashcardurile.";
+        throw new Error(message);
+      }
+      if (!isTopicFlashcardsResponse(payload)) {
+        throw new Error("Răspunsul cu flashcarduri nu este valid. Încearcă din nou.");
+      }
+
+      const flashcardsByTopic = new Map(
+        payload.topics.map((item) => [item.topic, item.flashcards]),
+      );
+      const tasksWithFlashcards = plannedTasks.map((task) => {
+        const flashcards = flashcardsByTopic.get(task.topic);
+        if (!flashcards?.length) {
+          throw new Error(`Lipsesc flashcardurile pentru tema „${task.topic}”.`);
+        }
+        return { ...task, flashcards };
+      });
+      addSavedTasks(tasksWithFlashcards);
       setNotice(
-        `Am adăugat ${plannedTasks.length} sesiuni de câte 30 de minute în Task-uri și Orar.`,
+        `Am adăugat ${plannedTasks.length} sesiuni cu flashcarduri în Task-uri și Orar.`,
       );
     } catch (requestError) {
       setError(
@@ -67,6 +154,8 @@ export default function StudyPlannerWidget({
           ? requestError.message
           : "Nu am putut genera planul de studiu.",
       );
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -155,13 +244,13 @@ export default function StudyPlannerWidget({
         )}
         <p className="study-planner-note study-planner-topics-note">
           Introdu temele manual. Planul evită orele de curs și intervalele din jurul task-urilor active.
-          Încrederea mai mică generează mai multe sesiuni de repetare.
+          Gemini creează flashcarduri pentru fiecare temă; nivelul de încredere le ajustează numărul și dificultatea.
         </p>
         {error && <p className="form-error study-planner-message" role="alert">{error}</p>}
         {notice && <p className="study-planner-success study-planner-message" role="status">{notice}</p>}
         <div className="study-planner-actions">
-          <button className="button button-primary" disabled={!now} type="submit">
-            <Icon name="sparkles" size={15} /> Generează planul
+          <button className="button button-primary" disabled={!now || generating} type="submit">
+            <Icon name="sparkles" size={15} /> {generating ? "Se generează planul și flashcardurile..." : "Generează planul"}
           </button>
           <span>Planul se adaugă în Task-uri și apare în Orar.</span>
         </div>

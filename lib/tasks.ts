@@ -6,6 +6,18 @@ export type SavedTask = {
   category: "Studiu" | "Practică" | "Test";
   done: boolean;
   createdAt: string;
+  topic?: string;
+  flashcards?: SavedFlashcard[];
+};
+
+export type SavedFlashcard = {
+  question: string;
+  answer: string;
+};
+
+export type TopicFlashcards = {
+  topic: string;
+  flashcards: SavedFlashcard[];
 };
 
 export type SavedTaskReschedule = {
@@ -15,6 +27,23 @@ export type SavedTaskReschedule = {
 
 const taskStorageKey = "uniflow-assistant-tasks";
 const tasksChangedEvent = "uniflow-assistant-tasks-change";
+
+function isSavedFlashcard(value: unknown): value is SavedFlashcard {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "question" in value &&
+    typeof value.question === "string" &&
+    value.question.trim().length > 0 &&
+    value.question.length > 0 &&
+    value.question.length <= 300 &&
+    "answer" in value &&
+    typeof value.answer === "string" &&
+    value.answer.trim().length > 0 &&
+    value.answer.length > 0 &&
+    value.answer.length <= 800
+  );
+}
 
 function isSavedTask(value: unknown): value is SavedTask {
   return (
@@ -36,7 +65,13 @@ function isSavedTask(value: unknown): value is SavedTask {
     "done" in value &&
     typeof value.done === "boolean" &&
     "createdAt" in value &&
-    typeof value.createdAt === "string"
+    typeof value.createdAt === "string" &&
+    (!("topic" in value) ||
+      (typeof value.topic === "string" && value.topic.length <= 80)) &&
+    (!("flashcards" in value) ||
+      (Array.isArray(value.flashcards) &&
+        value.flashcards.length <= 4 &&
+        value.flashcards.every(isSavedFlashcard)))
   );
 }
 

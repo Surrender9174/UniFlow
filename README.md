@@ -49,7 +49,9 @@ postponed to a selected future date and time from the Tasks page. In the
 assistant, you can also ask to move a saved task to a new date and time; Gemini
 must identify the task and a future date/time before UniFlow changes it.
 Gmail does not need to be connected for task requests, but Gemini must be
-configured.
+configured. The adaptive study planner also uses Gemini to generate
+confidence-adjusted flashcards for each topic; generated cards are saved with
+the plan's local tasks and can be studied by opening a task on the Tasks page.
 
 The assistant conversation is also saved in the current browser and restored
 when `/assistant` is opened again. It is not synced to other devices. The latest
@@ -151,6 +153,10 @@ For an existing QueueLess installation, also run
 [`supabase/migrations/20261114050000_queueless_leave_queue.sql`](./supabase/migrations/20261114050000_queueless_leave_queue.sql)
 to allow users to cancel their own waiting ticket and update the remaining queue
 positions.
+
+Run
+[`supabase/migrations/20261114060000_queueless_reset_ticket_numbers.sql`](./supabase/migrations/20261114060000_queueless_reset_ticket_numbers.sql)
+to restart ticket numbering at 1 when a location has no active tickets.
 
 The current version provides estimates from the configured average service
 time and active tickets. It does not yet include food pre-orders, library book
