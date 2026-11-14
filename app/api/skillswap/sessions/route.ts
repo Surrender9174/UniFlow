@@ -111,6 +111,9 @@ export async function POST(request: Request) {
     }
     return Response.json({ sessionId }, { status: 201 });
   } catch (error) {
-    return databaseErrorResponse(error, "Nu am putut trimite propunerea de schimb.");
+    return databaseErrorResponse(
+      error,
+      "Nu am putut trimite propunerea de schimb. Încearcă din nou mai târziu.",
+    );
   }
 }
