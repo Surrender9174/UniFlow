@@ -11,12 +11,21 @@ import {
 } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/icons";
+import {
+  maxAssistantAttachmentTextLength,
+  type AssistantAttachment,
+} from "@/lib/assistant-attachment";
 import type {
   EmailTask,
   TaskAction,
   WhatsAppAnalysis,
   WhatsAppEvent,
 } from "@/lib/email-analysis";
+import { extractScheduleFile, isSupportedScheduleFile } from "@/lib/schedule-file-reader";
+import {
+  maxScheduleFileSize,
+  scheduleFileAccept,
+} from "@/lib/schedule-file-types";
 import {
   addSavedTasks,
   formatSavedTaskDueAt,
@@ -40,6 +49,7 @@ type Message = {
   rescheduledTasks?: SavedTask[];
   whatsappEvents?: WhatsAppEvent[];
   savedWhatsAppEventIndexes?: number[];
+  attachmentName?: string;
 };
 
 type GmailStatus = {
@@ -237,7 +247,9 @@ function isStoredMessage(value: unknown): value is Message {
       (Array.isArray(value.savedWhatsAppEventIndexes) &&
         value.savedWhatsAppEventIndexes.every(
           (index) => Number.isInteger(index) && index >= 0,
-        )))
+        ))) &&
+    (!("attachmentName" in value) ||
+      (typeof value.attachmentName === "string" && value.attachmentName.length <= 255))
   );
 }
 
@@ -376,6 +388,11 @@ export default function AssistantPage() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [attachment, setAttachment] = useState<AssistantAttachment | null>(null);
+  const [attachmentError, setAttachmentError] = useState("");
+  const [attachmentProgress, setAttachmentProgress] = useState("");
+  const [attachmentProcessing, setAttachmentProcessing] = useState(false);
+  const attachmentInput = useRef<HTMLInputElement>(null);
   const [whatsappFile, setWhatsAppFile] = useState<File | null>(null);
   const [whatsappError, setWhatsAppError] = useState("");
   const whatsappFileInput = useRef<HTMLInputElement>(null);
@@ -446,16 +463,28 @@ export default function AssistantPage() {
     })();
   }, []);
 
-  const submitQuestion = async (question: string) => {
-    const text = question.trim();
-    if (!text || loading) return;
+  const submitQuestion = async (
+    question: string,
+    selectedAttachment: AssistantAttachment | null = null,
+  ) => {
+    const text = question.trim() || (selectedAttachment ? "Analizează fișierul atașat." : "");
+    if ((!text && !selectedAttachment) || loading || attachmentProcessing) return;
 
     setError("");
     updateMessages((current) => [
       ...current,
-      { role: "student", text, time: currentTime() },
+      {
+        role: "student",
+        text,
+        time: currentTime(),
+        attachmentName: selectedAttachment?.name,
+      },
     ]);
     setDraft("");
+    setAttachment(null);
+    setAttachmentError("");
+    setAttachmentProgress("");
+    if (attachmentInput.current) attachmentInput.current.value = "";
     setLoading(true);
 
     try {
@@ -492,6 +521,7 @@ export default function AssistantPage() {
         },
         body: JSON.stringify({
           question: text,
+          attachment: selectedAttachment,
           history: messages
             .slice(1)
             .slice(-8)
@@ -572,6 +602,55 @@ export default function AssistantPage() {
   const selectWhatsAppFile = (event: ChangeEvent<HTMLInputElement>) => {
     setWhatsAppError("");
     setWhatsAppFile(event.currentTarget.files?.[0] ?? null);
+  };
+
+  const selectAssistantAttachment = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    setAttachment(null);
+    setAttachmentError("");
+    setAttachmentProgress("");
+    if (!file) return;
+
+    if (file.size > maxScheduleFileSize) {
+      setAttachmentError("Fișierul depășește limita de 15 MB.");
+      input.value = "";
+      return;
+    }
+    if (!isSupportedScheduleFile(file)) {
+      setAttachmentError("Alege PDF, imagine PNG/JPG/WebP, Excel, Word, CSV sau TXT.");
+      input.value = "";
+      return;
+    }
+
+    setAttachmentProcessing(true);
+    setAttachmentProgress("Se citește fișierul...");
+    try {
+      const extractedText = await extractScheduleFile(file, setAttachmentProgress);
+      const text = extractedText.trim();
+      if (!text) throw new Error("Nu am găsit text lizibil în fișier.");
+      if (text.length > maxAssistantAttachmentTextLength) {
+        throw new Error("Fișierul conține prea mult text. Limita pentru analiză este de 30.000 de caractere.");
+      }
+      setAttachment({ name: file.name, text });
+      setAttachmentProgress("");
+    } catch (attachmentRequestError: unknown) {
+      setAttachmentError(
+        attachmentRequestError instanceof Error
+          ? attachmentRequestError.message
+          : "Nu am putut citi fișierul.",
+      );
+    } finally {
+      setAttachmentProcessing(false);
+      input.value = "";
+    }
+  };
+
+  const clearAssistantAttachment = () => {
+    setAttachment(null);
+    setAttachmentError("");
+    setAttachmentProgress("");
+    if (attachmentInput.current) attachmentInput.current.value = "";
   };
 
   const analyzeWhatsAppChat = async (event: FormEvent<HTMLFormElement>) => {
@@ -699,7 +778,7 @@ export default function AssistantPage() {
 
   const sendMessage = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    void submitQuestion(draft);
+    void submitQuestion(draft, attachment);
   };
 
   const disconnectGmail = async () => {
@@ -891,6 +970,11 @@ export default function AssistantPage() {
                 {message.role === "assistant" ? <Icon name="sparkles" size={15} /> : "A"}
               </span>
               <div className="chat-message-content">
+                {message.attachmentName && (
+                  <span className="chat-message-attachment">
+                    <Icon name="file" size={13} /> {message.attachmentName}
+                  </span>
+                )}
                 <div className="chat-bubble">{message.text}</div>
                 {message.tasks?.map((task, taskIndex) => (
                   <article className="email-task-card" key={`${task.title}-${taskIndex}`}>
@@ -992,10 +1076,46 @@ export default function AssistantPage() {
             </div>
           )}
         </div>
+        {attachmentProcessing && (
+          <p className="chat-attachment-status" role="status">
+            {attachmentProgress || "Se citește fișierul..."}
+          </p>
+        )}
+        {attachmentError && (
+          <p className="chat-attachment-error" role="alert">{attachmentError}</p>
+        )}
+        {attachment && (
+          <div className="chat-attachment-preview">
+            <Icon name="file" size={14} />
+            <span title={attachment.name}>{attachment.name}</span>
+            <button
+              aria-label={`Elimină fișierul ${attachment.name}`}
+              onClick={clearAssistantAttachment}
+              type="button"
+            >
+              ×
+            </button>
+          </div>
+        )}
+        <input
+          accept={scheduleFileAccept}
+          aria-label="Selectează un fișier PDF, imagine, Excel, Word, CSV sau TXT"
+          className="visually-hidden"
+          disabled={loading || attachmentProcessing}
+          onChange={selectAssistantAttachment}
+          ref={attachmentInput}
+          type="file"
+        />
         <form className="chat-compose" onSubmit={sendMessage}>
-          <span className="compose-attach" aria-hidden="true">
-            <Icon name="mail" size={18} />
-          </span>
+          <button
+            aria-label="Atașează un fișier"
+            className="compose-attach"
+            disabled={loading || attachmentProcessing}
+            onClick={() => attachmentInput.current?.click()}
+            type="button"
+          >
+            <Icon name="plus" size={18} />
+          </button>
           <input
             aria-label="Întreabă-l pe Uni sau adaugă un task"
             disabled={loading}
@@ -1007,13 +1127,15 @@ export default function AssistantPage() {
           <button
             aria-label="Trimite mesajul"
             className="send-button"
-            disabled={!draft.trim() || loading}
+            disabled={(!draft.trim() && !attachment) || loading || attachmentProcessing}
             type="submit"
           >
             <Icon name="send" size={17} />
           </button>
         </form>
         <p className="chat-disclaimer">
+          Formate acceptate: PDF, PNG/JPG/WebP, Excel, Word, CSV și TXT (max. 15 MB).
+          Textul extras din atașament este trimis la Gemini pentru analiză. Nu încărca date sensibile.
           Răspunsurile sunt generate cu AI. Verifică atent datele și cerințele importante.
         </p>
       </section>

@@ -88,6 +88,7 @@ export function Icon({
       width={size}
       height={size}
       viewBox="0 0 24 24"
+      className={name === "arrow" ? "arrow-icon" : undefined}
       {...common}
       >
     
