@@ -62,7 +62,7 @@ button { color: inherit; }
 .nav-link { display: flex; min-height: 46px; align-items: center; gap: 13px; padding: 0 13px; border-radius: 12px; color: #777a90; font-size: 13px; font-weight: 550; transition: background .2s ease, color .2s ease, transform .2s ease; }
 .nav-link:hover { background: #f7f6fc; color: var(--violet); transform: translateX(2px); }
 .nav-link.active { background: var(--violet-soft); color: var(--violet-dark); font-weight: 650; }
-.nav-count { display: grid; width: 20px; height: 20px; margin-left: auto; place-items: center; border-radius: 7px; background: #fff; color: #777a90; font-size: 10px; }
+.nav-count { display: inline; width: auto; height: auto; margin-left: auto; padding: 0; border: 0; border-radius: 0; outline: 0; background: none; box-shadow: none; color: var(--violet); font-size: 10px; }
 .sidebar-bottom { margin-top: auto; }
 .sidebar-ingestion { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 12px 10px; border: 1px solid #ece9fa; border-radius: 14px; background: linear-gradient(120deg, #f8f6ff, #fff); color: #48445e; transition: transform .2s ease, box-shadow .2s ease; }
 .sidebar-ingestion:hover { box-shadow: 0 8px 22px #423b7412; transform: translateY(-2px); }
@@ -1189,6 +1189,7 @@ html[data-theme="dark"] .sidebar-ingestion { border-color: #353247; background: 
 html[data-theme="dark"] .nav-link { color: #a0a2b5; }
 html[data-theme="dark"] .nav-link:hover,
 html[data-theme="dark"] .nav-link.active { background: #302b4b; color: #c4b8ff; }
+html[data-theme="dark"] .nav-count { outline: none; background: transparent; color: #c7bcff; }
 html[data-theme="dark"] .topbar-context,
 html[data-theme="dark"] .profile-summary small,
 html[data-theme="dark"] .sidebar-caption,

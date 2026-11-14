@@ -93,6 +93,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       };
     }
   }, [taskSnapshot]);
+  const activeTaskCount = taskData.tasks.filter((task) => !task.done).length;
   const upcomingDeadlines = useMemo(() => {
     if (!now) return [];
     const maximum = now.getTime() + 24 * 60 * 60 * 1_000;
@@ -272,7 +273,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               >
                 <Icon name={item.icon} size={19} />
                 <span>{item.label}</span>
-                {item.href === "/tasks" && <span className="nav-count">3</span>}
+                {item.href === "/tasks" && (
+                  <span aria-label={`${activeTaskCount} task-uri active`} className="nav-count">
+                    {activeTaskCount}
+                  </span>
+                )}
               </Link>
             );
           })}
