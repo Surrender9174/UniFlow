@@ -119,6 +119,10 @@ export default function SkillSwapRoom({ sessionId }: { sessionId: string }) {
   const [messageDraft, setMessageDraft] = useState("");
   const [code, setCode] = useState("");
   const [roomError, setRoomError] = useState("");
+  const [pythonStatus, setPythonStatus] = useState<"idle" | "loading" | "running">("idle");
+  const [pythonOutput, setPythonOutput] = useState<{ stream: "stdout" | "stderr"; text: string }[]>([]);
+  const pythonWorkerRef = useRef<Worker | null>(null);
+  const pythonTimeoutRef = useRef<number | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [activePanel, setActivePanel] = useState<"board" | "code" | "chat">("board");
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -580,6 +584,59 @@ export default function SkillSwapRoom({ sessionId }: { sessionId: string }) {
     }, 180);
   };
 
+  const stopPython = useCallback(() => {
+    if (pythonTimeoutRef.current !== null) {
+      window.clearTimeout(pythonTimeoutRef.current);
+      pythonTimeoutRef.current = null;
+    }
+    pythonWorkerRef.current?.terminate();
+    pythonWorkerRef.current = null;
+    setPythonStatus("idle");
+  }, []);
+
+  useEffect(() => stopPython, [stopPython]);
+
+  const runPython = () => {
+    if (!code.trim() || pythonStatus !== "idle") return;
+    const worker = new Worker("/python-worker.js");
+    pythonWorkerRef.current = worker;
+    setPythonOutput([]);
+    setPythonStatus("loading");
+    const appendOutput = (stream: "stdout" | "stderr", text: string) =>
+      setPythonOutput((current) => [...current.slice(-499), { stream, text }]);
+
+    worker.onmessage = (event: MessageEvent<{
+      type: "status" | "output" | "done" | "error";
+      status?: "loading" | "running";
+      stream?: "stdout" | "stderr";
+      text?: string;
+    }>) => {
+      const message = event.data;
+      if (message.type === "status" && message.status) {
+        setPythonStatus(message.status);
+        if (message.status === "running") {
+          // Execution time limit; loading Pyodide itself is not counted.
+          pythonTimeoutRef.current = window.setTimeout(() => {
+            stopPython();
+            appendOutput("stderr", "Execuția a fost oprită după 10 secunde.");
+          }, 10_000);
+        }
+      } else if (message.type === "output" && message.stream && message.text !== undefined) {
+        appendOutput(message.stream, message.text);
+      } else if (message.type === "error") {
+        appendOutput("stderr", message.text ?? "Eroare necunoscută.");
+        stopPython();
+      } else if (message.type === "done") {
+        stopPython();
+      }
+    };
+    worker.onerror = () => {
+      appendOutput("stderr", "Nu am putut încărca executorul Python. Verifică conexiunea la internet.");
+      stopPython();
+    };
+    worker.postMessage({ id: Date.now(), code });
+  };
+
   const sendChatMessage = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const text = messageDraft.trim();
@@ -823,18 +880,50 @@ export default function SkillSwapRoom({ sessionId }: { sessionId: string }) {
               <div className="skillswap-panel-heading">
                 <div>
                   <h2>Cod partajat</h2>
-                  <p>Un spațiu simplu pentru exemple și notițe de cod.</p>
+                  <p>Scrie cod Python și rulează-l direct în browser.</p>
                 </div>
+                {pythonStatus === "idle" ? (
+                  <button
+                    className="skillswap-primary-button skillswap-run-button"
+                    disabled={!code.trim()}
+                    onClick={runPython}
+                    type="button"
+                  >
+                    ▶ Rulează Python
+                  </button>
+                ) : (
+                  <button className="skillswap-danger-button skillswap-run-button" onClick={stopPython} type="button">
+                    ■ Oprește
+                  </button>
+                )}
               </div>
                 <textarea
                   aria-label="Cod partajat"
                   className="skillswap-code-editor"
                   maxLength={20_000}
                 onChange={(event) => handleCodeChange(event.target.value)}
-                placeholder={"// Scrieți aici un exemplu împreună\n"}
+                onKeyDown={(event) => {
+                  if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+                    event.preventDefault();
+                    runPython();
+                  }
+                }}
+                placeholder={"# Scrieți aici un exemplu Python împreună\nprint('Salut!')\n"}
                 spellCheck={false}
                 value={code}
               />
+              <pre aria-live="polite" className="skillswap-code-output">
+                {pythonStatus === "loading" && "Se încarcă Python (prima rulare durează câteva secunde)…"}
+                {pythonStatus !== "loading" && pythonOutput.length === 0 && (
+                  <span className="skillswap-code-output-hint">Rezultatul apare aici (Ctrl+Enter pentru rulare).</span>
+                )}
+                {pythonOutput.map((line, index) => (
+                  <span className={line.stream === "stderr" ? "skillswap-code-error" : undefined} key={index}>
+                    {line.text}
+                    {"\n"}
+                  </span>
+                ))}
+              </pre>
             </div>
           )}
 
