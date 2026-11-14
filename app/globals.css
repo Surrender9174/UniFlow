@@ -1808,7 +1808,7 @@ html[data-theme="dark"] .skillswap-room-footer { color: #a5a4b5; }
 .skillswap-match-meta span { display: inline-flex; align-items: center; gap: 4px; }
 .skillswap-match-meta span:first-child svg { color: #dfa849; }
 .skillswap-next-slots { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-.skillswap-next-slots span { padding: 4px 6px; border: 1px solid #ece9f8; border-radius: 6px; color: #77718d; font-size: 8px; }
+.skillswap-next-slots span { padding: 4px 6px; border: 1px solid var(--color-foreground); border-radius: 6px; color: var(--color-foreground); font-size: 8px; }
 .skillswap-propose-button { min-height: 34px; align-self: center; padding: 0 9px; font-size: 9px; white-space: nowrap; }
 .skillswap-cycles { display: grid; gap: 9px; margin-top: 17px; padding-top: 15px; border-top: 1px solid #efedf4; }
 .skillswap-subheading { display: flex; align-items: center; gap: 9px; }
@@ -1823,7 +1823,8 @@ html[data-theme="dark"] .skillswap-room-footer { color: #a5a4b5; }
 .skillswap-cycle-card li { display: flex; align-items: center; gap: 5px; color: #77788b; font-size: 8px; }
 .skillswap-cycle-card li small { margin-left: auto; color: #6358a0; font-size: 8px; font-weight: 600; }
 .skillswap-cycle-card > .button { min-height: 32px; justify-self: start; font-size: 9px; }
-.skillswap-tree-copy { margin: -4px 0 12px; color: #9192a2; font-size: 10px; line-height: 1.5; }
+
+.skillswap-tree-copy { margin: -4px 0 12px; color: var(--color-foreground); font-size: 10px; line-height: 1.5; }
 .skillswap-tree-domain { padding: 5px 8px; border-radius: 8px; background: #f0edff; color: #705ecb; font-size: 8px; font-weight: 650; }
 .skillswap-tree { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 7px; padding: 13px 8px; border-radius: 12px; background: linear-gradient(135deg, #fbfaff, #f8f6ff); }
 .skillswap-tree-step { display: flex; align-items: center; gap: 7px; }
@@ -1832,6 +1833,7 @@ html[data-theme="dark"] .skillswap-room-footer { color: #a5a4b5; }
 .skillswap-tree-node.known { border-color: #bce6d5; background: #f2fbf7; color: #308668; }
 .skillswap-tree-node.wanted { border-color: #d8cff9; background: #f6f3ff; color: #6c59c5; }
 .skillswap-tree-edge { color: #aaa4c5; }
+
 .skillswap-tree-hint { display: block; margin-top: 9px; color: #a0a0ae; font-size: 8px; text-align: center; }
 .skillswap-review-queue { display: grid; gap: 10px; }
 .skillswap-verification-card { display: grid; gap: 10px; padding: 12px; border: 1px solid #eeedf4; border-radius: 11px; }
@@ -3050,3 +3052,6 @@ html[data-theme="dark"] .dashboard-page .text-link,
 html[data-theme="dark"] .dashboard-page .recommendation-copy > span,
 html[data-theme="dark"] .dashboard-page .recommendation-copy a,
 html[data-theme="dark"] .dashboard-page .heading-count { color: #93c5fd; }
+
+
+.skillswap-section
