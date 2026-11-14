@@ -1266,7 +1266,7 @@ export default function SkillSwapSection() {
             <button aria-label="Închide fereastra" className="skillswap-modal-close" onClick={() => setProposalTarget(null)} type="button">×</button>
             <p className="eyebrow">PROPUNE UN SCHIMB GRATUIT</p>
             <h2>{proposalTarget.kind === "direct" ? "Alege o oră pentru sesiune" : "Planifică schimbul în trei"}</h2>
-            <p className="muted">overflow: hidden</p>
+            <p className="muted">overflow: hidden</p>x``
             <h2 id="skillswap-proposal-heading">{proposalTarget.kind === "direct" ? "Alege o oră pentru sesiune" : "Planifică schimbul în trei"}</h2>
             <p className="muted">
               {proposalTarget.kind === "direct"
