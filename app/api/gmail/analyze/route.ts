@@ -17,6 +17,10 @@ import {
   type ChatTurn,
   type TimeContext,
 } from "@/lib/email-analysis";
+import {
+  maxAssistantAttachmentTextLength,
+  type AssistantAttachment,
+} from "@/lib/assistant-attachment";
 
 function isChatHistory(value: unknown): value is ChatTurn[] {
   return (
@@ -126,6 +130,21 @@ function isTimeContext(value: unknown): value is TimeContext {
   }
 }
 
+function isAssistantAttachment(value: unknown): value is AssistantAttachment {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "name" in value &&
+    typeof value.name === "string" &&
+    value.name.length > 0 &&
+    value.name.length <= 255 &&
+    "text" in value &&
+    typeof value.text === "string" &&
+    value.text.trim().length > 0 &&
+    value.text.length <= maxAssistantAttachmentTextLength
+  );
+}
+
 function isTaskCreationRequest(question: string, history: ChatTurn[]) {
   const normalized = question
     .normalize("NFD")
@@ -208,6 +227,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const attachmentValue =
+    "attachment" in body ? body.attachment : null;
+  if (attachmentValue !== null && !isAssistantAttachment(attachmentValue)) {
+    return NextResponse.json(
+      { error: "The attachment text is invalid or exceeds the 30,000-character limit." },
+      { status: 400 },
+    );
+  }
+
   const historyValue =
     typeof body === "object" && body !== null && "history" in body
       ? body.history
@@ -269,6 +297,7 @@ export async function POST(request: NextRequest) {
       isTaskRescheduleRequest(body.question, historyValue),
       isTaskCreationRequest(body.question, historyValue),
       searchInbox,
+      attachmentValue,
     );
     return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
