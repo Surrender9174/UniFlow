@@ -132,6 +132,20 @@ export default function TasksPage() {
     setShowFlashcardAnswer(false);
   };
 
+  const completeTask = (task: TaskRow) => {
+    setStorageError("");
+    try {
+      if (!task.done) setSavedTaskDone(task.id, true);
+      setFlashcardTaskId(null);
+      setFlashcardResponse("");
+      setShowFlashcardAnswer(false);
+    } catch (error) {
+      setStorageError(
+        error instanceof Error ? error.message : "Nu am putut finaliza task-ul.",
+      );
+    }
+  };
+
   const openFlashcardTask = taskRows.find((task) => task.id === flashcardTaskId);
   const openFlashcards = openFlashcardTask?.flashcards ?? [];
   const activeFlashcard = openFlashcards[flashcardIndex] ?? null;
@@ -355,14 +369,24 @@ export default function TasksPage() {
                   >
                     Înapoi
                   </button>
-                  <button
-                    className="button button-secondary"
-                    disabled={flashcardIndex >= openFlashcards.length - 1}
-                    onClick={() => moveFlashcard(1)}
-                    type="button"
-                  >
-                    Următorul
-                  </button>
+                  {flashcardIndex < openFlashcards.length - 1 ? (
+                    <button
+                      className="button button-secondary"
+                      onClick={() => moveFlashcard(1)}
+                      type="button"
+                    >
+                      Următorul
+                    </button>
+                  ) : (
+                    <button
+                      className="button button-primary"
+                      disabled={task.done}
+                      onClick={() => completeTask(task)}
+                      type="button"
+                    >
+                      {task.done ? "Task completat" : "Completează taskul"}
+                    </button>
+                  )}
                 </div>
               </section>
             )}
