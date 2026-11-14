@@ -3,9 +3,6 @@
 import Link from "next/link";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { Icon } from "@/components/icons";
-import ScheduleReview from "@/components/sections/schedule-review";
-import { useScheduleUpload } from "@/components/use-schedule-upload";
-import { scheduleFileAccept } from "@/lib/schedule-file-types";
 import { useDeviceNow } from "@/components/use-device-now";
 import {
   formatLocalDate,
@@ -17,7 +14,6 @@ import {
 } from "@/lib/device-time";
 import { getWeekdayName } from "@/lib/schedule-parser";
 import {
-  clearSchedule,
   getServerScheduleSnapshot,
   getStoredScheduleSnapshot,
   parseScheduleSnapshot,
@@ -56,18 +52,6 @@ export default function SchedulePage() {
   const now = useDeviceNow();
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedWeekday, setSelectedWeekday] = useState<number | null>(null);
-  const {
-    fileInputRef,
-    uploadStatus,
-    uploadMessage,
-    uploadError,
-    pendingSchedule,
-    openFilePicker,
-    handleFileChange,
-    updatePendingEvent,
-    savePendingSchedule,
-    cancelSchedulePreview,
-  } = useScheduleUpload();
   const scheduleSnapshot = useSyncExternalStore(
     subscribeToSchedule,
     getStoredScheduleSnapshot,
@@ -90,7 +74,6 @@ export default function SchedulePage() {
     }
   }, [taskSnapshot]);
   const events = parseScheduleSnapshot(scheduleSnapshot);
-  const hasSchedule = events.length > 0;
   const weekAnchor = now
     ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + weekOffset * 7)
     : null;
@@ -126,67 +109,9 @@ export default function SchedulePage() {
   return (
     <div className="section-page">
       <div className="page-heading schedule-heading">
-        <div><p className="eyebrow">AN UNIVERSITAR · {now ? getAcademicYearLabel(now) : "—"}</p><h1>Orarul meu</h1><p className="muted">Programul tău, organizat pe zile.</p></div>
-        <div className="schedule-heading-actions">
-          {!hasSchedule && uploadStatus !== "preview" && (
-            <button
-              className="button button-secondary"
-              disabled={uploadStatus === "processing"}
-              onClick={openFilePicker}
-              type="button"
-            >
-              <Icon name="upload" size={17} />
-              {uploadStatus === "processing" ? "Se procesează..." : "Încarcă un orar"}
-            </button>
-          )}
-          {hasSchedule && (
-            <button
-              className="button button-danger"
-              onClick={() => {
-                if (window.confirm("Sigur vrei să ștergi orarul salvat? Această acțiune nu poate fi anulată.")) {
-                  clearSchedule();
-                }
-              }}
-              type="button"
-            >
-              Șterge orarul
-            </button>
-          )}
-        </div>
+        <div><p className="eyebrow">AN UNIVERSITAR · {now ? getAcademicYearLabel(now) : "—"}</p><h1>Orarul meu</h1><p className="muted">Programul și task-urile tale, organizate pe zile.</p></div>
+        <Link className="button button-secondary" href="/dashboard#schedule-upload"><Icon name="upload" size={17} /> Încarcă un orar</Link>
       </div>
-      <input
-        accept={scheduleFileAccept}
-        className="visually-hidden"
-        disabled={uploadStatus === "processing"}
-        onChange={handleFileChange}
-        ref={fileInputRef}
-        type="file"
-      />
-      {uploadStatus === "processing" && (
-        <div className="card-surface schedule-upload-state" role="status">
-          <Icon name="sparkles" size={20} />
-          <div>
-            <p className="eyebrow">RECUNOAȘTERE OCR</p>
-            <h2>{uploadMessage}</h2>
-            <p className="muted">Fișierul este procesat pe dispozitivul tău.</p>
-          </div>
-        </div>
-      )}
-      {uploadStatus === "preview" && (
-        <div className="card-surface schedule-review-card">
-          <ScheduleReview
-            events={pendingSchedule}
-            isPageReview
-            onCancel={cancelSchedulePreview}
-            onChange={updatePendingEvent}
-            onSave={savePendingSchedule}
-          />
-          {uploadError && <p className="schedule-upload-error" role="alert">{uploadError}</p>}
-        </div>
-      )}
-      {uploadError && uploadStatus !== "preview" && (
-        <p className="schedule-page-upload-error" role="alert">{uploadError}</p>
-      )}
       <section className="card-surface week-picker" aria-label="Selectează ziua săptămânii">
         <button aria-label="Săptămâna anterioară" className="week-arrow" onClick={() => setWeekOffset((offset) => offset - 1)} type="button"><span>‹</span></button>
         <div className="week-days">{Array.from({ length: 7 }, (_, index) => {
@@ -226,7 +151,7 @@ export default function SchedulePage() {
           {!events.length ? (
             <div className="schedule-empty">
               <Icon name="calendar" size={20} />
-              <p>{uploadStatus === "preview" ? "Salvează orarul pentru a vedea cursurile pe zile." : "Încarcă un orar pentru a vedea cursurile pe zile."}</p>
+              <p>Încarcă un orar pentru a vedea cursurile pe zile.</p>
             </div>
           ) : dayEvents.length ? dayEvents.map((event, index) => (
             <article className="schedule-item" key={event.id}>
@@ -266,9 +191,6 @@ export default function SchedulePage() {
           )}
         </div>
       </section>
-
-      {hasSchedule && <div className="schedule-tip"><span><Icon name="sparkles" size={18} /></span><p><strong>Orar salvat:</strong> îl poți șterge de aici sau înlocui din cardul orarului de pe pagina Acasă.</p></div>}
-
       {unscheduledTasks.length > 0 && (
         <section className="section-block">
           <div className="section-heading">
@@ -293,6 +215,7 @@ export default function SchedulePage() {
           </div>
         </section>
       )}
+      {!!events.length && <div className="schedule-tip"><span><Icon name="sparkles" size={18} /></span><p><strong>Orar salvat:</strong> programul a fost extras din fișierul tău și îl poți actualiza din pagina Acasă.</p></div>}
     </div>
   );
 }

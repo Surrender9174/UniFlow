@@ -174,4 +174,4 @@ and Gmail message ID in Supabase—not the full email body. Gmail access remains
 read-only. Until the migration, server secrets, deployment, scheduler, and
 browser permission are configured, background Gmail alerts are not active.
 
-bla bla
+Bla bla
