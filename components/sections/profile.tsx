@@ -210,12 +210,12 @@ export default function ProfilePage() {
         <aside className="profile-card card-surface">
           <div className="profile-avatar">{profile.name.trim().slice(0, 1).toUpperCase() || "A"}<span aria-hidden="true" className="avatar-edit"></span></div>
           <h2>{profile.name || "Numele tău"}</h2><p>{profile.program} · {profile.year} · {profile.semester}</p>
-          <span className="student-badge"><Icon name="graduation" size={15} /> {profile.institutionType === "Universitate" ? "Student UniFlow" : "Elev UniFlow"}</span>
+          <span className="student-badge">{profile.institutionType === "Universitate" ? "Student UniFlow" : "Elev UniFlow"}</span>
           <div className="profile-card-divider" />
-          <div className="profile-detail"><Icon name="mail" size={16} /><span>{profile.email}</span></div>
-          <div className="profile-detail"><Icon name="map" size={16} /><span>{profile.university}</span></div>
-          <div className="profile-detail"><Icon name="calendar" size={16} /><span>{hasSchedule ? "Completat" : "Necompletat"}</span></div>
-          <div className="profile-account-actions">
+          <div className="email-detail"> Email:  <span> {profile.email}</span></div>
+          <div className="university-detail"> Instituție:  <span> {profile.university}</span></div>
+          <div className="schedule-detail"> Orar:  <span> {hasSchedule ? "Completat" : "Necompletat"}</span></div>
+          <div>
             <button
               className="button button-secondary"
               disabled={signingOut}

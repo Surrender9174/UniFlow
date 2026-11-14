@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { Icon } from "@/components/icons";
 import { useDeviceNow } from "@/components/use-device-now";
 import { supabase } from "@/lib/supabase";
 import {
@@ -672,19 +671,19 @@ export default function SkillSwapSection() {
         </div>
       )}
 
-      <div className="skillswap-overview">
-        <article className="skillswap-stat card-surface">
+      <div className="skillswap-overview" aria-label="Rezumat SkillSwap">
+        <article className="skillswap-stat">
           <div><strong>{directMatches.length}</strong><small>potriviri directe</small></div>
         </article>
-        <article className="skillswap-stat card-surface">
+        <article className="skillswap-stat">
           <div><strong>{sessions.filter((session) =>
             ["requested", "accepted", "awaiting_confirmation"].includes(session.status)
           ).length}</strong><small>sesiuni active</small></div>
         </article>
-        <article className="skillswap-stat card-surface">
+        <article className="skillswap-stat">
           <div><strong>{profile?.verifiedSkills?.length ?? 0}</strong><small>abilități verificate</small></div>
         </article>
-        <article className="skillswap-stat card-surface">
+        <article className="skillswap-stat">
           <div><strong>{unreadCount}</strong><small>notificări noi</small></div>
         </article>
       </div>
@@ -999,7 +998,6 @@ export default function SkillSwapSection() {
 
               <div className="skillswap-form-divider" />
               <div className="skillswap-subheading">
-                <span className="skillswap-subheading-icon mint"><Icon name="calendar" size={15} /></span>
                 <div><strong>Disponibilitate</strong><small>Intervale recurente, în fusul tău orar.</small></div>
               </div>
               <div className="skillswap-availability-list">
@@ -1104,7 +1102,9 @@ export default function SkillSwapSection() {
                       <div className="skillswap-session-content">
                         <div className="skillswap-session-top">
                           <strong>{session.skill}</strong>
-                          <span className={`session-status ${session.status}`}>{sessionStatusLabels[session.status]}</span>
+                          <span className={`session-status ${session.status}${session.status === "awaiting_confirmation" ? " cancelled" : ""}`}>
+                            {sessionStatusLabels[session.status]}
+                          </span>
                         </div>
                         <p>{isTeacher ? "Predai" : "Înveți"} cu {partnerName}</p>
                         <small>{formatSkillSwapTime(session.starts_at, profile?.timezone ?? "UTC")} · 60 min · Gratuit</small>
@@ -1235,7 +1235,7 @@ export default function SkillSwapSection() {
                       type="button"
                     >
                       <span className="notification-dot" />
-                      <span><strong>{notification.message}</strong><small>{formatSkillSwapTime(notification.created_at, profile?.timezone ?? "UTC")}</small></span>
+                      <span><strong>{notification.message}</strong>{formatSkillSwapTime(notification.created_at, profile?.timezone ?? "UTC")}</span>
                     </button>
                     {notification.session_id && <Link href={`/skillswap/room/${notification.session_id}`}>Deschide</Link>}
                   </div>
@@ -1250,10 +1250,18 @@ export default function SkillSwapSection() {
         <div className="skillswap-modal-backdrop" onMouseDown={(event) => {
           if (event.target === event.currentTarget) setProposalTarget(null);
         }}>
-          <form className="skillswap-modal card-surface" onSubmit={submitProposal}>
+          <form
+            aria-labelledby="skillswap-proposal-heading"
+            aria-modal="true"
+            className="skillswap-modal card-surface"
+            onSubmit={submitProposal}
+            role="dialog"
+          >
             <button aria-label="Închide fereastra" className="skillswap-modal-close" onClick={() => setProposalTarget(null)} type="button">×</button>
             <p className="eyebrow">PROPUNE UN SCHIMB GRATUIT</p>
             <h2>{proposalTarget.kind === "direct" ? "Alege o oră pentru sesiune" : "Planifică schimbul în trei"}</h2>
+            <p className="muted">overflow: hidden</p>x``
+            <h2 id="skillswap-proposal-heading">{proposalTarget.kind === "direct" ? "Alege o oră pentru sesiune" : "Planifică schimbul în trei"}</h2>
             <p className="muted">
               {proposalTarget.kind === "direct"
                 ? `O sesiune de 60 de minute cu ${proposalTarget.match.partner.displayName}, pentru ${proposalTarget.match.learnsSkill}.`
