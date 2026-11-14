@@ -12,6 +12,7 @@ import {
   postponeSavedTask,
   setSavedTaskDone,
   subscribeToSavedTasks,
+  type SavedFlashcard,
 } from "@/lib/tasks";
 
 type TaskRow = {
@@ -22,6 +23,8 @@ type TaskRow = {
   dueAt: string | null;
   category: "Studiu" | "Practică" | "Test";
   done: boolean;
+  topic?: string;
+  flashcards?: SavedFlashcard[];
 };
 
 type TaskFilter = "all" | "active" | "done";
@@ -42,6 +45,11 @@ export default function TasksPage() {
   const [storageError, setStorageError] = useState("");
   const [actionTaskId, setActionTaskId] = useState<string | null>(null);
   const [postponeMinimum, setPostponeMinimum] = useState("");
+  const [postponeValue, setPostponeValue] = useState("");
+  const [flashcardTaskId, setFlashcardTaskId] = useState<string | null>(null);
+  const [flashcardIndex, setFlashcardIndex] = useState(0);
+  const [showFlashcardAnswer, setShowFlashcardAnswer] = useState(false);
+  const [flashcardResponse, setFlashcardResponse] = useState("");
   const [taskFilter, setTaskFilter] = useState<TaskFilter>("all");
   const postponeInput = useRef<HTMLInputElement>(null);
   const taskSnapshot = useSyncExternalStore(
@@ -68,6 +76,8 @@ export default function TasksPage() {
       dueAt: task.dueAt,
       category: task.category,
       done: task.done,
+      topic: task.topic,
+      flashcards: task.flashcards,
   }));
   const activeCount = savedTasks.filter((task) => !task.done).length;
   const completedCount = taskRows.length - activeCount;
@@ -103,12 +113,51 @@ export default function TasksPage() {
     try {
       deleteSavedTask(task.id);
       setActionTaskId(null);
+      if (flashcardTaskId === task.id) setFlashcardTaskId(null);
     } catch (error) {
       setStorageError(
         error instanceof Error ? error.message : "Nu am putut șterge task-ul.",
       );
     }
   };
+
+  const toggleFlashcards = (task: TaskRow) => {
+    if (!task.flashcards?.length) return;
+    if (flashcardTaskId === task.id) {
+      setFlashcardTaskId(null);
+      setFlashcardResponse("");
+      setShowFlashcardAnswer(false);
+      return;
+    }
+    setFlashcardTaskId(task.id);
+    setFlashcardIndex(0);
+    setFlashcardResponse("");
+    setShowFlashcardAnswer(false);
+  };
+
+  const moveFlashcard = (direction: -1 | 1) => {
+    setFlashcardIndex((current) => current + direction);
+    setFlashcardResponse("");
+    setShowFlashcardAnswer(false);
+  };
+
+  const completeTask = (task: TaskRow) => {
+    setStorageError("");
+    try {
+      if (!task.done) setSavedTaskDone(task.id, true);
+      setFlashcardTaskId(null);
+      setFlashcardResponse("");
+      setShowFlashcardAnswer(false);
+    } catch (error) {
+      setStorageError(
+        error instanceof Error ? error.message : "Nu am putut finaliza task-ul.",
+      );
+    }
+  };
+
+  const openFlashcardTask = taskRows.find((task) => task.id === flashcardTaskId);
+  const openFlashcards = openFlashcardTask?.flashcards ?? [];
+  const activeFlashcard = openFlashcards[flashcardIndex] ?? null;
 
   const postponeTask = (event: FormEvent<HTMLFormElement>, task: TaskRow) => {
     event.preventDefault();
@@ -234,40 +283,58 @@ export default function TasksPage() {
         )}
         {visibleTasks.map((task, index) => (
           <article
-            className={`task-row${task.done ? " task-done" : ""}${actionTaskId === task.id ? " task-row-actions-open" : ""}`}
+            className="task-entry"
             key={task.id}
           >
-            <button
-              aria-label={task.done ? "Marchează ca nefinalizat" : "Marchează ca finalizat"}
-              aria-pressed={task.done}
-              className={`task-check ${task.done ? "checked" : ""}`}
-              onClick={() => toggleTask(task)}
-              type="button"
-            >
-              {task.done && <Icon name="check" size={13} />}
-            </button>
-            <span className={`task-color ${index % 2 ? "mint" : "lavender"}`} />
-            <div className="task-description">
-              <strong>{task.title}</strong>
-              <small>{task.subject}</small>
-            </div>
-            <span className="task-category">{task.category}</span>
-            <span className={`task-due${!task.done && index === 0 && task.date !== "Fără termen" ? " due-soon" : ""}`}>
-              <Icon name="clock" size={14} />{task.date}
-            </span>
-            <div className="task-actions">
+            <div className={`task-row${task.done ? " task-done" : ""}${actionTaskId === task.id ? " task-row-actions-open" : ""}`}>
               <button
-                aria-controls={`task-actions-${task.id}`}
-                aria-expanded={actionTaskId === task.id}
-                aria-label="Mai multe opțiuni"
-                className="quiet-icon task-more"
-                onClick={() => toggleTaskActions(task)}
+                aria-label={task.done ? "Marchează ca nefinalizat" : "Marchează ca finalizat"}
+                aria-pressed={task.done}
+                className={`task-check ${task.done ? "checked" : ""}`}
+                onClick={() => toggleTask(task)}
                 type="button"
               >
-                <Icon name="more" size={18} />
+                {task.done && <Icon name="check" size={13} />}
               </button>
-              {actionTaskId === task.id && (
-                <div className="task-action-panel" id={`task-actions-${task.id}`}>
+              <span className={`task-color ${index % 2 ? "mint" : "lavender"}`} />
+              <div className="task-description">
+                {task.flashcards?.length ? (
+                  <button
+                    aria-controls={`task-flashcards-${task.id}`}
+                    aria-expanded={flashcardTaskId === task.id}
+                    className="task-title-button"
+                    onClick={() => toggleFlashcards(task)}
+                    type="button"
+                  >
+                    <strong>{task.title}</strong>
+                    <small>
+                      {task.subject} · {task.flashcards.length} flashcarduri · Apasă pentru a studia
+                    </small>
+                  </button>
+                ) : (
+                  <>
+                    <strong>{task.title}</strong>
+                    <small>{task.subject}</small>
+                  </>
+                )}
+              </div>
+              <span className="task-category">{task.category}</span>
+              <span className={`task-due${!task.done && index === 0 && task.date !== "Fără termen" ? " due-soon" : ""}`}>
+                <Icon name="clock" size={14} />{task.date}
+              </span>
+              <div className="task-actions">
+                <button
+                  aria-controls={`task-actions-${task.id}`}
+                  aria-expanded={actionTaskId === task.id}
+                  aria-label="Mai multe opțiuni"
+                  className="quiet-icon task-more"
+                  onClick={() => toggleTaskActions(task)}
+                  type="button"
+                >
+                  <Icon name="more" size={18} />
+                </button>
+                {actionTaskId === task.id && (
+                  <div className="task-action-panel" id={`task-actions-${task.id}`}>
                   <button
                     className="task-action-delete"
                     onClick={() => deleteTask(task)}
@@ -300,9 +367,93 @@ export default function TasksPage() {
                       Salvează noul termen
                     </button>
                   </form>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
+            {flashcardTaskId === task.id && activeFlashcard && (
+              <section
+                aria-label={`Flashcarduri pentru ${task.topic ?? task.title}`}
+                className="task-flashcards"
+                id={`task-flashcards-${task.id}`}
+              >
+                <div className="task-flashcards-heading">
+                  <strong>Flashcard {flashcardIndex + 1} din {openFlashcards.length}</strong>
+                  <button
+                    onClick={() => {
+                      setFlashcardTaskId(null);
+                      setFlashcardResponse("");
+                      setShowFlashcardAnswer(false);
+                    }}
+                    type="button"
+                  >
+                    Închide
+                  </button>
+                </div>
+                <div className="task-flashcard">
+                  <span>ÎNTREBARE</span>
+                  <p>{activeFlashcard.question}</p>
+                  <label className="task-flashcard-response">
+                    <span>RĂSPUNSUL TĂU</span>
+                    <textarea
+                      disabled={showFlashcardAnswer}
+                      onChange={(event) => setFlashcardResponse(event.target.value)}
+                      placeholder="Scrie răspunsul înainte să verifici..."
+                      rows={3}
+                      value={flashcardResponse}
+                    />
+                  </label>
+                  {showFlashcardAnswer ? (
+                    <>
+                      <div className="task-flashcard-answer">
+                        <span>RĂSPUNS AȘTEPTAT</span>
+                        <p>{activeFlashcard.answer}</p>
+                      </div>
+                      <p className="task-flashcard-self-check">
+                        Compară răspunsul tău cu cel așteptat, apoi continuă.
+                      </p>
+                    </>
+                  ) : (
+                    <button
+                      className="button button-secondary"
+                      disabled={!flashcardResponse.trim()}
+                      onClick={() => setShowFlashcardAnswer(true)}
+                      type="button"
+                    >
+                      Verifică răspunsul
+                    </button>
+                  )}
+                </div>
+                <div className="task-flashcard-navigation">
+                  <button
+                    className="button button-secondary"
+                    disabled={flashcardIndex === 0}
+                    onClick={() => moveFlashcard(-1)}
+                    type="button"
+                  >
+                    Înapoi
+                  </button>
+                  {flashcardIndex < openFlashcards.length - 1 ? (
+                    <button
+                      className="button button-secondary"
+                      onClick={() => moveFlashcard(1)}
+                      type="button"
+                    >
+                      Următorul
+                    </button>
+                  ) : (
+                    <button
+                      className="button button-primary"
+                      disabled={task.done}
+                      onClick={() => completeTask(task)}
+                      type="button"
+                    >
+                      {task.done ? "Task completat" : "Completează taskul"}
+                    </button>
+                  )}
+                </div>
+              </section>
+            )}
           </article>
         ))}
       </section>

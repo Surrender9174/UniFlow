@@ -15,6 +15,7 @@ export type PlannedStudyTask = {
   subject: string;
   dueAt: string;
   category: "Studiu";
+  topic: string;
 };
 
 type StudySlot = {
@@ -264,6 +265,7 @@ export function generateStudyPlanTasks(
       subject,
       dueAt: slot.startsAt.toISOString(),
       category: "Studiu" as const,
+      topic: session.topic,
     };
   });
 }

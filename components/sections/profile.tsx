@@ -4,7 +4,13 @@
 import { useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/supabase";
-import { useState, useSyncExternalStore, type ChangeEvent, type FormEvent } from "react";
+import {
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import { Icon } from "@/components/icons";
 import { extractScheduleFile, isSupportedScheduleFile } from "@/lib/schedule-file-reader";
 import { parseScheduleText } from "@/lib/schedule-parser";
@@ -15,7 +21,10 @@ import {
   parseScheduleSnapshot,
   subscribeToSchedule,
 } from "@/lib/schedule-storage";
-import { saveStudentProfileToDatabase } from "@/lib/auth-profile";
+import {
+  loadAuthenticatedProfileFromDatabase,
+  saveStudentProfileToDatabase,
+} from "@/lib/auth-profile";
 import {
   defaultProfile,
   getNotificationSnapshot,
@@ -55,6 +64,9 @@ export default function ProfilePage() {
     !!profile.schedule.trim() || parseScheduleSnapshot(savedSchedule).length > 0;
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileLoadError, setProfileLoadError] = useState("");
+  const [profileLoadAttempt, setProfileLoadAttempt] = useState(0);
   const [saveError, setSaveError] = useState("");
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState("");
@@ -63,6 +75,30 @@ export default function ProfilePage() {
   const [scheduleFileProgress, setScheduleFileProgress] = useState("");
   const [scheduleFileProcessing, setScheduleFileProcessing] = useState(false);
   const notifications = savedNotifications === "on";
+
+  useEffect(() => {
+    let active = true;
+    void loadAuthenticatedProfileFromDatabase()
+      .then((profileFromDatabase) => {
+        if (active) saveProfile(profileFromDatabase);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setProfileLoadError(
+            error instanceof Error
+              ? error.message
+              : "Nu am putut încărca profilul din baza de date.",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setProfileLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [profileLoadAttempt]);
 
   const handleScheduleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const input = event.currentTarget;
@@ -192,8 +228,24 @@ export default function ProfilePage() {
           </div>
         </aside>
         <div className="profile-settings">
+          {profileLoadError && (
+            <p className="gmail-status-error" role="alert">
+              {profileLoadError}{" "}
+              <button
+                onClick={() => {
+                  setProfileLoadError("");
+                  setProfileLoading(true);
+                  setProfileLoadAttempt((attempt) => attempt + 1);
+                }}
+                type="button"
+              >
+                Reîncearcă
+              </button>
+            </p>
+          )}
           <form className="card-surface settings-card" onSubmit={handleSave}>
             <div className="settings-title"><span className="settings-icon"><Icon name="user" size={18} /></span><div><h2>Informații personale</h2><p>Datele academice se salvează în baza de date; emailul și orarul se păstrează în acest browser.</p></div></div>
+            <fieldset className="profile-fields" disabled={profileLoading}>
             <div className="form-grid">
               <label className="form-field"><span>Nume complet</span><input onChange={(event) => updateField("name", event.target.value)} required value={profile.name} /></label>
               <label className="form-field"><span>Adresă de email</span><input onChange={(event) => updateField("email", event.target.value)} required type="email" value={profile.email} /></label>
@@ -233,7 +285,8 @@ export default function ProfilePage() {
                 </label>
               </div>
             </div>
-            <div className="form-footer"><span className={`save-feedback${saveError ? " error" : ""}`} role={saveError ? "alert" : "status"}>{saveError || (saved ? "Modificările au fost salvate." : "")}</span><button className="button button-primary" disabled={saving} type="submit">{saving ? "Se salvează..." : "Salvează modificările"}</button></div>
+            </fieldset>
+            <div className="form-footer"><span className={`save-feedback${saveError ? " error" : ""}`} role={saveError ? "alert" : "status"}>{saveError || (saved ? "Modificările au fost salvate." : "")}</span><button className="button button-primary" disabled={saving || profileLoading || !!profileLoadError} type="submit">{profileLoading ? "Se încarcă profilul..." : saving ? "Se salvează..." : "Salvează modificările"}</button></div>
           </form>
           <section className="card-surface preferences-card">
             <div className="settings-title"><span className="settings-icon settings-icon-muted"><Icon name="bell" size={18} /></span><div><h2>Preferințe</h2><p>Controlează cum te ține UniFlow la curent.</p></div></div>

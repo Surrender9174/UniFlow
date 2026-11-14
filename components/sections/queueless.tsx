@@ -19,6 +19,12 @@ type QueueLessSnapshot = {
   activeTicket: QueueLessTicket | null;
 };
 
+type WaitEstimateBaseline = {
+  waitingCount: number;
+  minutes: number;
+  startedAt: number;
+};
+
 const categories: Array<{ id: QueueLessCategory | "all"; label: string }> = [
   { id: "all", label: "Toate" },
   { id: "campus_office", label: "Birouri campus" },
@@ -40,6 +46,19 @@ function getCrowdLevel(waitMinutes: number) {
   return { label: "Aglomerat", tone: "peak" };
 }
 
+function getCurrentWaitMinutes(
+  location: QueueLessLocation,
+  baseline: WaitEstimateBaseline | undefined,
+  now: number | null,
+) {
+  if (now === null || !baseline || now < baseline.startedAt) {
+    return location.estimated_wait_minutes;
+  }
+
+  const elapsedMinutes = Math.floor((now - baseline.startedAt) / 60_000);
+  return Math.max(0, baseline.minutes - elapsedMinutes);
+}
+
 function formatCountdown(milliseconds: number) {
   const minutes = Math.max(0, Math.ceil(milliseconds / 60_000));
   if (minutes < 1) return "sub 1 min";
@@ -49,6 +68,9 @@ function formatCountdown(milliseconds: number) {
 
 export default function QueueLessSection() {
   const [locations, setLocations] = useState<QueueLessLocation[]>([]);
+  const [waitEstimateBaselines, setWaitEstimateBaselines] = useState<
+    Record<string, WaitEstimateBaseline>
+  >({});
   const [ticket, setTicket] = useState<QueueLessTicket | null>(null);
   const [selectedLocationId, setSelectedLocationId] = useState("");
   const [category, setCategory] = useState<QueueLessCategory | "all">("all");
@@ -66,7 +88,26 @@ export default function QueueLessSection() {
   const refresh = useCallback(async () => {
     try {
       const snapshot = await fetchQueueLess<QueueLessSnapshot>("/api/queueless");
+      const receivedAt = Date.now();
       setLocations(snapshot.locations);
+      setWaitEstimateBaselines((current) =>
+        Object.fromEntries(snapshot.locations.map((location) => {
+          const previous = current[location.id];
+          const unchanged = previous &&
+            previous.waitingCount === location.waiting_count &&
+            previous.minutes === location.estimated_wait_minutes;
+          return [
+            location.id,
+            unchanged
+              ? previous
+              : {
+                  waitingCount: location.waiting_count,
+                  minutes: location.estimated_wait_minutes,
+                  startedAt: receivedAt,
+                },
+          ];
+        }))
+      );
       setTicket(snapshot.activeTicket);
       setQueueLessActiveTicketPresent(!!snapshot.activeTicket);
       setSelectedLocationId((current) =>
@@ -156,9 +197,17 @@ export default function QueueLessSection() {
     0,
   );
   const communityWaitMinutes = locations.reduce(
-    (total, location) => total + location.estimated_wait_minutes,
+    (total, location) =>
+      total + getCurrentWaitMinutes(location, waitEstimateBaselines[location.id], now),
     0,
   );
+  const selectedWaitMinutes = selectedLocation
+    ? getCurrentWaitMinutes(
+        selectedLocation,
+        waitEstimateBaselines[selectedLocation.id],
+        now,
+      )
+    : 0;
   const ticketEta = ticket && ticketLocation && now !== null
     ? new Date(ticket.updated_at).getTime() +
       ticket.queue_position * ticketLocation.average_service_minutes * 60_000 - now
@@ -222,6 +271,31 @@ export default function QueueLessSection() {
         requestError instanceof Error
           ? requestError.message
           : "Nu am putut amâna bonul.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const leaveQueue = async () => {
+    if (!ticket) return;
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      await fetchQueueLess<{ success: boolean }>(
+        `/api/queueless/tickets/${ticket.id}/leave`,
+        { method: "POST" },
+      );
+      setTicket(null);
+      setQueueLessActiveTicketPresent(false);
+      setNotice("Ai ieșit din coadă.");
+      await refresh();
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Nu am putut ieși din coadă.",
       );
     } finally {
       setBusy(false);
@@ -302,7 +376,12 @@ export default function QueueLessSection() {
         ) : (
           <div className="queueless-location-grid">
             {filteredLocations.map((location) => {
-              const crowd = getCrowdLevel(location.estimated_wait_minutes);
+              const waitMinutes = getCurrentWaitMinutes(
+                location,
+                waitEstimateBaselines[location.id],
+                now,
+              );
+              const crowd = getCrowdLevel(waitMinutes);
               return (
                 <button
                   aria-pressed={selectedLocationId === location.id}
@@ -321,7 +400,7 @@ export default function QueueLessSection() {
                   <small>{location.description}</small>
                   <span className="queueless-location-metrics">
                     <span><b>{location.waiting_count}</b> în coadă</span>
-                    <span><b>{location.estimated_wait_minutes}</b> min așteptare</span>
+                    <span><b>{waitMinutes}</b> min așteptare</span>
                   </span>
                   <span className="queueless-location-address">
                     {location.address}
@@ -369,7 +448,7 @@ export default function QueueLessSection() {
           {notice && <p className="queueless-success" role="status">{notice}</p>}
           <div className="queueless-join-footer">
             <span>
-              Estimare live: <strong>{selectedLocation.estimated_wait_minutes} min</strong>
+              Estimare live: <strong>{selectedWaitMinutes} min</strong>
             </span>
             <button
               className="button button-primary"
@@ -436,6 +515,16 @@ export default function QueueLessSection() {
               type="button"
             >
               Amână-mă cu o poziție
+            </button>
+          )}
+          {ticket.status !== "SERVING" && (
+            <button
+              className="button button-secondary queueless-delay"
+              disabled={busy}
+              onClick={() => void leaveQueue()}
+              type="button"
+            >
+              Ieși din coadă
             </button>
           )}
         </section>

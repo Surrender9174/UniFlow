@@ -661,12 +661,6 @@ export default function SkillSwapSection() {
       {(error || notice || realtimeError) && (
         <div className={`skillswap-feedback${error ? " error" : ""}`} role={error ? "alert" : "status"}>
           <span>{error || notice || realtimeError}</span>
-          {error && (
-            <small>
-              Dacă tabelele SkillSwap nu există încă, aplică migrarea
-              <code>supabase/migrations/20261113223000_skillswap.sql</code> în Supabase.
-            </small>
-          )}
           {!error && <button aria-label="Închide mesajul" onClick={() => setNotice("")} type="button">×</button>}
         </div>
       )}

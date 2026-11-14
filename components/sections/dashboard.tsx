@@ -24,6 +24,7 @@ import {
   getServerProfileSnapshot,
   getStoredProfileSnapshot,
   subscribeToProfile,
+  type StudentProfile,
 } from "@/lib/profile";
 import {
   formatSavedTaskDueAt,
@@ -105,7 +106,7 @@ export default function Dashboard() {
     const startTime = performance.now();
     const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ? 400
-      : 1800;
+      : 800;
     const interruptScroll = () => cancelScrollAnimation.current?.();
     const cleanup = () => {
       window.removeEventListener("wheel", interruptScroll);
@@ -166,9 +167,13 @@ export default function Dashboard() {
     getServerScheduleSnapshot,
   );
   const profileData = savedProfile
-    ? JSON.parse(savedProfile) as { name?: string }
+    ? JSON.parse(savedProfile) as Partial<StudentProfile>
     : null;
   const name = profileData?.name ?? defaultProfile.name;
+  const studyLevel = {
+    institutionType: profileData?.institutionType ?? defaultProfile.institutionType,
+    year: profileData?.year ?? defaultProfile.year,
+  };
   const scheduleEvents = parseScheduleSnapshot(savedSchedule);
   const hasSchedule = scheduleEvents.length > 0;
   const completed = savedTasks.filter((task) => task.done).length;
@@ -333,7 +338,12 @@ export default function Dashboard() {
         </article>
       </section>
 
-      <StudyPlannerWidget now={now} schedule={scheduleEvents} tasks={savedTasks} />
+      <StudyPlannerWidget
+        now={now}
+        schedule={scheduleEvents}
+        studyLevel={studyLevel}
+        tasks={savedTasks}
+      />
 
       <section className="section-block">
         <div className="section-heading">

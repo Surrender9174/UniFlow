@@ -49,7 +49,11 @@ postponed to a selected future date and time from the Tasks page. In the
 assistant, you can also ask to move a saved task to a new date and time; Gemini
 must identify the task and a future date/time before UniFlow changes it.
 Gmail does not need to be connected for task requests, but Gemini must be
-configured.
+configured. The adaptive study planner also uses Gemini to generate
+flashcards for each topic, adjusting difficulty for confidence and the
+student's school or university year; generated cards are saved with the plan's
+local tasks. On the Tasks page, students can write an answer before revealing
+the suggested answer for comparison.
 
 The assistant conversation is also saved in the current browser and restored
 when `/assistant` is opened again. It is not synced to other devices. The latest
@@ -133,9 +137,9 @@ units from uploaded materials or sync plans across devices.
 
 QueueLess MVP is available at `/queueless` for the live location directory,
 crowd estimates, authenticated virtual tickets, the one-position delay action,
-and required-document checklists. Queue counts and a user's ticket update through
-Supabase Realtime. Staff use `/queueless/staff` to view assigned queues and call
-the next ticket.
+ticket cancellation, and required-document checklists. Queue counts and a user's
+ticket update through Supabase Realtime. Staff use `/queueless/staff` to view
+assigned queues and call the next ticket.
 
 Before using it, run
 [`supabase/migrations/20261114040000_queueless.sql`](./supabase/migrations/20261114040000_queueless.sql)
@@ -146,6 +150,15 @@ requirements with verified campus details before using it operationally. To
 authorize staff, add their Supabase Auth user ID and location ID to
 `public.queueless_staff`; users without an assignment cannot operate the staff
 kiosk.
+
+For an existing QueueLess installation, also run
+[`supabase/migrations/20261114050000_queueless_leave_queue.sql`](./supabase/migrations/20261114050000_queueless_leave_queue.sql)
+to allow users to cancel their own waiting ticket and update the remaining queue
+positions.
+
+Run
+[`supabase/migrations/20261114060000_queueless_reset_ticket_numbers.sql`](./supabase/migrations/20261114060000_queueless_reset_ticket_numbers.sql)
+to restart ticket numbering at 1 when a location has no active tickets.
 
 The current version provides estimates from the configured average service
 time and active tickets. It does not yet include food pre-orders, library book

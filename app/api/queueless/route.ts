@@ -24,7 +24,7 @@ export async function GET(request: Request) {
         .order("name"),
       client
         .from("queueless_queue_stats")
-        .select("location_id,waiting_count,estimated_wait_minutes,updated_at"),
+        .select("location_id,waiting_count,estimated_wait_minutes"),
       client
         .from("queueless_tickets")
         .select("id,location_id,user_id,ticket_number,ticket_code,queue_position,status,delay_used,counter_name,called_at,created_at,updated_at")
@@ -44,7 +44,6 @@ export async function GET(request: Request) {
         ...location,
         waiting_count: stats?.waiting_count ?? 0,
         estimated_wait_minutes: stats?.estimated_wait_minutes ?? 0,
-        stats_updated_at: stats?.updated_at ?? null,
       };
     });
 

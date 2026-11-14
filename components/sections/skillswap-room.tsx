@@ -479,9 +479,15 @@ export default function SkillSwapRoom({ sessionId }: { sessionId: string }) {
     setMediaStarting(true);
     setRoomError("");
     try {
+      const { data: authData, error: authError } = await supabase.auth.getSession();
+      if (authError) throw authError;
+      const token = authData.session?.access_token;
+      if (!token) throw new Error("Autentifică-te pentru a intra în sala SkillSwap.");
+      setAccessToken(token);
+
       const iceConfig = await fetchSkillSwapApi<IceConfigResponse>(
         "/api/skillswap/ice-config",
-        accessToken,
+        token,
       );
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       localStreamRef.current = stream;

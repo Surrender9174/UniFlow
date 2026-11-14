@@ -13,6 +13,14 @@ type SessionRow = SkillSwapSession & {
   learner_id: string;
 };
 
+const sessionCreationErrors: Record<string, string> = {
+  "Invalid session participants.": "Nu poți trimite o propunere către propriul cont. Verifică partenerul selectat.",
+  "Choose a valid future 60-minute session.": "Alege o oră cu cel puțin 15 minute în viitor și în următoarele 90 de zile.",
+  "The selected skill is not a complementary match.": "Abilitatea aleasă nu mai corespunde profilurilor. Reîmprospătează pagina și încearcă din nou.",
+  "Both participants must be available for the selected time.": "Ora aleasă trebuie să se încadreze în disponibilitatea amândurora pentru toate cele 60 de minute. Alege un interval comun sugerat.",
+  "A participant already has a session at that time.": "Unul dintre participanți are deja o sesiune suprapusă la acea oră.",
+};
+
 export async function GET(request: Request) {
   const result = await authenticateSkillSwapRequest(request);
   if (!result.auth) return result.response;
@@ -91,9 +99,21 @@ export async function POST(request: Request) {
         p_starts_at: startsAt,
       },
     );
-    if (error) return databaseErrorResponse(error, "Nu am putut trimite propunerea de schimb.");
+    if (error) {
+      const message = error.code === "P0001"
+        ? sessionCreationErrors[error.message]
+        : undefined;
+      if (message) return Response.json({ error: message }, { status: 400 });
+      return databaseErrorResponse(
+        error,
+        "Nu am putut trimite propunerea de schimb. Încearcă din nou mai târziu.",
+      );
+    }
     return Response.json({ sessionId }, { status: 201 });
   } catch (error) {
-    return databaseErrorResponse(error, "Nu am putut trimite propunerea de schimb.");
+    return databaseErrorResponse(
+      error,
+      "Nu am putut trimite propunerea de schimb. Încearcă din nou mai târziu.",
+    );
   }
 }
